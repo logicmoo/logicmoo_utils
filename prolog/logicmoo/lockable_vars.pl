@@ -110,7 +110,7 @@ unlock_vars(Term):- must(quietly((term_attvars(Term,Vs),maplist(delete_vl,Vs))))
 delete_vl( Var):- var(Var),!, del_attr(Var,vl).
 delete_vl( Term):- term_attvars(Term,Vs),maplist(delete_vl,Vs).
 
-:- use_module(library(scope_locally/each_call_cleanup)).
+:- use_module(library(logicmoo/each_call)).
 
 :- meta_predicate(with_vars_locked_old(1,:)).
 with_vars_locked_old(Notify,Goal):- term_variables(Goal,Vs),with_vars_locked_old(Notify,Vs,Goal).

@@ -1,6 +1,6 @@
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_no_repeats.pl
 :- module(no_repeats,
-          [ memberchk_pred/3,
+          [ /*memberchk_pred/3,
             memberchk_pred_rev/3,
             memberchk_same/2,
             memberchk_same0/2,
@@ -8,10 +8,11 @@
             memberchk_same2/2,
             memberchk_same3/2,
             memberchk_cmp/3,
-            memb_r/2,
+            memb_r/2,*/
             must_not_repeat/1,
             no_repeats/1,
             no_repeats/2,
+/*
             no_repeats_av/0,
             no_repeats_findall5/5,
             no_repeats_findall_r/5,
@@ -24,8 +25,9 @@
             subtract_eq/3,
             succeeds_n_times/2,
             nr_test/2,
-            no_repeats_var/1,
-            loop_check_nr/1
+            */
+            no_repeats_var/1
+%            loop_check_nr/1
           ]).
 :- meta_predicate
         memberchk_pred(2, ?, ?),
@@ -52,7 +54,7 @@
 
       
 :- set_module(class(library)).
-:- use_module(library(misc_lm/logicmoo_util_terms)).
+:- use_module(library(logicmoo/misc_terms)).
 
 %% loop_check_nr( ?CL) is semidet.
 %

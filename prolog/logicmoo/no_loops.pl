@@ -39,7 +39,7 @@
 
 
 %:- use_module(library(tabling)).
-:- use_module(library(scope_locally/each_call_cleanup)).
+:- use_module(library(logicmoo/each_call)).
 %:- use_module(library(logicmoo_startup)).
 
 

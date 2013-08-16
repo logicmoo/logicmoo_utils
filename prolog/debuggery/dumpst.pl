@@ -43,10 +43,10 @@
   dtrace(*,0).
 
 
-:- reexport(library(misc_lm/logicmoo_util_strings)).
+:- reexport(library(logicmoo/util_strings)).
 :- use_module(library(logicmoo_utils_all)).
 :- use_module((ucatch)).
-:- use_module(library(loop_check/no_loops)).
+:- use_module(library(logicmoo/no_loops)).
 :- use_module((rtrace)).
 :- use_module(library(must_sanity)).
 

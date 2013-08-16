@@ -1,16 +1,16 @@
 /*  Logicmoo Debug Tools
 % ===================================================================
-% File 'listing_vars.pl'
+% File 'util_varnames.pl'
 % Purpose: An Implementation in SWI-Prolog of certain debugging tools
 % Maintainer: Douglas Miles
 % Contact: $Author: dmiles $@users.sourceforge.net ;
-% Version: 'listing_vars.pl' 1.0.0
+% Version: 'util_varnames.pl' 1.0.0
 % Revision: $Revision: 1.1 $
 % Revised At:  $Date: 2002/07/11 21:57:28 $
 % ===================================================================
 */
-% File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/listing_vars.pl
-:- module(listing_vars,
+% File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/util_varnames.pl
+:- module(util_varnames,
           [ ain00/1,
             contains_ftVar/1,
             count_members_eq/3,
@@ -107,7 +107,7 @@
 */
 
 :- use_module(library(must_sanity)).
-:- use_module(library(misc_lm/logicmoo_util_terms)).
+:- use_module(library(logicmoo/misc_terms)).
 
 :- multifile
         prolog:make_hook/2.
@@ -195,7 +195,7 @@
 :- meta_predicate dcall_if_verbose(0).
 
 :- reexport((lockable_vars)).
-:- system:use_module(library(scope_locally/with_thread_local)).
+:- system:use_module(library(logicmoo/each_call)).
 % :- use_module(library(dictoo_lib)).
 
 
@@ -1451,7 +1451,7 @@ maybe_record_scanned_file:-ignore((  source_location(F,_), \+ varname_cache:varn
 % Init Varname Storages.
 %
 init_varname_stores(_):- !.
-% init_varname_stores(M):- M:ensure_loaded(logicmoo_util_with_assertions), M:ensure_loaded(listing_vars).
+% init_varname_stores(M):- M:ensure_loaded(logicmoo_util_with_assertions), M:ensure_loaded(util_varnames).
 
 
 :- initialization(maybe_scan_for_varnames).

@@ -11,7 +11,7 @@
 % ===================================================================
 */
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_preddefs.pl
-:- module(hook_hybrid,
+:- module(call_from,
           [ call_if_defined/1,
             convert_to_dynamic/1,
             convert_to_dynamic/3,

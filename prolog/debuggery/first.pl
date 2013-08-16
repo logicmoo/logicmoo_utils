@@ -73,7 +73,7 @@
 
 :- set_module(class(library)).
 :- thread_local(tlbugger:ifHideTrace/0).
-%:- reexport(library(hybrid_db/listing_vars)).
+%:- reexport(library(logicmoo/util_varnames)).
 :- use_module(library(lists)).
 
 

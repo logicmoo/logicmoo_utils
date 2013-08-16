@@ -172,8 +172,8 @@
             safe_univ0/2,
             my_module_sensitive_code/1.
 
-:- reexport(library(hybrid_db/clause_attvars)).
-:- reexport(library(hybrid_db/lockable_vars)).
+:- reexport(library(logicmoo/clause_attvars)).
+:- reexport(library(logicmoo/lockable_vars)).
 
 :-multifile(baseKB:first_std_provider/3).
 :-multifile(baseKB:next_std_provider/3).
@@ -664,7 +664,7 @@ modulize_head_fb(From,H,Fallback,M:H):-
 
 
 
-:- reexport(library(hybrid_db/listing_vars)).
+:- reexport(library(logicmoo/util_varnames)).
 
 
 %% clause_asserted_i(+Head) is semidet.

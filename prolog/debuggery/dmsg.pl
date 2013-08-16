@@ -251,7 +251,7 @@ if_defined_local(G,Else):- current_predicate(_,G)->G;Else.
 :- user:use_module(library(memfile)).
 :- user:use_module(first).
 %:- user:ensure_loaded(logicmoo_util_rtrace).
-:- ensure_loaded(library(scope_locally/with_thread_local)).
+:- ensure_loaded(library(logicmoo/each_call)).
 %:- user:ensure_loaded(logicmoo_util_loop_check).
 
 

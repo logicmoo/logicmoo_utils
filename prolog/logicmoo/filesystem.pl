@@ -144,7 +144,7 @@
 :- use_module(library(dialect)).
 
 
-:- ensure_loaded(library(no_repeats/no_repeats)).
+:- ensure_loaded(library(logicmoo/no_repeats)).
 
 :- if(exists_source(library(filesex))).
 %:- set_prolog_flag(generate_debug_info, true).=

@@ -36,7 +36,7 @@ make_as_dynamic/4
 
 :- set_module(class(library)).
 :- reexport(library(must_sanity)).
-:- reexport(library(loop_check/no_loops)).
+:- reexport(library(logicmoo/no_loops)).
 
 :- meta_predicate decl_as(*,+).
 :- meta_predicate decl_as_rev(+,*).

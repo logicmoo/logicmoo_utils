@@ -87,7 +87,7 @@ erase_preds(Where):-
 % :- listing(sce:buffer_clauses/5).
 
 :- if( \+ current_predicate(system:each_call_cleanup/3)).
-:- use_module(system:library(scope_locally/each_call_cleanup)).
+:- use_module(system:library(logicmoo/each_call)).
 :- endif.
 
 :- set_module(class(library)).

@@ -296,7 +296,7 @@ user:expand_query(_Goal, _Expanded, _Bindings, _ExpandedBindings):-  run_pending
 :- endif.
 
 
-%:- use_module(library(scope_locally/each_call_cleanup)).
+%:- use_module(library(logicmoo/each_call)).
 %:- use_module(library(logicmoo_startup)).
 
 :- meta_predicate if_debugging(*,0).
@@ -736,7 +736,7 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
   run_pending_inits, fail.
 :- endif.
 
-:- use_module(library(scope_locally/each_call_cleanup)).
+:- use_module(library(logicmoo/each_call)).
 
 :- use_module(library(debuggery/dmsg)).
 :- use_module(library(must_sanity)).

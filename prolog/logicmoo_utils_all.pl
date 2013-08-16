@@ -19,13 +19,15 @@
 :- module(logicmoo_utils_all,[]).
 
 :- reexport(library(logicmoo_common)).
-:- reexport(library(hybrid_db/portray_vars)).
-:- reexport(library(hybrid_db/predicate_inheritance)).
-:- reexport(library(hybrid_db/retry_undefined)).
-:- reexport(library(hybrid_db/call_from_module)).
-:- reexport(library(expand_finer/subclause_expansion)).
-:- reexport(library(hybrid_db/virtualize_source)).
-:- reexport(library(file_utils/filesystem)).
+
+:- reexport(library(logicmoo/call_from_module)).
+:- reexport(library(logicmoo/filesystem)).
+:- reexport(library(logicmoo/portray_vars)).
+:- reexport(library(logicmoo/predicate_inheritance)).
+:- reexport(library(logicmoo/retry_undefined)).
+:- reexport(library(logicmoo/subclause_expansion)).
+:- reexport(library(logicmoo/virtualize_source)).
+:- reexport(library(logicmoo/xlisting)).
 
 
 

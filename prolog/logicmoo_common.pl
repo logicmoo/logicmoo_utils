@@ -21,8 +21,10 @@
 :- reexport(library(logicmoo_startup)).
 :- reexport(library(must_sanity)).
 :- reexport(library(hook_database)).
-:- reexport(library(loop_check/no_loops)).
-:- reexport(library(no_repeats/no_repeats)).
+:- reexport(library(logicmoo/each_call)).
+:- reexport(library(logicmoo/redo_locally)).
+:- reexport(library(logicmoo/no_loops)).
+:- reexport(library(logicmoo/no_repeats)).
 
 
 

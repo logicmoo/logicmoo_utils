@@ -71,7 +71,7 @@ Thread.
 
 
 :- use_module(library(must_sanity)).
-:- use_module(library(misc_lm/logicmoo_util_terms)).
+:- use_module(library(logicmoo/misc_terms)).
 
 contains_eq(USub,Term):- sub_term(Sub,Term),USub=@=Sub.
 contains_f(F,Term):- sub_term(Sub,Term),callable(Sub),cfunctor(Sub,F,_).
