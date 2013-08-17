@@ -597,7 +597,7 @@ compound_name_args_safe(P,F,A):-
 %
 % Append Term.
 %
-append_term(T,I,HEAD):-atom(T),!,HEAD=..[T,I],!.
+append_term(F,I,HEAD):-atom(F),!,HEAD=..[F,I],!.
 append_term(Call,E,CallE):-var(Call),!, must(compound(CallE)),CallE=..ListE,append(List,[E],ListE),Call=..List.
 append_term(Call,E,CallE):-must(compound(Call)), Call=..List, append(List,[E],ListE), CallE=..ListE.
 

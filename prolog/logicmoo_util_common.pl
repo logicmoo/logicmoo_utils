@@ -150,7 +150,6 @@ set_prolog_stack_gb(Six):-set_prolog_stack(global, limit(Six*10**9)),set_prolog_
 
 % invert_varname(NV):-  ignore(((NV=(N=V), V='$VAR'(N)))).
 
-
 add_history(O):- 
    ignore_not_not((make_historial(O,A),add_history0(A))),!.
 
@@ -164,6 +163,7 @@ make_historial(O,A):-
     prolog_load_context(variable_names, Bindings),
     format(atom(A), '~W', [O, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]).
 
+add_history0(_):- \+ app_argv('--history'),!.
 add_history0(A):-
    (current_predicate(system:rl_add_history/1) -> system:rl_add_history(A) ; true),
    (current_predicate(editline:el_add_history/2) -> editline:el_add_history(user_input,A) ; true).
