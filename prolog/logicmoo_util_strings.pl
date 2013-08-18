@@ -52,6 +52,7 @@
             ctype_switch/2,
             ctype_switcher/1,
             destringify/2,
+            dehyphenize_const/2,
             divide_list/3,
             either_empty/2,
             either_starts_with_icase/2,
@@ -288,6 +289,21 @@
 
 % :-import(must/1).
 
+
+dehyphenize_const(PM,PMO):- atom(PM), atomic_list_concat(List,'-',PM),dehyphenize_const(PM,List,PMO),!.
+
+% \\000
+%dehyphenize_const(PM,List,PMO):- tokenize_atom(PM,[_,T1|Toks]),member(E,[T1|Toks]),number(E),E<0,!,atomic_list_concat(List,'_',PMO),!.
+dehyphenize_const(P,[P],P):-!.
+dehyphenize_const(_,[P,F|List],PMO):-must_maplist(toPropercase_hyphenize_number,[F|List],ListO),atomic_list_concat([P|ListO],PMO),!.
+
+toPropercase_hyphenize_number('','_').
+toPropercase_hyphenize_number(N,O):-sub_atom(N, 0, 1, _, S),char_type(S,digit),!,atom_concat('_',N,O).
+toPropercase_hyphenize_number(I,O):- string_codes(I,[C|Odes]),to_upper(C,U),atom_codes(O,[U|Odes]).
+
+:- sanity(dehyphenize_const('a-b','aB')).
+:- must(dehyphenize_const('a-2b','a_2b')).
+:- must(dehyphenize_const('uitype-ProductDescriptionTemplate','uitypeProductDescriptionTemplate')).
 
 %= 	 	 
 
