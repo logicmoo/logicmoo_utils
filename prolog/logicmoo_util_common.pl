@@ -17,7 +17,21 @@
 */
 
 % We save the name of the module loading this module
-:- module(logicmoo_util_common,[add_history/1,qsave_lm/1,ignore_not_not/1,load_library_system/1,fixup_exports/0]).
+:- module(logicmoo_util_common,[add_history/1,add_history0/1,make_historial/2,
+   maybe_rtrace/1,normally/1,
+   qsave_lm/1,ignore_not_not/1,load_library_system/1,fixup_exports/0,
+          all_source_file_predicates_are_transparent/0,
+          all_source_file_predicates_are_transparent/2,
+          all_source_file_predicates_are_exported/0,
+          all_source_file_predicates_are_exported/2]).
+
+:- meta_predicate(ignore_not_not(0)).
+:- meta_predicate(maybe_rtrace(0)).
+
+normally(G):- locally(set_prolog_flag(runtime_debug,0),locally(set_prolog_flag(bugger,false),G)).
+
+maybe_rtrace(G):-catch((G),E,(trace,wdmsg(E),rtrace(G)))*->true;ignore(catch((trace,rtrace(G)),E,wdmsg(E -> G))).
+
 
 % sets upo to restore the subsystems
 :- meta_predicate(load_library_system(:)).
@@ -25,12 +39,18 @@ load_library_system(M:File):- load_library_system(M,File).
 load_library_system(M,File):- during_boot(gripe_time(40,(if_file_exists(ensure_loaded(M:File))))).
 :- system:import(load_library_system/2).
 
+:- module_transparent((add_history/1,qsave_lm/1,ignore_not_not/1,load_library_system/1,fixup_exports/0,
+          all_source_file_predicates_are_transparent/0,
+          all_source_file_predicates_are_transparent/2,
+          all_source_file_predicates_are_exported/0,
+          all_source_file_predicates_are_exported/2)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DEFAULT PROLOG FLAGS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-:- set_prolog_flag(lm_expanders,default).
-:- set_prolog_flag(dialect_pfc,default).
+ % :- set_prolog_flag(subclause_expansion,default).
+ % :- set_prolog_flag(subclause_expansion,false).
+ % :- set_prolog_flag(dialect_pfc,default).
 :- set_prolog_flag(qcompile,part).
 :- set_prolog_flag(do_renames,never).
 :- if( \+ current_module(prolog_stack)).
@@ -41,16 +61,16 @@ load_library_system(M,File):- during_boot(gripe_time(40,(if_file_exists(ensure_l
 
 % invert_varname(NV):-  ignore(((NV=(N=V), V='$VAR'(N)))).
 
+
+add_history(O):- 
+   ignore_not_not((make_historial(O,A),add_history0(A))),!.
+
 ignore_not_not(G):- ignore((catch((( \+ \+ (ignore(once(G))))),_,fail))),!.
 
 make_historial(O,A):-ground(O),format(atom(A), '~W', [O, [fullstop(true),portrayed(true),quoted(true),numbervars(true)]]).
 make_historial(O,A):-
     prolog_load_context(variable_names, Bindings),
     format(atom(A), '~W', [O, [fullstop(true),portrayed(true),quoted(true),variable_names(Bindings)]]).
-
-add_history(O):- 
-   ignore_not_not((make_historial(O,A),add_history0(A))),!.
-
 add_history0(A):- 
    (current_predicate(system:rl_add_history/1) -> system:rl_add_history(A) ; true),
    (current_predicate(editline:el_add_history/2) -> editline:el_add_history(user_input,A) ; true).
@@ -87,13 +107,13 @@ user:expand_answer(Bindings, ExpandedBindings):-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DURING/AFTER BOOT HOOKS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-:- dynamic(system:after_boot_goal/1).
+:- dynamic(lmconf:after_boot_goal/1).
 :- meta_predicate(system:during_boot(:)).
-system:after_boot_call(How):- forall(system:after_boot_goal(Goal),call(How,Goal)),threads.
+system:after_boot_call(How):- forall(lmconf:after_boot_goal(Goal),call(How,Goal)),threads.
 system:after_boot_call:- baseKB:after_boot_call(must_det).
 system:during_boot(Goal):- call(Goal),after_boot(Goal). 
 :- meta_predicate(system:after_boot(:)).
-system:after_boot(Goal):- add_history(Goal),system:assertz(after_boot_goal(Goal)).
+system:after_boot(Goal):- add_history(Goal),system:assertz(lmconf:after_boot_goal(Goal)).
 :- meta_predicate(system:after_boot_sanity_test(:)).
 system:after_boot_sanity_test(M:Goal):- after_boot(M:sanity(Goal)).
 
@@ -124,14 +144,41 @@ qsave_lm(LM):- statistics(globallimit,G),statistics(locallimit,L),statistics(tra
 
 */
 
-:- module_transparent(fixup_exports/0).
 
-fixup_exports:-
- ignore((source_location(S,_), prolog_load_context(module,LC),
+
+
+%% all_source_file_predicates_are_exported() is det.
+%
+% All Module Predicates Are Exported.
+
+all_source_file_predicates_are_exported:-
+ source_location(S,_), prolog_load_context(module,LC),
+ all_source_file_predicates_are_exported(S,LC).
+
+all_source_file_predicates_are_exported(S,LC):-
  forall(source_file(M:H,S),
- ((on_x_debug(functor(H,F,A)),
+ ignore((functor(H,F,A), \+ atom_concat('$',_,F),
   must((ignore(((atom(LC),atom(M), LC\==M,M:export(M:F/A),LC:multifile(M:F/A),fail,atom_concat('$',_,F),LC:import(M:F/A)))))),
-  ignore(((\+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F),LC:export(M:F/A), (current_predicate(system:F/A)->true; system:import(M:F/A))))),
-  ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A]))))))))).
+  ignore(((\+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F),LC:export(M:F/A), 
+  (current_predicate(system:F/A)->true; system:import(M:F/A)))))))).
 
-:- fixup_exports.
+%% all_source_file_predicates_are_transparent() is det.
+%
+% All Module Predicates Are Transparent.
+
+all_source_file_predicates_are_transparent:-
+ source_location(S,_), prolog_load_context(module,LC),
+ all_source_file_predicates_are_transparent(S,LC).
+
+all_source_file_predicates_are_transparent(S,_LC):- 
+ forall(source_file(M:H,S),
+ (functor(H,F,A),
+  ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), 
+  \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A])))))).
+
+
+:- module_transparent(fixup_exports/0).
+fixup_exports:- 
+   all_source_file_predicates_are_exported,
+   all_source_file_predicates_are_transparent.
+
