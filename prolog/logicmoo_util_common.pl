@@ -119,13 +119,15 @@ system:after_boot_sanity_test(M:Goal):- after_boot(M:sanity(Goal)).
 
 
 qsave_lm(LM):- statistics(globallimit,G),statistics(locallimit,L),statistics(traillimit,T),
-  qsave_program(LM,[toplevel(logicmoo_toplevel),
+  X = qsave_program(LM,[toplevel(logicmoo_toplevel),
    goal(logicmoo_goal),op(save),
        % stand_alone(true),
        % class(development),
        % autoload(false),
        % foreign(no_save),
-       global(G),trail(T),local(L)]),!.
+       global(G),trail(T),local(L)]),
+   dmsg(X),
+   call(X).
 
 
 /*
