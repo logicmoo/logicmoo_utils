@@ -30,7 +30,8 @@
 
 normally(G):- locally(set_prolog_flag(runtime_debug,0),locally(set_prolog_flag(bugger,false),G)).
 
-maybe_rtrace(G):-catch((G),E,(trace,wdmsg(E),rtrace(G)))*->true;ignore(catch((trace,rtrace(G)),E,wdmsg(E -> G))).
+maybe_rtrace(G):-catch(once(notrace(G)),E,(wdmsg(error_maybe_rtrace(E,G)),rtrace(G)))*->!;
+  ((wdmsg(failed_maybe_rtrace(G)),ignore(catch(once(rtrace(G)),E,wdmsg(E -> G))))).
 
 
 % sets upo to restore the subsystems
@@ -96,8 +97,8 @@ user:expand_query(Goal, _Expanded, Bindings, _ExpandedBindings):-
    fail.
        
 
-:- user:dynamic(expand_answer/2).
 :- user:multifile(expand_answer/2).
+:- user:dynamic(expand_answer/2).
 
 user:expand_answer(Bindings, ExpandedBindings):- 
     nb_linkval_current('$expand_answer',Bindings),
@@ -107,15 +108,20 @@ user:expand_answer(Bindings, ExpandedBindings):-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DURING/AFTER BOOT HOOKS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:- multifile(lmconf:after_boot_goal/1).
 :- dynamic(lmconf:after_boot_goal/1).
+
 :- meta_predicate(system:during_boot(:)).
-system:after_boot_call(How):- forall(lmconf:after_boot_goal(Goal),call(How,Goal)),threads.
-system:after_boot_call:- baseKB:after_boot_call(must_det).
-system:during_boot(Goal):- call(Goal),after_boot(Goal). 
+system:during_boot(M:Goal):- maybe_rtrace(M:Goal),after_boot(M:Goal).
 :- meta_predicate(system:after_boot(:)).
-system:after_boot(Goal):- add_history(Goal),system:assertz(lmconf:after_boot_goal(Goal)).
+system:after_boot(M:Goal):- add_history(M:Goal),system:assertz(lmconf:after_boot_goal(M:Goal)).
 :- meta_predicate(system:after_boot_sanity_test(:)).
-system:after_boot_sanity_test(M:Goal):- after_boot(M:sanity(Goal)).
+system:after_boot_sanity_test(M:Goal):- after_boot(M:sanity(M:Goal)).
+
+:- module_transparent(system:after_boot_call/1).
+system:after_boot_call(How):- forall(lmconf:after_boot_goal(M:Goal),once(ignore(call(How,M:Goal)))),threads.
+:- module_transparent(system:after_boot_call/0).
+system:after_boot_call:- baseKB:after_boot_call(maybe_rtrace).
 
 
 qsave_lm(LM):- statistics(globallimit,G),statistics(locallimit,L),statistics(traillimit,T),
