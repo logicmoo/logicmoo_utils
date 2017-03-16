@@ -18,7 +18,7 @@
 
 % We save the name of the module loading this module
 :- module(logicmoo_util_common,[add_history/1,add_history0/1,make_historial/2,
-   maybe_rtrace/1,normally/1,
+   maybe_rtrace/1,normally/1,var_non_attvar/1,
    qsave_lm/1,ignore_not_not/1,load_library_system/1,fixup_exports/0,
           all_source_file_predicates_are_transparent/0,
           all_source_file_predicates_are_transparent/2,
@@ -153,16 +153,19 @@ qsave_lm(LM):- statistics(globallimit,G),statistics(locallimit,L),statistics(tra
 */
 
 
+var_non_attvar(V):- var(V),\+ attvar(V).
 
 
 %% all_source_file_predicates_are_exported() is det.
 %
 % All Module Predicates Are Exported.
 
+:- module_transparent(all_source_file_predicates_are_exported/0).
 all_source_file_predicates_are_exported:-
  source_location(S,_), prolog_load_context(module,LC),
  all_source_file_predicates_are_exported(S,LC).
 
+:- module_transparent(all_source_file_predicates_are_exported/2).
 all_source_file_predicates_are_exported(S,LC):-
  forall(source_file(M:H,S),
  ignore((functor(H,F,A), \+ atom_concat('$',_,F),
@@ -173,11 +176,12 @@ all_source_file_predicates_are_exported(S,LC):-
 %% all_source_file_predicates_are_transparent() is det.
 %
 % All Module Predicates Are Transparent.
-
+:- module_transparent(all_source_file_predicates_are_transparent/0).
 all_source_file_predicates_are_transparent:-
  source_location(S,_), prolog_load_context(module,LC),
  all_source_file_predicates_are_transparent(S,LC).
 
+:- module_transparent(all_source_file_predicates_are_transparent/2).
 all_source_file_predicates_are_transparent(S,_LC):- 
  forall(source_file(M:H,S),
  (functor(H,F,A),
