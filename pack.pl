@@ -1,5 +1,5 @@
 name(logicmoo_utils).
-version('1.1.114').
+version('1.1.115').
 title('Common predicates used by external Logicmoo Utils and Base').
 keywords([source]).
 author( 'Douglas Miles', 'http://www.linkedin.com/in/logicmoo' ).
