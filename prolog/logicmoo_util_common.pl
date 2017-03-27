@@ -50,6 +50,11 @@ load_library_system(M,File):- during_boot(gripe_time(40,(if_file_exists(ensure_l
           all_source_file_predicates_are_exported/0,
           all_source_file_predicates_are_exported/2)).
 
+
+:- dynamic(lmconf:saved_app_argv/1).
+app_argv(List):- lmconf:saved_app_argv(List).
+app_argv(List):- current_prolog_flag(os_argv,List).
+
 % ======================================================
 % Add Extra file_search_paths
 % ======================================================
