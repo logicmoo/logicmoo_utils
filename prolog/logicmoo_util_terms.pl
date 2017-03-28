@@ -106,7 +106,12 @@ univ_term/2,
 weak_nd_subst/4,
 weak_nd_subst1/5,
 weak_nd_subst2/4,
-wsubst/4
+wsubst/4,
+append_termlist/3,            
+append_term/3,            
+apply_term/3,
+compound_name_args_safe/3,
+compound_name_arity_safe/3
           ]).
 :- meta_predicate
         at_start(0),
@@ -555,7 +560,7 @@ nd_predsubst(  P, Pred, P1 ) :- functor_catch(P,_,N),nd_predsubst1( Pred, P, N, 
 % Nd Predsubst Secondary Helper.
 %
 nd_predsubst1( _,  P, 0, P  ).
-nd_predsubst1( Pred,  P, N, P1 ) :- N > 0, P =.. [F|Args],
+nd_predsubst1( Pred,  P, N, P1 ) :- N > 0, compound_name_arguments(P,F,Args),
             nd_predsubst2( Pred,  Args, ArgS ),
             nd_predsubst2( Pred, [F], [FS] ),
             univ_term(P1 , [FS|ArgS]).
@@ -574,6 +579,46 @@ nd_predsubst2( Pred, [A|As], [A|AS]  ) :- var(A), !, nd_predsubst2( Pred, As, AS
 nd_predsubst2( Pred, [A|As], [Ap|AS] ) :- nd_predsubst( A,Pred,Ap ),nd_predsubst2( Pred, As, AS).
 nd_predsubst2( _, L, L ).
 
+compound_name_arity_safe(P,F,A):- compound(P) -> compound_name_arity(P,F,A) ; functor(P,F,A).
+
+
+compound_name_args_safe(P,F,A):- 
+  ( compound(P)
+   -> (compound(F) ->apply_term(F,A,P);compound_name_arguments(P,F,A))
+   ; ( atom(F)
+       -> (P=..[F|A])
+        ;  (apply_term(F,A,P)))),!.
+
+%% append_term( ?T, ?I, ?HEAD) is semidet.
+%
+% Append Term.
+%
+append_term(T,I,HEAD):-atom(T),!,HEAD=..[T,I],!.
+append_term(Call,E,CallE):-var(Call),!, must(compound(CallE)),CallE=..ListE,append(List,[E],ListE),Call=..List.
+append_term(Call,E,CallE):-must(compound(Call)), Call=..List, append(List,[E],ListE), CallE=..ListE.
+
+
+apply_term(T,LST,HEAD):- atom(T),!,HEAD=..[T|LST],!.
+apply_term(T,LST,HEAD):- HEAD=..[t,T|LST],!.
+apply_term(T,LST,HEAD):- HEAD==T,!,LST=[].
+apply_term(T,LST,HEAD):- (LST==[] -> HEAD= T ; (HEAD= T -> LST=[] )).
+
+
+%% append_termlist( ?Call, ?EList, ?CallE) is semidet.
+%
+% Append Termlist.
+%
+append_termlist(Call,EList,CallE):- var(Call),must(is_list(EList)),!,must((append([t,Call],EList,ListE), CallE=..ListE)).
+append_termlist(Call,EList,CallE):-must(is_list(EList)),!,must((Call=..LeftSide, append(LeftSide,EList,ListE), CallE=..ListE)).
+
+
+/*
+compound_name_args_safe(P,F,A):- var(P),
+   compound_name_arguments(P,F,A),!.
+compound_name_args_safe(P,F,A):- atom(F),P=..[F|A],!.
+compound_name_args_safe(B,P,ARGS):- ARGS==[],!,B=P.
+compound_name_args_safe(B,P,ARGS):- nonvar(ARGS), \+ is_list(ARGS),!,B=[P|ARGS].
+*/
 
 % ===================================================================
 % Substitution based on +PRED
@@ -587,7 +632,7 @@ pred_subst(_,A,_B,_C,A).
 nd_pred_subst(Pred,  Var, VarS,SUB,SUB ) :- call(Pred, Var,VarS),!.
 nd_pred_subst(_Pred,  Var, _,_,Var ) :- var(Var),!.
 
-nd_pred_subst(Pred,  P, X,Sk, P1 ) :- functor(P,_,N),nd_pred_subst1(Pred, X, Sk, P, N, P1 ).
+nd_pred_subst(Pred,  P, X,Sk, P1 ) :- compound_name_arity_safe(P,_,N),nd_pred_subst1(Pred, X, Sk, P, N, P1 ).
 
 nd_pred_subst1(_Pred, _,  _, P, 0, P  ).
 nd_pred_subst1(Pred, X, Sk, P, N, P1 ) :- N > 0, univ_term(P , [F|Args]),
@@ -660,7 +705,9 @@ subst(A,_B,_C,A).
 nd_subst(  Var, VarS,SUB,SUB ) :- Var==VarS,!.
 nd_subst(  Var, _,_,Var ) :- var(Var),!.
 
-nd_subst(  P, X,Sk, P1 ) :- functor(P,_,N),nd_subst1( X, Sk, P, N, P1 ).
+nd_subst(  P, X,Sk, P1 ) :- 
+  compound_name_arity_safe(P,_,N),
+  nd_subst1( X, Sk, P, N, P1 ).
 
 
 %= 	 	 
@@ -729,7 +776,9 @@ weak_nd_subst(        P, X,Sk,        P1 ) :- functor_catch(P,_,N),weak_nd_subst
 %
 weak_nd_subst1( _,  _, P, 0, P  ).
 
-weak_nd_subst1( X, Sk, P, N, P1 ) :- N > 0, P =.. [F|Args], weak_nd_subst2( X, Sk, Args, ArgS ),
+weak_nd_subst1( X, Sk, P, N, P1 ) :- N > 0, 
+  compound_name_arguments(P,F,Args),
+  weak_nd_subst2( X, Sk, Args, ArgS ),
             weak_nd_subst2( X, Sk, [F], [FS] ),
             univ_term(P1 , [FS|ArgS]).
 

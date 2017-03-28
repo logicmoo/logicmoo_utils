@@ -19,12 +19,10 @@
     call_diff/3,
     intersect_eq0/3,
     member_eq0/2,
-    shared_vars/3,
     collecting_list/4,
 
     start_listening/1,
     call_in_engine/1,
-    shared_vars/3,
     start_goal_saved1/0,
     wait_until_next_request/0,
     next_solution/0,
@@ -79,8 +77,6 @@ collecting_list(G,Vs,At,S):-
 
 
 :- nb_setval(query_result,sol(0,1,false,false)).
-
-shared_vars(Left,Right,SVG):-quietly(( term_variables(Left,Vs1),term_variables(Right,Vs2),intersect_eq0(Vs2,Vs1,SVG))).
 
 % sol(number,G,successfull,done)
 next_solution:- quietly(next_solution(How)),call(How).

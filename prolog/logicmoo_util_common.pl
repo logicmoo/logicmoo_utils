@@ -25,7 +25,8 @@
           all_source_file_predicates_are_exported/0,
           all_source_file_predicates_are_exported/2,
           add_file_search_path_safe/2,
-          startup_file/1
+          startup_file/1,
+          shared_vars/3
           ]).
 
 :- meta_predicate(ignore_not_not(0)).
@@ -35,6 +36,16 @@ normally(G):- locally(set_prolog_flag(runtime_debug,0),locally(set_prolog_flag(b
 
 maybe_rtrace(G):-catch(once(notrace(G)),E,(wdmsg(error_maybe_rtrace(E,G)),rtrace(G)))*->!;
   ((wdmsg(failed_maybe_rtrace(G)),ignore(catch(once(rtrace(G)),E,wdmsg(E -> G))))).
+
+ shared_vars(Left,Right,SVG):-quietly(( term_variables(Left,Vs1),term_variables(Right,Vs2),intersect_eq0(Vs2,Vs1,SVG))).
+
+ intersect_eq0([], _, []).
+ intersect_eq0([X|Xs], Ys, L) :-
+         (   member_eq0(X, Ys)
+         ->  L = [X|T],
+             intersect_eq0(Xs, Ys, T)
+         ;   intersect_eq0(Xs, Ys, L)
+         ).
 
 
 % sets upo to restore the subsystems
@@ -54,6 +65,7 @@ load_library_system(M,File):- during_boot(gripe_time(40,(if_file_exists(ensure_l
 :- dynamic(lmconf:saved_app_argv/1).
 app_argv(List):- lmconf:saved_app_argv(List).
 app_argv(List):- current_prolog_flag(os_argv,List).
+app_argv(Atom):- nonvar(Atom),!,app_argv(List),memberchk(Atom,List).
 
 % ======================================================
 % Add Extra file_search_paths
