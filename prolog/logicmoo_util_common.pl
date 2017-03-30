@@ -36,7 +36,8 @@
 :- meta_predicate(if_file_exists(:)).
 
 :- export(pack_upgrade/0).
-pack_upgrade:- call((user:use_module(library(prolog_pack)), forall(call(prolog_pack:current_pack(Pack)),maybe_pack_upgrade(Pack)))).
+pack_upgrade:- call((user:use_module(library(prolog_pack)),use_module(library(predicate_streams)), 
+  with_input_from_predicate({}/[X]>>X='Y',forall(call(prolog_pack:current_pack(Pack)),maybe_pack_upgrade(Pack))))).
 maybe_pack_upgrade(Pack):- pack_property(Pack, directory(PackDir)),\+ access_file(PackDir,write),!.
 maybe_pack_upgrade(Pack):- pack_upgrade(Pack).
 
