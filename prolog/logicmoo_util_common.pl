@@ -26,7 +26,7 @@
           all_source_file_predicates_are_exported/2,
           add_file_search_path_safe/2,
           startup_file/1,
-
+          pack_upgrade/0,
           if_file_exists/1,
           shared_vars/3
           ]).
@@ -331,9 +331,10 @@ iff_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
 % iff_defined(M:Goal,Else):- !, current_predicate(_,OM:Goal),!,OM:Goal;Else.
 %iff_defined(Goal,  Else):- current_predicate(_,OM:Goal)->OM:Goal;Else.
 
-
+:- if( (current_prolog_flag(os_argv,List), member('--upgrade',List)) ).
 :- if( \+ iff_defined(getuid(0),true)).
 :- whenever(run_network,pack_upgrade).
+:- endif.
 :- endif.
 
 
