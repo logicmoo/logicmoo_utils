@@ -96,6 +96,31 @@ absolute_directory(Dir,ABS):- absolute_file_name(library(Dir),ABS,[file_type(dir
 :- endif.
 
 
+/*
+system:logicmoo_user_stacks:- Six = 6, set_prolog_stack(global, limit(Six*10**9)),
+  set_prolog_stack(local, limit(Six*10**9)),set_prolog_stack(trail, limit(Six*10**9)).
+
+:- rtrace,during_boot(system:logicmoo_user_stacks).
+:- Six = 6, set_prolog_stack(global, limit(Six*10**9)),set_prolog_stack(local, limit(Six*10**9)),set_prolog_stack(trail, limit(Six*10**9)).
+
+%% set_prolog_stack_gb( +Six) is semidet.
+%
+% Set Prolog Stack Gb.
+%
+set_prolog_stack_gb(Six):-set_prolog_stack(global, limit(Six*10**9)),set_prolog_stack(local, limit(Six*10**9)),set_prolog_stack(trail, limit(Six*10**9)).
+set_prolog_stack_gb/1,
+
+:- set_prolog_stack(global, limit(32*10**9)).
+:- set_prolog_stack(local, limit(32*10**9)).
+:- set_prolog_stack(trail, limit(32*10**9)).
+:- module_transparent( (set_prolog_stack_gb)/1).
+:- during_boot(set_prolog_stack_gb(16)).
+
+
+*/
+
+
+
 % invert_varname(NV):-  ignore(((NV=(N=V), V='$VAR'(N)))).
 
 

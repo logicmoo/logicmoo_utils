@@ -199,6 +199,9 @@ compound_name_arity_safe/3
 :- current_prolog_flag(double_quotes,WAS),asserta(double_quotes_was_lib(WAS)).
 :- set_prolog_flag(double_quotes,string).
 
+:- set_prolog_flag(virtual_stubs,default).
+:- set_prolog_flag_until_eof(virtual_stubs,false).
+
 expire_tabled_list(_).
 
 %= 	 	 
@@ -586,7 +589,7 @@ compound_name_args_safe(P,F,A):-
   ( compound(P)
    -> (compound(F) ->apply_term(F,A,P);compound_name_arguments(P,F,A))
    ; ( atom(F)
-       -> (P=..[F|A])
+       -> (call(call, ( =.. ),P,[F|A]))
         ;  (apply_term(F,A,P)))),!.
 
 %% append_term( ?T, ?I, ?HEAD) is semidet.
@@ -615,7 +618,7 @@ append_termlist(Call,EList,CallE):-must(is_list(EList)),!,must((Call=..LeftSide,
 /*
 compound_name_args_safe(P,F,A):- var(P),
    compound_name_arguments(P,F,A),!.
-compound_name_args_safe(P,F,A):- atom(F),P=..[F|A],!.
+compound_name_args_safe(P,F,A):- atom(F),call(call,=..,P,[F|A]),!.
 compound_name_args_safe(B,P,ARGS):- ARGS==[],!,B=P.
 compound_name_args_safe(B,P,ARGS):- nonvar(ARGS), \+ is_list(ARGS),!,B=[P|ARGS].
 */
