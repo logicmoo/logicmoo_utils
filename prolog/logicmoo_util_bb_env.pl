@@ -64,7 +64,7 @@ inside_file_bb/1,
 lg_op2/3,
 ppi/1,
 pred_1_info/4,
-mpred_props/3,
+mpred_prop/3,
 push_prefix_arg/4,
 term_expansion_add_context/5
 ]).
