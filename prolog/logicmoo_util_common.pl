@@ -26,11 +26,14 @@
           all_source_file_predicates_are_exported/2,
           add_file_search_path_safe/2,
           startup_file/1,
+
+          if_file_exists/1,
           shared_vars/3
           ]).
 
 :- meta_predicate(ignore_not_not(0)).
 :- meta_predicate(maybe_rtrace(0)).
+:- meta_predicate(if_file_exists(:)).
 
 normally(G):- locally(set_prolog_flag(runtime_debug,0),locally(set_prolog_flag(bugger,false),G)).
 
@@ -51,7 +54,7 @@ maybe_rtrace(G):-catch(once(notrace(G)),E,(wdmsg(error_maybe_rtrace(E,G)),rtrace
 % sets upo to restore the subsystems
 :- meta_predicate(load_library_system(:)).
 load_library_system(M:File):- load_library_system(M,File). 
-load_library_system(user,File):- during_boot(gripe_time(40,(if_file_exists(ensure_loaded(system:File))))).
+load_library_system(user,File):-!, during_boot(gripe_time(40,(if_file_exists(ensure_loaded(system:File))))).
 load_library_system(M,File):- during_boot(gripe_time(40,(if_file_exists(ensure_loaded(M:File))))).
 :- system:import(load_library_system/2).
 
@@ -60,6 +63,18 @@ load_library_system(M,File):- during_boot(gripe_time(40,(if_file_exists(ensure_l
           all_source_file_predicates_are_transparent/2,
           all_source_file_predicates_are_exported/0,
           all_source_file_predicates_are_exported/2)).
+
+
+:- meta_predicate(if_file_exists(:)).
+
+%= 	 	 
+
+%% if_file_exists( ?M) is semidet.
+%
+% If File Exists.
+%
+if_file_exists(M:Call):- arg(1,Call,MMFile),strip_module(MMFile,_,File),
+ (exists_source(File)-> must(M:Call);fmt(not_installing(M,Call))),!.
 
 
 :- dynamic(lmconf:saved_app_argv/1).
