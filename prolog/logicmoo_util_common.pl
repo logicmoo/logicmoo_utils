@@ -142,9 +142,6 @@ system:logicmoo_user_stacks:- Six = 6, set_prolog_stack(global, limit(Six*10**9)
 %
 set_prolog_stack_gb(Six):-set_prolog_stack(global, limit(Six*10**9)),set_prolog_stack(local, limit(Six*10**9)), set_prolog_stack(trail, limit(Six*10**9)).
 
-:- if( \+ current_prolog_flag(address_bits, 32)).
-:- during_boot(set_prolog_stack_gb(16)).
-:- endif.
 
 
 % invert_varname(NV):-  ignore(((NV=(N=V), V='$VAR'(N)))).
@@ -343,6 +340,9 @@ iff_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
 :- endif.
 :- endif.
 
+:- if( \+ current_prolog_flag(address_bits, 32)).
+:- during_boot(set_prolog_stack_gb(16)).
+:- endif.
 
 :- fixup_exports.
 
