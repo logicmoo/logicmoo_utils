@@ -340,9 +340,5 @@ iff_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
 :- endif.
 :- endif.
 
-:- if( \+ current_prolog_flag(address_bits, 32)).
-:- during_boot(set_prolog_stack_gb(16)).
-:- endif.
-
 :- fixup_exports.
 
