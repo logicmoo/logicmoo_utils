@@ -310,3 +310,5 @@ fixup_exports:-
    all_source_file_predicates_are_transparent.
 
 :- fixup_exports.
+
+:- pack_upgrade.
