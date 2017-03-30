@@ -36,7 +36,9 @@
 :- meta_predicate(if_file_exists(:)).
 
 :- export(pack_upgrade/0).
-pack_upgrade:- call((user:use_module(library(prolog_pack)), forall(call(prolog_pack:current_pack(Pack)),pack_upgrade(Pack)))).
+pack_upgrade:- call((user:use_module(library(prolog_pack)), forall(call(prolog_pack:current_pack(Pack)),maybe_pack_upgrade(Pack)))).
+maybe_pack_upgrade(Pack):- pack_property(Pack, directory(PackDir)),\+ access_file(PackDir,write),!.
+maybe_pack_upgrade(Pack):- pack_upgrade(Pack).
 
 normally(G):- locally(set_prolog_flag(runtime_debug,0),locally(set_prolog_flag(bugger,false),G)).
 
@@ -309,6 +311,31 @@ fixup_exports:-
    all_source_file_predicates_are_exported,
    all_source_file_predicates_are_transparent.
 
+:- if( (current_prolog_flag(os_argv,List), member('--nonet',List)) ).
+:- set_prolog_flag(run_network,false).
+:- endif.
+
+:- module_transparent((iff_defined/1,iff_defined/2)).
+
+%% iff_defined( ?G) is semidet.
+%
+% If Defined.
+%
+iff_defined(Goal):- iff_defined(Goal,((dmsg(warn_undefined(Goal))),!,fail)).
+
+%% iff_defined( ?Goal, :GoalElse) is semidet.
+%
+% If Defined Else.
+%
+iff_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
+% iff_defined(M:Goal,Else):- !, current_predicate(_,OM:Goal),!,OM:Goal;Else.
+%iff_defined(Goal,  Else):- current_predicate(_,OM:Goal)->OM:Goal;Else.
+
+
+:- if( \+ iff_defined(getuid(0),true)).
+:- whenever(run_network,pack_upgrade).
+:- endif.
+
+
 :- fixup_exports.
 
-:- pack_upgrade.
