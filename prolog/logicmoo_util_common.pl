@@ -35,6 +35,9 @@
 :- meta_predicate(maybe_rtrace(0)).
 :- meta_predicate(if_file_exists(:)).
 
+:- export(pack_upgrade/0).
+pack_upgrade:- call((user:use_module(library(prolog_pack)), forall(call(prolog_pack:current_pack(Pack)),pack_upgrade(Pack)))).
+
 normally(G):- locally(set_prolog_flag(runtime_debug,0),locally(set_prolog_flag(bugger,false),G)).
 
 maybe_rtrace(G):-catch(once(notrace(G)),E,(wdmsg(error_maybe_rtrace(E,G)),rtrace(G)))*->!;
