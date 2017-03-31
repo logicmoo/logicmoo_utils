@@ -220,7 +220,10 @@ lastMember2(E,[H|List]):-lastMember2(E,List);E=H.
 %
 % If Is A True.
 %
-is_true(B):-B==true.
+is_true(B):-is_ftVar(B),!,fail.
+is_true(true):-!.
+is_true({B}):-is_true(B),!.
+is_true(props(_,NIL)):- NIL==[].
 is_true(B):-is_proof(B).
 
 
