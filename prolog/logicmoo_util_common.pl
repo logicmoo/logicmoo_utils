@@ -111,7 +111,7 @@ absolute_directory(Dir,ABS):- absolute_file_name(library(Dir),ABS,[file_type(dir
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  % :- set_prolog_flag(subclause_expansion,default).
  % :- set_prolog_flag(subclause_expansion,false).
- % :- set_prolog_flag(dialect_pfc,default).
+:- set_prolog_flag(dialect_pfc,default).
 :- set_prolog_flag(qcompile,part).
 :- set_prolog_flag(do_renames,never).
 :- if( \+ current_module(prolog_stack)).
