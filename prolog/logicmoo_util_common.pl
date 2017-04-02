@@ -215,7 +215,7 @@ system:after_boot(M:Goal):- add_history(M:Goal),system:assertz(lmconf:after_boot
 system:after_boot_sanity_test(M:Goal):- after_boot(M:sanity(M:Goal)).
 
 :- module_transparent(system:after_boot_call/1).
-system:after_boot_call(How):- forall(lmconf:after_boot_goal(M:Goal),once(ignore(call(How,M:Goal)))),threads.
+system:after_boot_call(How):- forall(lmconf:after_boot_goal(M:Goal),once(ignore(call(How,M:Goal)))).
 :- module_transparent(system:after_boot_call/0).
 system:after_boot_call:- baseKB:after_boot_call(maybe_rtrace).
 
