@@ -28,8 +28,8 @@
             ensure_struct/3,
             extract_struct_parameter/4,
             extract_struct_parameter/5,
-            gvar_get/2,
-            gvar_put/2,
+            hooked_gvar_get/2,
+            hooked_gvar_put/2,
             if_changed/3,
             is_point/1,
             key_match/2,
@@ -96,8 +96,8 @@
         ensure_struct/3,
         extract_struct_parameter/4,
         extract_struct_parameter/5,
-        gvar_get/2,
-        gvar_put/2,
+        hooked_gvar_get/2,
+        hooked_gvar_put/2,
         if_changed/3,
         is_point/1,
         key_match/2,
@@ -321,27 +321,28 @@ prop_get(_,     Dict, _ ):- ( \+ \+ Dict=[] ),!, fail.
 prop_get(Name, Struct,  Value):- prop_get_try(Name, Struct,  Value, _),!.
 prop_get(Name, Struct,  Value):- Name \= extraprops, prop_get(extraprops, Struct,  Extra),
                                               prop_get_try(Name, Extra,  Value, _),!.
-prop_get(Name,_Struct, Value):-gvar_get(Name,  Value).
+prop_get(Name,_Struct, Value):-hooked_gvar_get(Name,  Value).
 
 
 %= 	 	 
 
-%% gvar_get( ?VALUE1, ?VALUE2) is semidet.
+%% hooked_gvar_get( ?VALUE1, ?VALUE2) is semidet.
 %
 % Gvar Get.
 %
-gvar_get(Name,  Value):- sisctus_key(Name,N),nb_current(N,ValueV),!,Value=ValueV.
-gvar_get(Name,  Value):- nb_current(Name,Value).
+% hooked_gvar_get(Name,  Value):- sisctus_key(Name,N),nb_current(N,ValueV),!,Value=ValueV.
+hooked_gvar_get(Name,  Value):- nb_current(Name,Value),!.
+hooked_gvar_get(_Name,  []):-!.
 
 
 %= 	 	 
 
-%% gvar_put( ?VALUE1, ?VALUE2) is semidet.
+%% hooked_gvar_put( ?VALUE1, ?VALUE2) is semidet.
 %
 % Gvar Put.
 %
-gvar_put(Name,  Value):- sisctus_key(Name,N),nb_current(N,_),!,nb_setval(N,Value).
-gvar_put(Name,  Value):- nb_setval(Name,Value).
+% hooked_gvar_put(Name,  Value):- sisctus_key(Name,N),nb_current(N,_),!,nb_setval(N,Value).
+hooked_gvar_put(Name,  Value):- nb_setval(Name,Value).
 
 
 
@@ -362,7 +363,7 @@ key_match(Name,N):-atom(N), (Name=N -> true ; atom_concat(':',Name,N)).
 % Prop Get Try.
 %
 prop_get_try(_,     Dict, _  ,_ ):- ( \+ \+ Dict=[] ),!, fail.
-prop_get_try(Name, bb,   Value, gvar(Name,Value)):- !, must(gvar_get(Name,Value)).
+prop_get_try(Name, bb,   Value, gvar(Name,Value)):- !, must(hooked_gvar_get(Name,Value)).
 prop_get_try(_   , Atomic,  _  , _  ):- atomic(Atomic),!,fail.
 prop_get_try(Name, Dict,   Value, Ref):- prop_get_map(Name, Dict, Value),!,must(Dict=Ref).
 prop_get_try(Name, STRUCT,  Value, Ref):- STRUCT = mutable(Struct), !, prop_get_try(Name, Struct,  Value, Ref).
@@ -436,7 +437,7 @@ prop_set(Name,Dict,Value):-
 prop_set_try(Name,Dict,Value,_):- (var(Name);var(Dict);var(Value)),!,dtrace,trace_or_throw(var_prop_set(Name,Dict,Value)).
 prop_set_try(_,    Dict,   _, _):- ( \+ \+ Dict=[] ),!, fail.
 prop_set_try([Name],Dict,Value,NewDict):-!, prop_set_try(Name,Dict,Value, NewDict).
-prop_set_try(Name, bb,   Value, _):- !, gvar_put(Name,Value).
+prop_set_try(Name, bb,   Value, _):- !, hooked_gvar_put(Name,Value).
 prop_set_try(_,    Struct,   _, _):- ( \+ compound(Struct)),!,fail.
 prop_set_try([Name,Last],Dict,Value,WasNewDict):- prop_get(Name,Dict,SubDict),prop_set_try(Last,SubDict,Value,NewSubDict),NewSubDict\==SubDict,prop_set_try(Name,Dict,NewSubDict,WasNewDict),!.
 prop_set_try([Name|More],Dict,Value,WasNewDict):-prop_get(Name,Dict,SubDict),prop_set_try(More,SubDict,Value,NewDict),NewDict\==SubDict,prop_set_try(Name,Dict,NewDict,WasNewDict).

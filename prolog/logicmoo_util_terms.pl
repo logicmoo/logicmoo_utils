@@ -199,8 +199,6 @@ compound_name_arity_safe/3
 :- current_prolog_flag(double_quotes,WAS),asserta(double_quotes_was_lib(WAS)).
 :- set_prolog_flag(double_quotes,string).
 
-:- set_prolog_flag(virtual_stubs,default).
-:- set_prolog_flag_until_eof(virtual_stubs,false).
 
 expire_tabled_list(_).
 
@@ -1184,3 +1182,5 @@ call_no_cuts(CALL):-functor(CALL,F,A),functor(C,F,A),must(once(not(not(clause_sa
 % Logicmoo Library File Loaded.
 %
 logicmoo_library_file_loaded.
+
+:- fixup_exports.

@@ -89,7 +89,7 @@ if_file_exists(M:Call):- arg(1,Call,MMFile),strip_module(MMFile,_,File),
 :- dynamic(lmconf:saved_app_argv/1).
 app_argv(List):- lmconf:saved_app_argv(List).
 app_argv(List):- current_prolog_flag(os_argv,List).
-app_argv(Atom):- nonvar(Atom),!,app_argv(List),memberchk(Atom,List).
+app_argv(Atom):- atom(Atom),app_argv(List),memberchk(Atom,List).
 
 % ======================================================
 % Add Extra file_search_paths
@@ -314,10 +314,12 @@ fixup_exports:-
    all_source_file_predicates_are_exported,
    all_source_file_predicates_are_transparent.
 
-:- if( (current_prolog_flag(os_argv,List), member('--nonet',List)) ).
+:- if(app_argv('--nonet')).
 :- set_prolog_flag(run_network,false).
 :- endif.
 
+:- meta_predicate iff_defined(*).
+:- meta_predicate iff_defined(:,0).
 :- module_transparent((iff_defined/1,iff_defined/2)).
 
 %% iff_defined( ?G) is semidet.
@@ -334,10 +336,8 @@ iff_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
 % iff_defined(M:Goal,Else):- !, current_predicate(_,OM:Goal),!,OM:Goal;Else.
 %iff_defined(Goal,  Else):- current_predicate(_,OM:Goal)->OM:Goal;Else.
 
-:- if( (current_prolog_flag(os_argv,List), member('--upgrade',List)) ).
-:- if( \+ iff_defined(getuid(0),true)).
+:- if( app_argv('--upgrade') ).
 :- whenever(run_network,pack_upgrade).
-:- endif.
 :- endif.
 
 :- fixup_exports.

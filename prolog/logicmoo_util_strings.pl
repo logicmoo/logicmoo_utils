@@ -267,7 +267,8 @@
         double_quotes_was_strings/1,
         to_string_hook/3.
 
-:- set_prolog_flag_until_eof(virtual_stubs,false).
+:- system:use_module(library('file_scope')).
+
 
 :- meta_predicate toCase(2,?,?).
 :- meta_predicate toCaseSplit(?,2,?,?).

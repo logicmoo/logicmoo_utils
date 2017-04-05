@@ -11,19 +11,18 @@
 % Licience: LGPL
 % ===================================================================
 */
-:- if(\+current_predicate(_:combine_logicmoo_utils/0)).
 :- module(logicmoo_util_bb_env, [
 abolish_and_make_static/2,
 add_push_prefix_arg/4,
 % bb:'$sourcefile_info_env'/1,
-% baseKB:decl_env_mepred/2, a-box:defaultTBoxMt/1,
+% baseKB:decl_env_mpred/2, a-box:defaultTBoxMt/1,
 clause_to_hb/3,
 clause_to_hb0/3,
-decl_env_mepred/2,
-decl_env_mepred_dom/2,
-decl_env_mepred_fa/4,
-decl_env_mepred_real/4,
-decl_env_mepred_task/2,
+decl_env_mpred/2,
+decl_env_mpred_dom/2,
+decl_env_mpred_fa/4,
+decl_env_mpred_real/4,
+decl_env_mpred_task/2,
 do_prefix_arg/4,
 env_1_info/2,
 env_assert/1,
@@ -64,10 +63,11 @@ inside_file_bb/1,
 lg_op2/3,
 ppi/1,
 pred_1_info/4,
-mpred_prop/3,
 push_prefix_arg/4,
 term_expansion_add_context/5
 ]).
+
+:- kb_shared(baseKB:mpred_prop/3).
 
  :- meta_predicate % cmt :-
         env_call(+),
@@ -82,7 +82,7 @@ term_expansion_add_context/5
 %:- export((clause_to_hb0/3, env_mpred_op_1/3, hb_to_clause_env0/3, lg_op2/3)).
 %:- (dynamic bb:'$sourcefile_info_env'/1, a-box:defaultTBoxMt/1, env_push_args/4, env_source_file/1, in_dyn/2).
 %:- kb_shared((bb:'$sourcefile_info_env'/1, abox:defaultTBoxMt/1, env_push_args/4, env_source_file/1, in_dyn/2)).
-:- endif.
+
 
 
 
@@ -123,14 +123,14 @@ env_retractall(P):- must(env_mpred_op(retractall,P)),!.
 */
 
 env_clear(baseKB(Dom)):-nonvar(Dom),!,env_clear(Dom).
-env_clear(Dom):- forall(mpred_prop(F,A,Dom),env_mpred_op(retractall(F/A))).
+env_clear(Dom):- forall(baseKB:mpred_prop(F,A,Dom),env_mpred_op(retractall(F/A))).
 env_mpred_op(OP_P):- OP_P=..[OP,P],env_mpred_op(OP,P).
 
 :- module_transparent(env_mpred_op/2).
 :- meta_predicate env_mpred_op(1,:).
 env_mpred_op(OP,P):- var(OP),!,P.
-%TODO env_mpred_op(OP,P):- mpred_prop(F,A,P),!,forall(mpred_prop(F,A,P),(nop(dtrace),env_mpred_op(OP,F/A) )).
-%TODO env_mpred_op(OP,F):- mpred_prop(F,_,_),!,forall(mpred_prop(F,A,_),(nop(dtrace),env_mpred_op(OP,F/A) )).
+%TODO env_mpred_op(OP,P):- baseKB:mpred_prop(F,A,P),!,forall(baseKB:mpred_prop(F,A,P),(nop(dtrace),env_mpred_op(OP,F/A) )).
+%TODO env_mpred_op(OP,F):- baseKB:mpred_prop(F,_,_),!,forall(baseKB:mpred_prop(F,A,_),(nop(dtrace),env_mpred_op(OP,F/A) )).
 env_mpred_op(OP,F/A):-integer(A),atom(F),!,functor(P,F,A),!,env_mpred_op(OP,P).
 env_mpred_op(OP,P):- t_l:push_env_ctx, do_prefix_arg(P, ZZ, PP, _Type),P\==PP,!,get_env_ctx(ZZ),call(OP,/*ocluser*/ocl:PP).
 env_mpred_op(OP,P):- functor_h(P,F,A),must(get_mpred_stubType(F,A,ENV)),!,env_mpred_op(ENV,OP,P).
@@ -145,21 +145,22 @@ in_dyn(_DB,Call):- functor(Call,F,A), get_mp_arity(F,A), predicate_property(Call
 in_dyn_pred(_DB,Call):- var(Call),!,get_mp_arity(F,A),functor(Call,F,A),( predicate_property(Call,_) -> loop_check(Call)).
 in_dyn_pred(_DB,Call):- functor(Call,F,A), get_mp_arity(F,A), predicate_property(Call,_), !, loop_check(Call).
 
+:- dynamic(get_mp_arity/2).
 
 get_mp_arity(F,A):- defaultAssertMt(M),if_defined(M:arity(F,A)).
-get_mp_arity(F,A):- call_u(defaultTBoxMt(M)),if_defined(M:arity(F,A)).
-get_mp_arity(F,A):- call_u(defaultAssertMt(M)),M:mpred_arity(F,A).
+get_mp_arity(F,A):- get_current_default_tbox(M),if_defined(M:arity(F,A)).
+get_mp_arity(F,A):- arity_no_bc(F,A).
 
-mpred_prop(F,A,Prop):- call_u(defaultTBoxMt(M)),M:isa(F,Prop),get_mp_arity(F,A).
+% baseKB:mpred_prop(F,A,Prop):- get_current_default_tbox(M),M:isa(F,Prop),get_mp_arity(F,A).
 
 get_mpred_stubType(_,_,dyn):-!.
 get_mpred_stubType(F,A,StubOut):-    
-   mpred_prop(F,A,stubType(Stub)),!,must(StubIn=Stub),
+   baseKB:mpred_prop(F,A,stubType(Stub)),!,must(StubIn=Stub),
    % PREVENTS FAILURE
    nop(StubIn==dyn->true;dmsg(get_mpred_stubType(F,A,StubIn))),
    StubOut=dyn.
 
-get_mpred_stubType(F,A,dyn):-mpred_prop(F,A,dyn).
+get_mpred_stubType(F,A,dyn):-baseKB:mpred_prop(F,A,dyn).
 get_mpred_stubType(_,_,dyn).
 
 :- ain(isa_kb:box_prop(l)).
@@ -169,69 +170,76 @@ get_mpred_stubType(_,_,dyn).
 
 :- thread_local(t_l:env_ctx/2).
 
-:- export(decl_env_mepred/2).
-%:-module_transparent(decl_env_mepred/2).
+:- export(decl_env_mpred/2).
+%:-module_transparent(decl_env_mpred/2).
 
-decl_env_mepred(_,[]):-!.
-decl_env_mepred([],_):-!.
-decl_env_mepred(Props,[H|T]):-!,decl_env_mepred(Props,H),decl_env_mepred(Props,T).
-decl_env_mepred(Props,(H,T)):-!,decl_env_mepred(Props,H),decl_env_mepred(Props,T).
+decl_env_mpred(_,[]):-!.
+decl_env_mpred([],_):-!.
+decl_env_mpred(Props,[H|T]):-!,decl_env_mpred(Props,H),decl_env_mpred(Props,T).
+decl_env_mpred(Props,(H,T)):-!,decl_env_mpred(Props,H),decl_env_mpred(Props,T).
 
 
-decl_env_mepred([H],Pred):-!,decl_env_mepred(H,Pred).
-decl_env_mepred([H|T],Pred):-!,decl_env_mepred(H,Pred),decl_env_mepred(T,Pred).
-decl_env_mepred((H,T),Pred):-!,decl_env_mepred(H,Pred),decl_env_mepred(T,Pred).
+decl_env_mpred([H],Pred):-!,decl_env_mpred(H,Pred).
+decl_env_mpred([H|T],Pred):-!,decl_env_mpred(H,Pred),decl_env_mpred(T,Pred).
+decl_env_mpred((H,T),Pred):-!,decl_env_mpred(H,Pred),decl_env_mpred(T,Pred).
 
-decl_env_mepred(baseKB(KB),_):- ain(isa_abox(KB)),fail.
-decl_env_mepred(stubType(dyn),Pred):-!, decl_env_mepred(dyn,Pred).
+decl_env_mpred(baseKB(KB),_):- ain(isa_abox(KB)),fail.
+decl_env_mpred(stubType(dyn),Pred):-!, decl_env_mpred(dyn,Pred).
 
-decl_env_mepred(CMPD,Pred):-  fail, compound(CMPD),CMPD=..[_|CMPDL],
-   decl_env_mepred(CMPDL,Pred),
+decl_env_mpred(CMPD,Pred):-  fail, compound(CMPD),CMPD=..[_|CMPDL],
+   decl_env_mpred(CMPDL,Pred),
    get_functor(Pred,F,A),
-   decl_env_mepred_fa(CMPD,Pred,F,A),!.
+   decl_env_mpred_fa(CMPD,Pred,F,A),!.
 
-decl_env_mepred(Prop,Pred):- get_functor(Pred,F,A),
-   decl_env_mepred_fa(Prop,Pred,F,A).
+decl_env_mpred(Prop,Pred):- get_functor(Pred,F,A),
+   decl_env_mpred_fa(Prop,Pred,F,A).
 
-decl_env_mepred_dom(Props,Preds):-
+decl_env_mpred_dom(Props,Preds):-
  must(locally(t_l:env_ctx(dom,_CurrentDomain), 
-    decl_env_mepred([dom|Props],Preds))).
-decl_env_mepred_task(Props,Preds):-
+    decl_env_mpred([dom|Props],Preds))).
+decl_env_mpred_task(Props,Preds):-
  must(locally(t_l:env_ctx(task,_CurrentTask), 
-    decl_env_mepred([task|Props],Preds))).
+    decl_env_mpred([task|Props],Preds))).
 
 
+% abolish_and_make_static(_F,_A):-!.
 abolish_and_make_static(F,A):-
-  must_det_l((abolish(F,A),
-  retractall(get_mp_arity(F,A)),
+  must_det_l((
+   retractall(get_mp_arity(F,A)),
    retractall(arity(F,A)),
-   retractall(mpred_prop(F,A,_,)),
-  functor(H,F,A),asserta((H:-trace_or_throw(H))),compile_predicates([F/A]),lock_predicate(H))).
+   retractall(baseKB:mpred_prop(F,A,_)),
+  functor(H,F,A),
+  abolish(F,A),
+  asserta((H:-trace_or_throw(H))),
+  compile_predicates([F/A]),lock_predicate(H))).
 
-decl_env_mepred_fa(Prop,_Pred,F,A):- t_l:push_env_ctx,    
-   t_l:env_ctx(Type,Prefix),A1 is A+1,!,
-  must_det_l((functor(Pred1,F,A1),functor(Pred,F,A1),
-   add_push_prefix_arg(Pred,Type,Prefix,Pred1),
-   decl_env_mepred_real(Prop,Pred1,F,A1),!,
-   abolish_and_make_static(F,A),!,
-   if_defined(baseKB:arity(F,AA)),
-   must(arity(F,A1)==arity(F,AA)))).
-decl_env_mepred_fa(Prop,Pred,F,A):-
-   decl_env_mepred_real(Prop,Pred,F,A).
+decl_env_mpred_fa(Prop,_Pred,F,A):-  t_l:push_env_ctx,    
+   t_l:env_ctx(Type,Prefix),A1 is A+1,
+  must_det_l((functor(Pred1,F,A1),functor(Pred,F,A),
+   must(add_push_prefix_arg(Pred,Type,Prefix,Pred1)),
+   abolish_and_make_static(F,A),
+   must((decl_env_mpred_real(Prop,Pred1,F,A1),
+   if_defined(arity(F,AA)),
+   must(arity(F,A1)==arity(F,AA)))))),!.
+decl_env_mpred_fa(Prop,Pred,F,A):-
+   decl_env_mpred_real(Prop,Pred,F,A).
 
-decl_env_mepred_real(Prop,Pred,F,A):- 
+decl_env_mpred_real(Prop,Pred,F,A):- 
   (Prop==task->(thread_local(/*ocluser*/ocl:F/A));true),
   (Prop==dyn->(dynamic(/*ocluser*/ocl:F/A));true),
   (Prop==cache->'$set_pattr'(ocl:Pred, pred, (volatile));true),
   (Prop==dom->(multifile(/*ocluser*/ocl:F/A));true),
   baseKB:export(/*ocluser*/ocl:F/A),
   if_defined(decl_mpred(Pred,Prop),ain(baseKB:box_prop(F,Prop))),
-  ain(isa_kb:box_prop(Prop)), ain(get_mp_arity(F,A)),ain(arity(F,A)),!,
-  dtrace,ain(mpred_prop(F,A,Prop)).
+  ain(isa_kb:box_prop(Prop)), 
+  ain(get_mp_arity(F,A)),
+  ain(arity(F,A)),!,
+  % dtrace,
+  ain(baseKB:mpred_prop(F,A,Prop)).
 
 
 env_learn_pred(_,_):-nb_getval(disabled_env_learn_pred,true),!.
-env_learn_pred(ENV,P):-baseKB:decl_env_mepred(ENV,P).
+env_learn_pred(ENV,P):-baseKB:decl_env_mpred(ENV,P).
 
 env_recorded(call,Val) :- recorded(Val,Val).
 env_recorded(assert, Val) :- recordz(Val,Val).
@@ -249,9 +257,10 @@ lg_op2(_,OP,OP).
 :- meta_predicate env_shadow(1,?).
 
 env_mpred_op(_,_,[]):-!.
-env_mpred_op(ENV,OP,F/A):- dtrace,var(A),!, forall(mpred_prop(F,A,ENV),((functor(P,F,A),env_mpred_op(ENV,OP,P)))).
+env_mpred_op(ENV,OP,F/A):- % dtrace,
+   var(A),!, forall(baseKB:mpred_prop(F,A,ENV),((functor(P,F,A),env_mpred_op(ENV,OP,P)))).
 env_mpred_op(ENV,retractall,F/A):-functor(P,F,A),!,env_mpred_op(ENV,retractall,P).
-% env_mpred_op(ENV,OP,Dom):- isa_kb:box_prop(Dom),!,forall(mpred_prop(F,A,Dom),env_mpred_op(ENV,OP,F/A)).
+% env_mpred_op(ENV,OP,Dom):- isa_kb:box_prop(Dom),!,forall(baseKB:mpred_prop(F,A,Dom),env_mpred_op(ENV,OP,F/A)).
 % env_mpred_op(ENV,OP,F/A):-!, functor(P,F,A), (((get_mpred_stubType(F,A,LG2),LG2\==ENV)  -> env_mpred_op(LG2,OP,P) ; env_mpred_op(ENV,OP,P) )).
 % env_mpred_op(_,retractall,P):-functor_h(P,F,A),must(get_mpred_stubType(F,A,_)),fail.
 % env_mpred_op(ENV,OP,P):- functor_h(P,F,A),  (((get_mpred_stubType(F,A,LG2),LG2\==ENV)  -> env_mpred_op(LG2,OP,P) ; fail )).
@@ -296,7 +305,7 @@ env_info(Pred,Infos):- (nonvar(Pred)-> env_predinfo(Pred,Infos) ; (get_mp_arity(
 
 
 harvest_preds(Type,Functors):-
- findall(functor(P,F,A),((get_mp_arity(F,A),(mpred_prop(F,A,Type);Type=F),functor(P,F,A))),Functors).
+ findall(functor(P,F,A),((get_mp_arity(F,A),(baseKB:mpred_prop(F,A,Type);Type=F),functor(P,F,A))),Functors).
 
 env_1_info(Type,[predcount(NC)|Infos]):- 
  gensym(env_1_info,Sym),flag(Sym,_,0),
@@ -311,18 +320,17 @@ env_1_info(Type,[predcount(NC)|Infos]):-
 env_predinfo(PIn,Infos):- functor_h(PIn,F,A),get_mp_arity(F,A),functor(P,F,A),findall(Info,pred_1_info(P,F,A,Info),Infos).
 
 pred_1_info(P,_,_,Info):- member(Info:Prop,[count(NC):number_of_clauses(NC),mf:multifile,dyn:dynamic,vol:volitile,local:local]),predicate_property(P,Prop).
-pred_1_info(_,F,A,Info):- mpred_prop(F,A,Info).
+pred_1_info(_,F,A,Info):- baseKB:mpred_prop(F,A,Info).
 pred_1_info(_,F,A,F/A).
 
 
 :- meta_predicate(env_consult(:)).
 env_consult(M:File):- \+ exists_file(File),!,forall(filematch(File,FM),env_consult(M:FM)).
-env_consult(M:File):- ain(env_source_file(File)),
-   locally(((M:term_expansion(A,B):- t_l:push_env_ctx, env_term_expansion(A,B))),M:consult(File)).
+env_consult(M:File):- ain(env_source_file(File)), locally(((M:term_expansion(A,B):- t_l:push_env_ctx, env_term_expansion(A,B))),M:consult(File)).
 
 
-env_set(Call):-Call=..[P,V],!,gvar_put(P,V).
-env_get(Call):-Call=..[P,V],!,gvar_get(P,V).
+env_set(Call):-Call=..[P,V],!,hooked_gvar_put(P,V).
+env_get(Call):-Call=..[P,V],!,hooked_gvar_get(P,V).
 
 
 env_meta_term(t(env_call,env_assert,env_asserta,env_retract,env_retractall)).
@@ -331,20 +339,30 @@ env_meta_term(t(env_call,env_assert,env_asserta,env_retract,env_retractall)).
 
 env_push_argsA(Pred, Type,Prefix,Pred1 ):-t_l:push_env_ctx, env_push_args(Pred, Type,Prefix,Pred1 ).
 
-do_prefix_arg(Pred,Prefix,Pred ,Type ) :-env_push_argsA(_,  Type,Prefix,Pred ),!.
-do_prefix_arg(Pred,Prefix,Pred1 ,Type ) :-env_push_argsA(Pred, Type,Prefix,Pred1 ),!.
-do_prefix_arg(M:Pred,Prefix,M:Pred1, Type):-do_prefix_arg(Pred,Prefix,Pred1,Type),!.
+
+
+do_prefix_arg(Pred,Prefix,Pred1 ,Type ):- do_prefix_arg0(Pred,Prefix,Pred1 ,Type ),!.
+do_prefix_arg(M:Pred,Prefix,M:Pred1 ,Type ):- do_prefix_arg0(Pred,Prefix,Pred1 ,Type ),!.
+
+do_prefix_arg0(Pred,Prefix,Pred ,Type ) :-env_push_argsA(_,  Type,Prefix,Pred ),!.
+do_prefix_arg0(Pred,Prefix,Pred1 ,Type ) :-env_push_argsA(Pred, Type,Prefix,Pred1 ),!.
+% do_prefix_arg(M:Pred,Prefix,M:Pred1, Type):- !,do_prefix_arg(Pred,Prefix,Pred1,Type),!.
+
 
 push_prefix_arg(Pred,Type,Prefix,Pred ):-env_push_argsA(_,Type,Prefix,Pred),!,must(compound(Pred)).
 push_prefix_arg(Pred,Type,Prefix,Pred1):-env_push_argsA(Pred,Type,Prefix,Pred1),!.
 
-add_push_prefix_arg((F/A),Type,Prefix,Pred1):-must(integer(A)),!,functor(Pred,F,A),add_push_prefix_arg(Pred,Type,Prefix,Pred1).
-add_push_prefix_arg(Pred,Type,Prefix,Pred1):- must(atom(Type)),Pred=..[F|ARGS],Pred1=..[F,Prefix|ARGS],
+add_push_prefix_arg(Pred,Type,Prefix,Pred1):- must_det(add_push_prefix_arg0(Pred,Type,Prefix,OUT)),must(Pred1=OUT).
+add_push_prefix_arg0((F/A),Type,Prefix,Pred1):- !, sanity((atom(F),integer(A))),functor(Pred,F,A),
+   add_push_prefix_arg0(Pred,Type,Prefix,Pred1).
+add_push_prefix_arg0(Pred,Type,Prefix,Pred1):- sanity(atom(Type)),Pred=..[F|ARGS],Pred1=..[F,Prefix|ARGS],
    ain(env_push_args(Pred,Type,Prefix,Pred1)),!.
 
 
 term_expansion_add_context(_NeedIt,_Ctx,_,B,B):- var(B),!.
-term_expansion_add_context( NeedIt, Ctx,Outter,B,BB):- Outter \== (/), do_prefix_arg(B,Ctx,BB,_Type),!,ignore(NeedIt=Outter).
+term_expansion_add_context( NeedIt, Ctx,Outter,B,BB):- Outter \== (/), 
+   do_prefix_arg(B,Ctx,BB,_Type),!,ignore(NeedIt=Outter).
+
 term_expansion_add_context(_NeedIt,_Ctx,_,B,B):- \+compound(B),!.
 term_expansion_add_context(_NeedIt,_Ctx,_,DECL,DECLN):- 
     DECL  =..[DF,(F/A)],number(A),atom(F),functor(H,F,A),
@@ -370,18 +388,23 @@ clause_to_hb0((H),H,true).
 env_term_expansion(HB,HB):- \+ compound(HB),!.
 env_term_expansion(HB,HB):- is_ftVar(HB),!.
 env_term_expansion(HB,OUT):- 
- must_det_l((
-   must_det_l((
+ %must_det_l
+ ((
+   %must_det_l
+   ((
    clause_to_hb(HB,H,B),
    term_expansion_add_context(BNeedIt,Ctx,(:-),B,BB),
    term_expansion_add_context(HNeedIt,Ctx,(:-),H,HH),
    ((var(BNeedIt),functor(HH,F,A),\+functor(H,F,A)) -> ((get_env_ctx(Ctx),nonvar(Ctx))) ; true),
-   (((nonvar(HNeedIt);nonvar(BNeedIt)),var(Ctx)) -> BBB = (get_env_ctx(Ctx),BB) ; BBB = BB))),
+   (((nonvar(HNeedIt);nonvar(BNeedIt)),var(Ctx)) -> BBB = (get_env_ctx(Ctx),BB) ; BBB = BB))))),
    (BBB\==B ; H\==HH),
-   ((dmsg((old(H):-old,(B))),dmsg((HH:-BBB)))),
+   must_det_l((
+     dmsg((old(H):-B)),dmsg((new(HH):-BBB)),
      hb_to_clause_env(HH,BBB,OUT))),!.
 
-env_term_expansion(HB,(H:-B)):-  HB\=(:-_), end_of_file\==HB, clause_to_hb(HB,H,B),
+env_term_expansion(HB,(H:-B)):-  HB\=(:-_),
+    end_of_file\==HB, 
+    clause_to_hb(HB,H,B),
    _ALT = bb:'$sourcefile_info_env'(OUT),
    must(ain((H:-B))),
    hb_to_clause_env(H,B,OUT),!.
@@ -394,7 +417,7 @@ get_env_source_ctx(A,Active):-
     clause(domain_name(A),true,Ref),
     (clause_property(Ref,file(From)) -> (env_source_file(From) -> Active = loaded(From) ;  Active = loading(From)) ; Active = memory).
 
-get_env_ctx(A):- gvar_get(domain_name,A),!.
+get_env_ctx(A):- hooked_gvar_get(domain_name,A),!.
 get_env_ctx(A):- 
     get_env_expected_ctx(Current),
     get_env_source_ctx(A, Active),
@@ -415,7 +438,8 @@ user:term_expansion(A,B):- nonvar(A), A\==end_of_file, inside_file_bb(ocl),
 
 */
 
-:- env_term_expansion((mpred_undo(Why,nt(Head,Condition,Body)) :-
+:- env_term_expansion((
+  mpred_undo(Why,nt(Head,Condition,Body)) :-
   % undo a negative trigger.
   !,
   (retract_i(nt(Head,Condition,Body))
@@ -453,3 +477,5 @@ maybe_show_env_mpred_op(G):- t_l:db_spy -> show_call(why,G); G.
 :- meta_predicate(maybe_show_env_mpred_op(0)).
 
 */
+
+:- fixup_exports.

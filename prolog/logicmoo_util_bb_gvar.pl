@@ -7,6 +7,8 @@
 
 :- endif.
 
+:- fixup_exports.
+
 end_of_file.
 
 :- use_module(library(rbtrees)).
@@ -119,4 +121,4 @@ inside_queue(Q,E) :- %  trace_or_throw(inside_queue(Q,E)),!,fail.
 pred_info(H,Props):- get_functor(H,F,_),findall(PP,call_u(mpred_isa(F,PP)),Props).
 
 
-
+:- fixup_exports.
