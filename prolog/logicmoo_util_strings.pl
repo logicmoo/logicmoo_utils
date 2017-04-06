@@ -267,7 +267,7 @@
         double_quotes_was_strings/1,
         to_string_hook/3.
 
-:- system:use_module(library('file_scope')).
+:- user:use_module(library('file_scope')).
 
 
 :- meta_predicate toCase(2,?,?).

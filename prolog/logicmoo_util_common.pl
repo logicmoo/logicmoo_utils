@@ -115,7 +115,7 @@ absolute_directory(Dir,ABS):- absolute_file_name(library(Dir),ABS,[file_type(dir
 :- set_prolog_flag(qcompile,part).
 :- set_prolog_flag(do_renames,never).
 :- if( \+ current_module(prolog_stack)).
-:- system:use_module(library(prolog_stack)).
+:- user:use_module(library(prolog_stack)).
  prolog_stack:stack_guard(none).
 :- endif.
 
