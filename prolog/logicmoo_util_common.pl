@@ -238,7 +238,9 @@ sub_argv([X,Y]):-current_prolog_flag(os_argv,[_|List]),append(_,[X,Y|_],List).
 qsave_lm:-  is_startup_file(X),!,atom_concat(X,'.o',F),!,qsave_lm(F).
 qsave_lm:- qsave_lm(qsaved_lm),!.
 qsave_lm(LM):- \+ access_file(LM,write),!,debug(logicmoo,'~N% NO FILE WRITE ~p~n',[qsave_lm(LM)]).
-qsave_lm(LM):- statistics(globallimit,G),statistics(locallimit,L),statistics(traillimit,T),
+qsave_lm(_):- predicate_property(kb7166:assertion_content(_,_,_),number_of_clauses(N)),N>0,!.
+qsave_lm(LM):-qsave_lm0(LM),!.
+qsave_lm0(LM):- statistics(globallimit,G),statistics(locallimit,L),statistics(traillimit,T),
   X = qsave_program(LM,[toplevel(logicmoo_toplevel),
    goal(logicmoo_goal),op(save),
        stand_alone(false),
