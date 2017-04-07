@@ -26,9 +26,9 @@
           all_source_file_predicates_are_exported/2,
           add_file_search_path_safe/2,
           startup_file/1,
-          pack_upgrade/0,
           if_file_exists/1,
           set_prolog_stack_gb/1,
+          pack_upgrade/0,run_prologmud/0,init_logicmoo/0,
           shared_vars/3
           ]).
 
@@ -341,6 +341,43 @@ iff_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
 :- if( app_argv('--upgrade') ).
 :- whenever(run_network,pack_upgrade).
 :- endif.
+
+:- dynamic(lmcache:called_startup_goal/1).
+:- volatile(lmcache:called_startup_goal/1).
+has_ran_once(G):- lmcache:called_startup_goal(G),!.
+has_ran_once(G):- assert(lmcache:called_startup_goal(G)),!,fail.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% [Required/Optional]  Ensures...
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:- multifile(system:'$init_goal'/3).
+:- dynamic(system:'$init_goal'/3).
+:- module_transparent(system:'$init_goal'/3).
+
+initialization_after_boot(Phase):- 
+  dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),
+  dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),
+  dmsg(initialization_after_boot(Phase)),
+  dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),
+  dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),!,
+  after_boot_call.
+
+:- (is_startup_file(X),absolute_file_name(X,F)) -> 
+   assertz(system:'$init_goal'(F,logicmoo_util_common:initialization_after_boot(after(X)),F:9999)) 
+   ; true.
+
+% throw(is_startup_file(unknown)).
+
+:- initialization(initialization_after_boot(restore),restore).
+% [run_mud_server].
+:- multifile
+    prolog:message//1.
+
+prolog:message(welcome) -->  {initialization_after_boot(welcome),fail}.
+
+run_prologmud :- ensure_loaded(library(prologmud_sample_games/run_mud_server)),initialization_after_boot(run_prologmud).
+init_logicmoo :- ensure_loaded(library(logicmoo_repl)),initialization_after_boot(init_logicmoo).
 
 :- fixup_exports.
 
