@@ -296,8 +296,8 @@ disjuncts_to_list(Lit,[Lit]).
 % Conjuncts Converted To List.
 %
 conjuncts_to_list(Var,[Var]):-is_ftVar(Var),!.
-conjuncts_to_list(true,[]).
-conjuncts_to_list([],[]).
+conjuncts_to_list(true,[]):-!.
+conjuncts_to_list([],[]):-!.
 conjuncts_to_list('&'(A,B),ABL):-!,
   conjuncts_to_list(A,AL),
   conjuncts_to_list(B,BL),

@@ -178,7 +178,7 @@ extend_varnames(ExpandedBindings):-
 :- user:multifile(expand_query/4).
 
 
-user:expand_query(Goal, _Expanded, Bindings, _ExpandedBindings):-
+user:expand_query(Goal, _Expanded, Bindings, _ExpandedBindings):-        fail,
    ignore_not_not((once(( nb_linkval_current('$expand_query',Goal-Bindings),
     append(Bindings,[],Bindings),
     % ignore_not_not(nortrace),ignore_not_not(notrace),
