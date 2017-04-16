@@ -1607,7 +1607,7 @@ ommitable(O):- string_to_atom(O,A),atom_length(A,L),!,L<2.
 %
 % Atom Subst.
 %
-atom_subst(A,F,R,K):-replace_in_string(F,R,A,K),!.
+atom_subst(A,F,R,KA):-replace_in_string(F,R,A,K),!,string_to_atom(K,KA),!.
 
 
 
