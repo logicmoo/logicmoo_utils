@@ -18,7 +18,7 @@
 
 % We save the name of the module loading this module
 :- module(logicmoo_util_common,[add_history/1,add_history0/1,make_historial/2,
-   maybe_rtrace/1,normally/1,var_non_attvar/1,
+   maybe_notrace/1,normally/1,var_non_attvar/1,
    qsave_lm/0,qsave_lm/1,ignore_not_not/1,load_library_system/1,fixup_exports/0,
           all_source_file_predicates_are_transparent/0,
           all_source_file_predicates_are_transparent/2,
@@ -33,7 +33,7 @@
           ]).
 
 :- meta_predicate(ignore_not_not(0)).
-:- meta_predicate(maybe_rtrace(0)).
+:- meta_predicate(maybe_notrace(0)).
 :- meta_predicate(if_file_exists(:)).
 
 :- export(pack_upgrade/0).
@@ -46,10 +46,14 @@ maybe_pack_upgrade(Pack):- pack_upgrade(Pack).
 
 normally(G):- locally(set_prolog_flag(runtime_debug,0),locally(set_prolog_flag(bugger,false),G)).
 
-maybe_rtrace(G):-catch(once(notrace(G)),E,(wdmsg(error_maybe_rtrace(E,G)),rtrace(G)))*->!;
-  ((wdmsg(failed_maybe_rtrace(G)),ignore(catch(once(rtrace(G)),E,wdmsg(E -> G))))).
+maybe_notrace(G):- once(G),!.
+maybe_notrace(G):- nodebug,notrace,stop_rtrace,nortrace,
+  rtrace((wdmsg(retry_maybe_notrace(G)),debug,trace,G,break,wdmsg(tried_maybe_notrace(G)))),!,fail.
+  
 
- shared_vars(Left,Right,SVG):-quietly(( term_variables(Left,Vs1),term_variables(Right,Vs2),intersect_eq0(Vs2,Vs1,SVG))).
+% maybe_notrace(G):- catch(once(notrace(G)),E,(wdmsg(error_maybe_notrace(E,G)),rtrace(G)))-> ! ;((wdmsg(failed_maybe_notrace(G)),ignore(catch(once(rtrace(G)),E,wdmsg(E -> G)))).
+
+shared_vars(Left,Right,SVG):-quietly(( term_variables(Left,Vs1),term_variables(Right,Vs2),intersect_eq0(Vs2,Vs1,SVG))).
 
  intersect_eq0([], _, []).
  intersect_eq0([X|Xs], Ys, L) :-
@@ -206,7 +210,7 @@ user:expand_answer(Bindings, ExpandedBindings):-
 system:whenever(Flag,G):- (current_prolog_flag(Flag,false) -> true ; G).
 
 :- meta_predicate(system:during_boot(:)).
-system:during_boot(M:Goal):- maybe_rtrace(M:Goal),after_boot(M:Goal).
+system:during_boot(M:Goal):- maybe_notrace(M:Goal),after_boot(M:Goal).
 :- meta_predicate(system:during_net_boot(:)).
 system:during_net_boot(M:Goal):- during_boot(whenever(run_network,M:Goal)).
 :- meta_predicate(system:after_boot(:)).
@@ -217,7 +221,7 @@ system:after_boot_sanity_test(M:Goal):- after_boot(M:sanity(M:Goal)).
 :- module_transparent(system:after_boot_call/1).
 system:after_boot_call(How):- forall(lmconf:after_boot_goal(M:Goal),once(ignore(call(How,M:Goal)))).
 :- module_transparent(system:after_boot_call/0).
-system:after_boot_call:- baseKB:after_boot_call(maybe_rtrace).
+system:after_boot_call:- baseKB:after_boot_call(maybe_notrace).
 
 :-export(is_startup_file/1).
 is_startup_file(Name):- var(Name),!,startup_file(Path),directory_file_path(_,Name,Path).
