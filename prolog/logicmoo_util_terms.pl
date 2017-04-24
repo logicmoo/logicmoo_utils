@@ -889,7 +889,7 @@ functor_h(M:_,F,A):- atom(M),!, ( M=F -> current_predicate(F/A) ; current_predic
 functor_h(':-'(Obj),F,A):- nonvar(Obj), !,functor_h(Obj,F,A).
 
 functor_h(':-'(Obj,_),F,A):- nonvar(Obj), !,functor_h(Obj,F,A).
-functor_h(Obj,F,0):- string(Obj),!,must_det(atom_string(F,Obj)).
+functor_h(Obj,F,0):- string(Obj),!,maybe_notrace(atom_string(F,Obj)).
 
 functor_h(Obj,Obj,0):- \+ compound(Obj),!.
 

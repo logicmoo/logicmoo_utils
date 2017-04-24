@@ -953,7 +953,7 @@ destringify('$VAR'(S),'$VAR'(S)):-!.
 destringify(string(S),string(S)):-is_ftVar(S),!.
 destringify([],[]):-!.
 destringify('[]','[]'):-!.
-destringify(T,A):- on_x_fail(call((text_to_string(T,S),!,atom_string(A,S)))),!.
+destringify(T,A):- on_x_fail(call((text_to_string(T,S),!,maybe_notrace(atom_string(A,S))))),!.
 destringify(X,S):-is_ftString2(X),stringToCodelist(X,CL),name(S,CL),!.
 destringify([H|T],[HH|TT]):-!,destringify(H,HH),destringify(T,TT),!.
 destringify(X,P):-compound(X),X=..LIST,maplist(destringify,LIST,DL),P=..DL,!.
@@ -1114,12 +1114,14 @@ list_to_atomics_list0([E|EnglishF],[A|EnglishA]):-
 list_to_atomics_list0([],[]):-!.
 */
 
+maplist_atom_string(M,O):- catch(maplist(atom_string,M,O),_,fail).
+
 text_to_uq_atom(A,Sub):- atom_prefix(A,'"'),ifprolog:atom_suffix(A,1,'"'),sub_atom(A,1,_,1,Sub),!.
 text_to_uq_atom(A,A).
 
 convert_to_string_list(I,O):-string(I), (atom_contains(I,'\n');atom_contains(I,'*')),!,O=[I].
-convert_to_string_list(I,O):-is_s_string(I),I=..[s|M],!,maplist(atom_string,M,O).
-convert_to_string_list(I,O):-convert_to_atoms_list(I,M),maplist(atom_string,M,O).
+convert_to_string_list(I,O):-is_s_string(I),I=..[s|M],!,maplist_atom_string(M,O).
+convert_to_string_list(I,O):-convert_to_atoms_list(I,M),maplist_atom_string(M,O).
 
 is_s_string(I):-compound(I),functor(I,s,_),!.
 
@@ -1128,7 +1130,7 @@ convert_to_cycString(I,O):- convert_to_string_list(I,M),delistify_single_element
 
 convert_to_string(I,O):- convert_to_atoms_list(I,M),(is_list(M)->atomics_to_string(M," ",O);atom_to_string(M,O)).
 
-convert_to_atoms_list(I,O):- is_s_string(I),I=..[s|M],!,maplist(atom_string,O,M).
+convert_to_atoms_list(I,O):- is_s_string(I),I=..[s|M],!,maplist_atom_string(O,M).
 convert_to_atoms_list(A,B):- \+ atomic(A),!,listify(A,B),nop(dmsg(convert_to_atoms_list(A,B))).
 convert_to_atoms_list(A,B):- atom_length(A,L),convert_to_atoms_by_len(A,L,B),!.
 convert_to_atoms_list(A,B):- text_to_string(A,S),string_to_atom(S,M),listify(M,B).
