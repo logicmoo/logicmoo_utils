@@ -46,9 +46,9 @@ maybe_pack_upgrade(Pack):- pack_upgrade(Pack).
 
 normally(G):- locally(set_prolog_flag(runtime_debug,0),locally(set_prolog_flag(bugger,false),G)).
 
-maybe_notrace(G):- once(G),!.
+maybe_notrace(G):- call(G),!.
 maybe_notrace(G):- nodebug,notrace,stop_rtrace,nortrace,
-  rtrace((wdmsg(retry_maybe_notrace(G)),debug,trace,G,break,wdmsg(tried_maybe_notrace(G)))),!,fail.
+  ignore(rtrace((wdmsg(retry_maybe_notrace(G)),debug,trace,G,wdmsg(tried_maybe_notrace(G)),break))),!,fail.
   
 
 % maybe_notrace(G):- catch(once(notrace(G)),E,(wdmsg(error_maybe_notrace(E,G)),rtrace(G)))-> ! ;((wdmsg(failed_maybe_notrace(G)),ignore(catch(once(rtrace(G)),E,wdmsg(E -> G)))).
