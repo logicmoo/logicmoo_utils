@@ -1133,7 +1133,8 @@ convert_to_string(I,O):- convert_to_atoms_list(I,M),(is_list(M)->atomics_to_stri
 convert_to_atoms_list(I,O):- is_s_string(I),I=..[s|M],!,maplist_atom_string(O,M).
 convert_to_atoms_list(A,B):- \+ atomic(A),!,listify(A,B),nop(dmsg(convert_to_atoms_list(A,B))).
 convert_to_atoms_list(A,B):- atom_length(A,L),convert_to_atoms_by_len(A,L,B),!.
-convert_to_atoms_list(A,B):- text_to_string(A,S),string_to_atom(S,M),listify(M,B).
+convert_to_atoms_list(A,B):- text_to_string_safe(A,S),string_to_atom(S,M),listify(M,B),!.
+convert_to_atoms_list(M,B):- listify(M,B).
 
 is_upcased(U):- \+ downcase_atom(U,U), upcase_atom(U,U).
 
