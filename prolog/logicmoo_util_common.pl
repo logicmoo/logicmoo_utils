@@ -18,24 +18,84 @@
 
 % We save the name of the module loading this module
 :- module(logicmoo_util_common,[add_history/1,add_history0/1,make_historial/2,
-   maybe_notrace/1,normally/1,var_non_attvar/1,
-   qsave_lm/0,qsave_lm/1,ignore_not_not/1,load_library_system/1,fixup_exports/0,
+   normally/1,var_non_attvar/1,
+   qsave_lm/0,qsave_lm/1,ignore_not_not/1,fixup_exports/0,
           all_source_file_predicates_are_transparent/0,
           all_source_file_predicates_are_transparent/2,
           all_source_file_predicates_are_exported/0,
           all_source_file_predicates_are_exported/2,
           add_file_search_path_safe/2,
-          startup_file/1,
-          if_file_exists/1,
           set_prolog_stack_gb/1,
+          load_library_system/1,
+          add_file_search_path_safe/2,
           pack_upgrade/0,run_prologmud/0,init_logicmoo/0,
           shared_vars/3
           ]).
 
-:- meta_predicate(ignore_not_not(0)).
-:- meta_predicate(maybe_notrace(0)).
-:- meta_predicate(if_file_exists(:)).
 
+:- ensure_loaded(logicmoo_util_startup).
+
+
+:- meta_predicate(system:whenever_flag_permits(+,:)).
+system:whenever_flag_permits(Flag,G):- (current_prolog_flag(Flag,false) -> true ; G).
+
+
+
+%=======================================
+% Load only if exists
+%=======================================
+
+% sets up and restore the subsystems
+:- meta_predicate(load_library_system(:)).
+load_library_system(M:File):- load_library_system(M,File). 
+
+load_library_system(user,File):-!, during_boot(gripe_time(40,(if_file_exists(ensure_loaded(system:File))))).
+load_library_system(M,File):- during_boot(gripe_time(40,(if_file_exists(ensure_loaded(M:File))))).
+:- system:import(load_library_system/2).
+
+during_boot(G):- during_init(G).
+after_boot(G):- at_init(G).
+
+% doesnt run if --nonet
+:- meta_predicate(system:during_net_boot(:)).
+system:during_net_boot(M:Goal):- during_boot(whenever_flag_permits(run_network,M:Goal)).
+
+% --nonet
+:- meta_predicate(system:after_net_boot(:)).
+system:after_net_boot(M:Goal):- after_boot(whenever_flag_permits(run_network,M:Goal)).
+
+:- meta_predicate(system:after_boot_sanity_test(:)).
+system:after_boot_sanity_test(M:Goal):- after_boot(M:sanity(M:Goal)).
+
+
+
+:- meta_predicate iff_defined(*).
+:- meta_predicate iff_defined(:,0).
+:- module_transparent((iff_defined/1,iff_defined/2)).
+
+%% iff_defined( ?G) is semidet.
+%
+% If Defined.
+%
+iff_defined(Goal):- iff_defined(Goal,((dmsg(warn_undefined(Goal))),!,fail)).
+
+%% iff_defined( ?Goal, :GoalElse) is semidet.
+%
+% If Defined Else.
+%
+iff_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
+% iff_defined(M:Goal,Else):- !, current_predicate(_,OM:Goal),!,OM:Goal;Else.
+%iff_defined(Goal,  Else):- current_predicate(_,OM:Goal)->OM:Goal;Else.
+
+
+
+:- module_transparent((add_history/1,qsave_lm/1,ignore_not_not/1,load_library_system/1,fixup_exports/0,
+          all_source_file_predicates_are_transparent/0,
+          all_source_file_predicates_are_transparent/2,
+          all_source_file_predicates_are_exported/0,
+          all_source_file_predicates_are_exported/2)).
+
+:- meta_predicate(ignore_not_not(0)).
 :- export(pack_upgrade/0).
 pack_upgrade:- call((user:use_module(library(prolog_pack)),use_module(library(predicate_streams)), 
   with_input_from_predicate(({}/[X]>>(repeat,X='YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY')),
@@ -44,16 +104,9 @@ pack_upgrade:- call((user:use_module(library(prolog_pack)),use_module(library(pr
 maybe_pack_upgrade(Pack):- pack_property(Pack, directory(PackDir)),\+ access_file(PackDir,write),!.
 maybe_pack_upgrade(Pack):- pack_upgrade(Pack).
 
+
+
 normally(G):- locally(set_prolog_flag(runtime_debug,0),locally(set_prolog_flag(bugger,false),G)).
-
-maybe_notrace(G):- tracing,!,debug,(call(G)->!;((wdmsg(failed_maybe_notrace(G)),ignore(catch(once(rtrace(G)),E,wdmsg(E -> G)))))).
-maybe_notrace(G):- catch(once((G)),E,(wdmsg(error_maybe_notrace(E,G)),rtrace(G)))-> ! ;
-   ((wdmsg(failed_maybe_notrace(G)),ignore(catch(once(rtrace(G)),E,wdmsg(E -> G))))).
-/*
-maybe_notrace(G):- nodebug,notrace,stop_rtrace,nortrace,
-  ignore(wdmsg(retry_maybe_notrace(G)),debug,rtrace((trace,G,wdmsg(tried_maybe_notrace(G)),break))),!,fail.
-*/  
-
 
 
 shared_vars(Left,Right,SVG):-quietly(( term_variables(Left,Vs1),term_variables(Right,Vs2),intersect_eq0(Vs2,Vs1,SVG))).
@@ -66,37 +119,6 @@ shared_vars(Left,Right,SVG):-quietly(( term_variables(Left,Vs1),term_variables(R
          ;   intersect_eq0(Xs, Ys, L)
          ).
 
-
-% sets upo to restore the subsystems
-:- meta_predicate(load_library_system(:)).
-load_library_system(M:File):- load_library_system(M,File). 
-load_library_system(user,File):-!, during_boot(gripe_time(40,(if_file_exists(ensure_loaded(system:File))))).
-load_library_system(M,File):- during_boot(gripe_time(40,(if_file_exists(ensure_loaded(M:File))))).
-:- system:import(load_library_system/2).
-
-:- module_transparent((add_history/1,qsave_lm/1,ignore_not_not/1,load_library_system/1,fixup_exports/0,
-          all_source_file_predicates_are_transparent/0,
-          all_source_file_predicates_are_transparent/2,
-          all_source_file_predicates_are_exported/0,
-          all_source_file_predicates_are_exported/2)).
-
-
-:- meta_predicate(if_file_exists(:)).
-
-%= 	 	 
-
-%% if_file_exists( ?M) is semidet.
-%
-% If File Exists.
-%
-if_file_exists(M:Call):- arg(1,Call,MMFile),strip_module(MMFile,_,File),
- (exists_source(File)-> must(M:Call);fmt(not_installing(M,Call))),!.
-
-
-:- dynamic(lmconf:saved_app_argv/1).
-app_argv(List):- lmconf:saved_app_argv(List).
-app_argv(List):- current_prolog_flag(os_argv,List).
-app_argv(Atom):- atom(Atom),app_argv(List),memberchk(Atom,List).
 
 % ======================================================
 % Add Extra file_search_paths
@@ -151,139 +173,6 @@ set_prolog_stack_gb(Six):-set_prolog_stack(global, limit(Six*10**9)),set_prolog_
 
 
 
-% invert_varname(NV):-  ignore(((NV=(N=V), V='$VAR'(N)))).
-
-add_history(O):- 
-   ignore_not_not((make_historial(O,A),add_history0(A))),!.
-
-ignore_not_not(G):- ignore((catch((( \+ \+ (ignore(once(G))))),_,fail))),!.
-
-make_historial(_:O,A):-!,make_historial(O,A).
-make_historial(whenever(_,O),A):-!,make_historial(O,A).
-make_historial(add_history(O),A):-!,make_historial(O,A).
-make_historial(O,A):-ground(O),format(atom(A), '~W', [O, [fullstop(true),portrayed(true),quoted(true),numbervars(true)]]).
-make_historial(O,A):-
-    prolog_load_context(variable_names, Bindings),
-    format(atom(A), '~W', [O, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]).
-
-add_history0(_):- \+ app_argv('--history'),!.
-add_history0(A):-
-   (current_predicate(system:rl_add_history/1) -> system:rl_add_history(A) ; true),
-   (current_predicate(editline:el_add_history/2) -> editline:el_add_history(user_input,A) ; true).
-
-
-
-system:nb_linkval_current(N,V):-duplicate_term(V,VV),V=VV,nb_linkval(N,VV),nb_current(N,V).
-
-extend_varnames(ExpandedBindings):- 
-    prolog_load_context(variable_names,Vs),
-    append(Vs,ExpandedBindings,NewVs),    
-    append(NewVs,[],NewVs),
-    nb_linkval_current('$variable_names',NewVs).
-
-:- user:dynamic(expand_query/4).
-:- user:multifile(expand_query/4).
-
-
-user:expand_query(Goal, _Expanded, Bindings, _ExpandedBindings):-        fail,
-   ignore_not_not((once(( nb_linkval_current('$expand_query',Goal-Bindings),
-    append(Bindings,[],Bindings),
-    % ignore_not_not(nortrace),ignore_not_not(notrace),
-    format(atom(A), '~W', [Goal, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]),
-    add_history0(A))))),
-   fail.
-       
-
-:- user:multifile(expand_answer/2).
-:- user:dynamic(expand_answer/2).
-
-user:expand_answer(Bindings, ExpandedBindings):- 
-    nb_linkval_current('$expand_answer',Bindings),
-    toplevel_variables:expand_answer(Bindings, ExpandedBindings),
-    nb_linkval_current('$expand_answer',ExpandedBindings).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% DURING/AFTER BOOT HOOKS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-:- multifile(lmconf:after_boot_goal/1).
-:- dynamic(lmconf:after_boot_goal/1).
-
-
-:- meta_predicate(system:whenever(+,:)).
-system:whenever(Flag,G):- (current_prolog_flag(Flag,false) -> true ; G).
-
-:- meta_predicate(system:during_boot(:)).
-system:during_boot(M:Goal):- maybe_notrace(M:Goal),after_boot(M:Goal).
-:- meta_predicate(system:during_net_boot(:)).
-system:during_net_boot(M:Goal):- during_boot(whenever(run_network,M:Goal)).
-:- meta_predicate(system:after_boot(:)).
-system:after_boot(M:Goal):- add_history(M:Goal),system:assertz(lmconf:after_boot_goal(M:Goal)).
-:- meta_predicate(system:after_boot_sanity_test(:)).
-system:after_boot_sanity_test(M:Goal):- after_boot(M:sanity(M:Goal)).
-
-:- module_transparent(system:after_boot_call/1).
-system:after_boot_call(How):- forall(lmconf:after_boot_goal(M:Goal),once(ignore(call(How,M:Goal)))).
-:- module_transparent(system:after_boot_call/0).
-system:after_boot_call:- baseKB:after_boot_call(maybe_notrace).
-
-:-export(is_startup_file/1).
-is_startup_file(Name):- var(Name),!,startup_file(Path),directory_file_path(_,Name,Path).
-is_startup_file(Name):- absolute_file_name(Name,File,[file_type(prolog),access(read),file_errors(fail)]),Name\==File,!,is_startup_file(File).
-is_startup_file(Name):- exists_source(Name),startup_file(Path),same_file(Name,Path),!.
-is_startup_file(Name):- startup_file(Path),directory_file_path(_,Named,Path),atom_concat(Name,_,Named),!.
-
-startup_file(AFile):- startup_file0(File),absolute_file_name(File,AFile,[file_type(prolog),access(read),file_errors(fail)]).
-:-export(startup_file0/1).
-startup_file0(File):- sub_argv(['-f',File]).
-startup_file0(File):- sub_argv(['-l',File]).
-startup_file0(File):- sub_argv(['-g',Opt]),atom_to_term(Opt,ensure_loaded(File),_).
-startup_file0(File):- sub_argv(['-x',File]).
-startup_file0(File):- sub_argv(['-o',File]).
-startup_file0(File):- current_prolog_flag(os_argv,[_|List]),member(File,List).
-sub_argv([X,Y]):-current_prolog_flag(os_argv,[_|List]),append(_,[X,Y|_],List).
-
-qsave_lm:-  is_startup_file(X),!,atom_concat(X,'.o',F),!,qsave_lm(F).
-qsave_lm:- qsave_lm(qsaved_lm),!.
-qsave_lm(LM):- \+ access_file(LM,write),!,debug(logicmoo,'~N% NO FILE WRITE ~p~n',[qsave_lm(LM)]).
-qsave_lm(_):- predicate_property(kb7166:assertion_content(_,_,_),number_of_clauses(N)),N>0,!.
-qsave_lm(LM):-qsave_lm0(LM),!.
-qsave_lm0(LM):- statistics(globallimit,G),statistics(locallimit,L),statistics(traillimit,T),
-  X = qsave_program(LM,[toplevel(logicmoo_toplevel),
-   goal(logicmoo_goal),op(save),
-       stand_alone(false),
-       class(development),
-       autoload(false),
-       % foreign(no_save),
-       global(G),trail(T),local(L)]),
-   dmsg(X),
-   call(X).
-
-
-getenv_or(Name,ValueO,Default):-
-   (getenv(Name,RV)->Value=RV;Value=Default),
-   ( \+ number(Value) -> atom_number(Value,ValueO); Value=ValueO).
-
-
-/*
-:- dynamic(baseKB:logicmoo_utils_separate/0).
-:- retractall(baseKB:logicmoo_utils_separate).
-:- set_prolog_flag(generate_debug_info, true).
-
-
-% :- abox:defaultTBoxMt(_)->true;('$current_typein_module'(M),asserta(abox:defaultTBoxMt(M))).
-
-
-:- dynamic(baseKB:mpred_is_impl_file/1).
-:- multifile(baseKB:mpred_is_impl_file/1).
-% :- volatile(baseKB:mpred_is_impl_file/1).
-
-
-*/
-
-
-var_non_attvar(V):- var(V),\+ attvar(V).
-
-
 %% all_source_file_predicates_are_exported() is det.
 %
 % All Module Predicates Are Exported.
@@ -328,68 +217,107 @@ fixup_exports:-
    all_source_file_predicates_are_exported,
    all_source_file_predicates_are_transparent.
 
-:- if(app_argv('--nonet')).
-:- set_prolog_flag(run_network,false).
-:- endif.
+var_non_attvar(V):- var(V),\+ attvar(V).
 
-:- meta_predicate iff_defined(*).
-:- meta_predicate iff_defined(:,0).
-:- module_transparent((iff_defined/1,iff_defined/2)).
 
-%% iff_defined( ?G) is semidet.
-%
-% If Defined.
-%
-iff_defined(Goal):- iff_defined(Goal,((dmsg(warn_undefined(Goal))),!,fail)).
+getenv_or(Name,ValueO,Default):-
+   (getenv(Name,RV)->Value=RV;Value=Default),
+   ( \+ number(Value) -> atom_number(Value,ValueO); Value=ValueO).
 
-%% iff_defined( ?Goal, :GoalElse) is semidet.
-%
-% If Defined Else.
-%
-iff_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
-% iff_defined(M:Goal,Else):- !, current_predicate(_,OM:Goal),!,OM:Goal;Else.
-%iff_defined(Goal,  Else):- current_predicate(_,OM:Goal)->OM:Goal;Else.
+
+/*
+:- dynamic(baseKB:logicmoo_utils_separate/0).
+:- retractall(baseKB:logicmoo_utils_separate).
+:- set_prolog_flag(generate_debug_info, true).
+
+
+% :- abox:defaultTBoxMt(_)->true;('$current_typein_module'(M),asserta(abox:defaultTBoxMt(M))).
+
+
+:- dynamic(baseKB:mpred_is_impl_file/1).
+:- multifile(baseKB:mpred_is_impl_file/1).
+% :- volatile(baseKB:mpred_is_impl_file/1).
+
+
+*/
+
+
 
 :- if( app_argv('--upgrade') ).
 :- whenever(run_network,pack_upgrade).
 :- endif.
 
-:- dynamic(lmcache:called_startup_goal/1).
-:- volatile(lmcache:called_startup_goal/1).
-has_ran_once(G):- lmcache:called_startup_goal(G),!.
-has_ran_once(G):- assert(lmcache:called_startup_goal(G)),!,fail.
+
+qsave_lm:-  is_startup_file(X),!,atom_concat(X,'.o',F),!,qsave_lm(F).
+qsave_lm:- qsave_lm(qsaved_lm),!.
+qsave_lm(LM):- \+ access_file(LM,write),!,debug(logicmoo,'~N% NO FILE WRITE ~p~n',[qsave_lm(LM)]).
+qsave_lm(_):- predicate_property(kb7166:assertion_content(_,_,_),number_of_clauses(N)),N>0,!.
+qsave_lm(LM):-qsave_lm0(LM),!.
+qsave_lm0(LM):- statistics(globallimit,G),statistics(locallimit,L),statistics(traillimit,T),
+  X = qsave_program(LM,[toplevel(logicmoo_toplevel),
+   goal(logicmoo_goal),op(save),
+       stand_alone(false),
+       class(development),
+       autoload(false),
+       % foreign(no_save),
+       global(G),trail(T),local(L)]),
+   dmsg(X),
+   call(X).
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% [Required/Optional]  Ensures...
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-:- multifile(system:'$init_goal'/3).
-:- dynamic(system:'$init_goal'/3).
-:- module_transparent(system:'$init_goal'/3).
+run_prologmud :- ensure_loaded(library(prologmud_sample_games/run_mud_server)),init_why(run_prologmud).
+init_logicmoo :- ensure_loaded(library(logicmoo_repl)),init_why(init_logicmoo).
 
-initialization_after_boot(Phase):- 
-  dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),
-  dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),
-  dmsg(initialization_after_boot(Phase)),
-  dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),
-  dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),!,
-  after_boot_call.
 
-:- (is_startup_file(X),absolute_file_name(X,F)) -> 
-   assertz(system:'$init_goal'(F,logicmoo_util_common:initialization_after_boot(after(X)),F:9999)) 
-   ; true.
+% invert_varname(NV):-  ignore(((NV=(N=V), V='$VAR'(N)))).
 
-% throw(is_startup_file(unknown)).
+add_history(O):- 
+   ignore_not_not((make_historial(O,A),add_history0(A))),!.
 
-:- initialization(initialization_after_boot(restore),restore).
-% [run_mud_server].
-:- multifile
-    prolog:message//1.
+ignore_not_not(G):- ignore((catch((( \+ \+ (ignore(once(G))))),_,fail))),!.
 
-prolog:message(welcome) -->  {initialization_after_boot(welcome),fail}.
+make_historial(_:O,A):-!,make_historial(O,A).
+make_historial(whenever(_,O),A):-!,make_historial(O,A).
+make_historial(add_history(O),A):-!,make_historial(O,A).
+make_historial(O,A):-ground(O),format(atom(A), '~W', [O, [fullstop(true),portrayed(true),quoted(true),numbervars(true)]]).
+make_historial(O,A):-
+    prolog_load_context(variable_names, Bindings),
+    format(atom(A), '~W', [O, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]).
 
-run_prologmud :- ensure_loaded(library(prologmud_sample_games/run_mud_server)),initialization_after_boot(run_prologmud).
-init_logicmoo :- ensure_loaded(library(logicmoo_repl)),initialization_after_boot(init_logicmoo).
+add_history0(_):- \+ app_argv('--history'),!.
+add_history0(A):- prolog:history(user_input,add(A)).
+
+
+system:nb_linkval_current(N,V):-duplicate_term(V,VV),V=VV,nb_linkval(N,VV),nb_current(N,V).
+
+extend_varnames(ExpandedBindings):- 
+    prolog_load_context(variable_names,Vs),
+    append(Vs,ExpandedBindings,NewVs),    
+    append(NewVs,[],NewVs),
+    nb_linkval_current('$variable_names',NewVs).
+
+:- user:dynamic(expand_query/4).
+:- user:multifile(expand_query/4).
+
+
+:- user:multifile(expand_answer/2).
+:- user:dynamic(expand_answer/2).
+
+user:expand_answer(Bindings, ExpandedBindings):- 
+    nb_linkval_current('$expand_answer',Bindings),
+    toplevel_variables:expand_answer(Bindings, ExpandedBindings),
+    nb_linkval_current('$expand_answer',ExpandedBindings).
+
+
+user:expand_query(Goal, _Expanded, Bindings, _ExpandedBindings):-        fail,
+   ignore_not_not((once(( nb_linkval_current('$expand_query',Goal-Bindings),
+    append(Bindings,[],Bindings),
+    % ignore_not_not(nortrace),ignore_not_not(notrace),
+    format(atom(A), '~W', [Goal, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]),
+    add_history0(A))))),
+   fail.
+       
 
 :- fixup_exports.
+
 
