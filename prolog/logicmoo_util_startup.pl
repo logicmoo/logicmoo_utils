@@ -207,7 +207,7 @@ user:expand_answer(_Bindings, _ExpandedBindings):- run_pending_inits,fail.
 :- user:multifile(expand_answer/2).
 :- user:dynamic(expand_answer/2).
 user:expand_query(_Goal, _Expanded, _Bindings, _ExpandedBindings):-  run_pending_inits,fail.
-% term_expansion(EOF,_):- EOF == end_of_file,  prolog_load_context(source,File),prolog_load_context(file,File), fail.
+%term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File),prolog_load_context(file,File),run_pending_inits, fail.
 :- endif.
 
 :- fixup_exports.
