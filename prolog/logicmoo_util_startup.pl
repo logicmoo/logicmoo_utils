@@ -1,16 +1,16 @@
-/* Part of LogicMOO Base Logicmoo Path Setups
+/* Part of LogicMOO Base Logicmoo Utils
 % ===================================================================
-    File:         'logicmoo_util_library.pl'
-    Purpose:       To load the logicmoo libraries as needed
+    File:         'logicmoo_util_startuo.pl'
+    Purpose:       To load the logicmoo libraries inits as needed
     Contact:       $Author: dmiles $@users.sourceforge.net ;
-    Version:       'logicmoo_util_library.pl' 1.0.0
-    Revision:      $Revision: 1.7 $
-    Revised At:    $Date: 2002/07/11 21:57:28 $
+    Version:       'logicmoo_util_startuo.pl' 1.0.0
+    Revision:      $Revision: 1.2 $
+    Revised At:    $Date: 2017/06/02 21:57:28 $
     Author:        Douglas R. Miles
     Maintainers:   TeamSPoon
     E-mail:        logicmoo@gmail.com
     WWW:           http://www.prologmoo.com
-    SCM:           https://github.com/TeamSPoon/PrologMUD/tree/master/pack/logicmoo_base
+    SCM:           https://github.com/TeamSPoon/logicmoo_utils/blob/master/prolog/logicmoo_util_startup.pl
     Copyleft:      1999-2015, LogicMOO Prolog Extensions
     License:       Lesser GNU Public License
 % ===================================================================
@@ -69,6 +69,37 @@ if_file_exists(M:Call):- arg(1,Call,MMFile),strip_module(MMFile,_,File),
 app_argv(List):- lmconf:saved_app_argv(List).
 app_argv(List):- current_prolog_flag(os_argv,List).
 app_argv(Atom):- atom(Atom),app_argv(List),memberchk(Atom,List).
+
+
+erase_clause(H,B):- 
+  BH=B+H,BHC=BC+HC,
+  copy_term(BH,BHC),
+  clause(HC,BC,Ref),
+  BH=@=BHC,
+  erase(Ref).   
+
+:- meta_predicate(maybe_notrace(0)).
+
+%% maybe_notrace(:Goal) is nondet.
+%
+% When not tracing, try to run Goal.
+%   if Goal has a problem (like fails) 
+%         run inside rtrace/1 (the non-interactive debugger).
+% If tracing, try to run Goal inside of quietly(Goal)
+%   if Goal has a problem (like fails) 
+%         trace interactively.
+%
+% @NOTE quietly/1 is the nondet version of notrace/1.
+
+maybe_notrace(Goal):- tracing -> (debug,maybe_notrace(quietly(Goal), Goal)) ; maybe_notrace(Goal,rtrace(Goal)).
+
+:- meta_predicate(maybe_notrace(0,0)).
+
+maybe_notrace(Goal,Else):-   
+  (catch(Goal,E1,(wdmsg(error_maybe_notrace(E1,Goal)),Else)) 
+   -> ! 
+   ; (( wdmsg(failed_maybe_notrace(Goal)),
+     ignore(catch(Else,E2,(wdmsg(else_error_maybe_notrace(E2, Else, goal(Goal))),(nonvar(E1)->throw(E1);throw(E2)))))))).
 
 
 %=======================================
@@ -134,37 +165,6 @@ try_pending_init(How,Goal):- assert(lmcache:called_startup_goal(Goal)),
        erase_clause(lmcache:called_startup_goal(Goal),true)).
 
 
-erase_clause(H,B):- 
-  BH=B+H,BHC=BC+HC,
-  copy_term(BH,BHC),
-  clause(HC,BC,Ref),
-  BH=@=BHC,
-  erase(Ref).   
-
-:- meta_predicate(maybe_notrace(0)).
-
-%% maybe_notrace(:Goal) is nondet.
-%
-% When not tracing, try to run Goal.
-%   if Goal has a problem (like fails) 
-%         run inside rtrace/1 (the non-interactive debugger).
-% If tracing, try to run Goal inside of quietly(Goal)
-%   if Goal has a problem (like fails) 
-%         trace interactively.
-%
-% @NOTE quietly/1 is the nondet version of notrace/1.
-
-maybe_notrace(Goal):- tracing -> (debug,maybe_notrace(quietly(Goal), Goal)) ; maybe_notrace(Goal,rtrace(Goal)).
-
-:- meta_predicate(maybe_notrace(0,0)).
-
-maybe_notrace(Goal,Else):-   
-  (catch(Goal,E,(wdmsg(error_maybe_notrace(E,Goal)),Else)) -> ! ;
-    ((
-     wdmsg(failed_maybe_notrace(Goal)),
-     ignore(catch(Else,E,wdmsg(E -> Else -> Goal)))))).
-
-
 :- module_transparent(run_pending_inits/0).
 run_pending_inits:- run_pending_inits(maybe_notrace).
 
@@ -200,7 +200,6 @@ prolog:message(welcome) -->  {init_why(welcome),fail}.
    assertz(system:'$init_goal'(F,logicmoo_util_startup:init_why(after(X)),F:9999)) 
    ; true.
 
-
 :- if(true).
 :- user:dynamic(expand_query/4).
 :- user:multifile(expand_query/4).
@@ -210,9 +209,6 @@ user:expand_answer(_Bindings, _ExpandedBindings):- run_pending_inits,fail.
 user:expand_query(_Goal, _Expanded, _Bindings, _ExpandedBindings):-  run_pending_inits,fail.
 % term_expansion(EOF,_):- EOF == end_of_file,  prolog_load_context(source,File),prolog_load_context(file,File), fail.
 :- endif.
-
-
-
 
 :- fixup_exports.
 

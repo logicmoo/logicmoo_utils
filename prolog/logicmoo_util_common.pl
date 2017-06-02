@@ -33,8 +33,6 @@
           ]).
 
 
-:- ensure_loaded(logicmoo_util_startup).
-
 
 :- meta_predicate(system:whenever_flag_permits(+,:)).
 system:whenever_flag_permits(Flag,G):- (current_prolog_flag(Flag,false) -> true ; G).
@@ -183,15 +181,15 @@ all_source_file_predicates_are_exported:-
  source_location(S,_), prolog_load_context(module,LC),
  all_source_file_predicates_are_exported(S,LC).
 
-never_export_named(attr_unify_hook/2).
-never_export_named(attribute_goals/3).
-never_export_named(project_attributes/2).
-never_export_named(attr_portray_hook/2).
+lmconfig:never_export_named(attr_unify_hook/2).
+lmconfig:never_export_named(attribute_goals/3).
+lmconfig:never_export_named(project_attributes/2).
+lmconfig:never_export_named(attr_portray_hook/2).
 
-:- module_transparent(all_source_file_predicates_are_exported/2).
+% :- module_transparent(all_source_file_predicates_are_exported/2).
 all_source_file_predicates_are_exported(S,LC):-
  forall(source_file(M:H,S),
- ignore((functor(H,F,A), \+ atom_concat('$',_,F), \+ never_export_named(F/A),
+ ignore((functor(H,F,A), \+ atom_concat('$',_,F), \+ lmconfig:never_export_named(F/A),
   ((ignore(((atom(LC),atom(M), LC\==M,M:export(M:F/A),LC:multifile(M:F/A),fail,atom_concat('$',_,F),LC:import(M:F/A)))))),
   ignore(((\+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F),LC:export(M:F/A), 
   (current_predicate(system:F/A)->true; system:import(M:F/A)))))))).
@@ -319,5 +317,6 @@ user:expand_query(Goal, _Expanded, Bindings, _ExpandedBindings):-        fail,
        
 
 :- fixup_exports.
+:- system:ensure_loaded(logicmoo_util_startup).
 
 
