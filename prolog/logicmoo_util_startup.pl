@@ -19,14 +19,13 @@
 % We save the name of the module loading this module
 :- module(logicmoo_util_startup,[
           maybe_notrace/1,
-          startup_file/1,
+          absolute_startup_script/1,
           at_init/1,
           during_init/1,
           has_ran_once/1,
           app_argv/1,
-          is_startup_file/1,
+          is_startup_script/1,
           init_why/1,
-          if_file_exists/1,
           run_pending_inits/0]).
 
 :- create_prolog_flag(dmsg_level,filter,[type(term),keep(true)]).
@@ -35,38 +34,40 @@
 % Utils
 %=======================================
 
-:-export(is_startup_file/1).
 
-is_startup_file(Name):- var(Name),!,startup_file(Path),directory_file_path(_,Name,Path).
-is_startup_file(Name):- absolute_file_name(Name,File,[file_type(prolog),access(read),file_errors(fail)]),Name\==File,!,is_startup_file(File).
-is_startup_file(Name):- exists_source(Name),startup_file(Path),same_file(Name,Path),!.
-is_startup_file(Name):- startup_file(Path),directory_file_path(_,Named,Path),atom_concat(Name,_,Named),!.
+%= 	 	 
 
-startup_file(AFile):- startup_file0(File),absolute_file_name(File,AFile,[file_type(prolog),access(read),file_errors(fail)]).
-:-export(startup_file0/1).
-startup_file0(File):- sub_argv(['-f',File]).
-startup_file0(File):- sub_argv(['-l',File]).
-startup_file0(File):- sub_argv(['-g',Opt]),atom_to_term(Opt,LoadsFile,_),is_loads_file(LoadsFile,File).
-startup_file0(File):- sub_argv(['-x',File]).
-startup_file0(File):- sub_argv(['-o',File]).
-startup_file0(File):- current_prolog_flag(os_argv,[_|ListR]),reverse(List,ListR),member(File,List).
-% throw(is_startup_file(unknown)).
-
-sub_argv([X,Y]):-current_prolog_flag(os_argv,[_|ListR]),reverse(List,ListR),append(_,[Y,X|_],List).
-
-is_loads_file(ensure_loaded(SFile),File):- strip_module(File,_,SFile).
-is_loads_file([File],SFile):- strip_module(File,_,SFile).
-is_loads_file(consult(SFile),File):- strip_module(File,_,SFile).
-is_loads_file(use_module(SFile),File):- strip_module(File,_,SFile).
-is_loads_file(_:SFile,File):-!,is_loads_file(SFile,File).
-
-%% if_file_exists( ?M) is semidet.
+%% is_startup_script is semidet.
 %
-% If File Exists.
+% If Startup Script.
 %
-:- meta_predicate(if_file_exists(:)).
-if_file_exists(M:Call):- arg(1,Call,MMFile),strip_module(MMFile,_,File),
- (exists_source(File)-> must(M:Call);wdmsg(not_installing(M,Call))),!.
+is_startup_script:- prolog_load_context(source, File),is_startup_script(File).
+
+
+:-export(is_startup_script/1).
+
+is_startup_script(Name):- var(Name),!,absolute_startup_script(Path),directory_file_path(_,Name,Path).
+is_startup_script(Name):- absolute_file_name(Name,File,[file_type(prolog),access(read),file_errors(fail)]),Name\==File,!,is_startup_script(File).
+is_startup_script(Name):- exists_source(Name),absolute_startup_script(Path),same_file(Name,Path),!.
+is_startup_script(Name):- absolute_startup_script(Path),directory_file_path(_,Named,Path),atom_concat(Name,_,Named),!.
+
+absolute_startup_script(AFile):- short_startup_script(File),
+   absolute_file_name(File,AFile,[file_type(prolog),access(read),file_errors(fail)]).
+
+:-export(short_startup_script/1).
+
+script_type('-f').
+script_type('-l').
+script_type('-s').
+script_type(A):-atom(A), \+ atom_concat('-',_,A).
+
+short_startup_script(File):- current_prolog_flag(associated_file,File).
+short_startup_script(File):- sub_argv(Type,File),exists_source(File),script_type(Type).
+
+sub_argv(X,Y):-app_argv(List),
+  (append(ListL,[--|_],List) -> 
+    append(_,[X,Y|_],ListL) ;
+    append(_,[X,Y|_],List)).
 
 
 :- dynamic(lmconf:saved_app_argv/1).
@@ -118,7 +119,7 @@ maybe_notrace(Goal,Else):-
 % 
 % Run a +Goal just before entering/returning to prolog/0 or main goal.
 %
-%  much like to initialization(Goal,[restore]).  but *also* happens in non-compiled system
+%  much like to initialization(Goal,[restore]).  but *also* happens in non-compiled programs
 %
 %  
 %  swipl -l some_startup_file   - run before the banner would be displayed 
@@ -130,7 +131,7 @@ maybe_notrace(Goal,Else):-
 %  swipl -s some_startup_file   - run immediately unless is module
 % 
 :- meta_predicate(at_init(:)).
-at_init(M:Goal):- system:assertz(lmconf:at_restore_goal(M:Goal)),add_history(M:Goal).
+at_init(Goal):- system:assertz(lmconf:at_restore_goal(Goal)),add_history(Goal).
 
 
 %% during_init(:Goal) is semidet.
@@ -149,7 +150,19 @@ at_init(M:Goal):- system:assertz(lmconf:at_restore_goal(M:Goal)),add_history(M:G
 %  swipl -s some_startup_file   - like initialization(Goal,[now])
 %
 :- meta_predicate(during_init(:)).
-during_init(M:Goal):- ignore(try_pending_init(maybe_notrace,M:Goal)), at_init(M:Goal).
+during_init(Goal):- ignore(try_pending_init(maybe_notrace,Goal)), at_init(Goal).
+
+
+
+:- meta_predicate(is_startup_script(0)).   	 
+
+%% if_script( :Goal) is semidet.
+%
+% If this is a Startup Script call Goal
+%
+if_script(Call):- is_startup_script->Call;dmsg(\+ is_startup_script(Call)).
+
+      
 
 %=======================================
 %= CALL BOOT HOOKS
@@ -203,9 +216,7 @@ prolog:message(welcome) -->  {init_why(welcome),fail}.
 :- multifile(system:'$init_goal'/3).
 :- dynamic(system:'$init_goal'/3).
 :- module_transparent(system:'$init_goal'/3).
-:- (is_startup_file(X),absolute_file_name(X,F)) -> 
-   assertz(system:'$init_goal'(F,logicmoo_util_startup:init_why(after(X)),F:9999)) 
-   ; true.
+:- forall(absolute_startup_script(F),assertz(system:'$init_goal'(F,logicmoo_util_startup:init_why(after(F)),F:9999))).
 
 :- if(true).
 :- user:dynamic(expand_query/4).
@@ -219,6 +230,8 @@ user:expand_query(_Goal, _Expanded, _Bindings, _ExpandedBindings):-  run_pending
 :- use_module(logicmoo_util_common).
 :- fixup_exports.
 
+
+
 :- if(false). 
 :- multifile(user:term_expansion/2).
 :- dynamic(user:term_expansion/2).
@@ -230,6 +243,5 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
   SourceModule == TypeIn,
   run_pending_inits, fail.
 :- endif.
-
 
 

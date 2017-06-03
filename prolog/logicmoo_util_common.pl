@@ -28,6 +28,7 @@
           add_file_search_path_safe/2,
           set_prolog_stack_gb/1,
           load_library_system/1,
+          if_file_exists/1,
           add_file_search_path_safe/2,
           pack_upgrade/0,run_prologmud/0,init_logicmoo/0,
           shared_vars/3
@@ -41,9 +42,28 @@ whenever_flag_permits(Flag,G):- (current_prolog_flag(Flag,false) -> true ; G).
 
 
 
+% startup_file0(File):- sub_argv(['-g',Opt]),atom_to_term(Opt,LoadsFile,_),is_loads_file(LoadsFile,File).
+is_loads_file(ensure_loaded(SFile),File):- strip_module(File,_,SFile).
+is_loads_file([File],SFile):- strip_module(File,_,SFile).
+is_loads_file(consult(SFile),File):- strip_module(File,_,SFile).
+is_loads_file(use_module(SFile),File):- strip_module(File,_,SFile).
+is_loads_file(_:SFile,File):-!,is_loads_file(SFile,File).
+
 %=======================================
 % Load only if exists
 %=======================================
+
+
+%% if_file_exists( ?M) is semidet.
+%
+% If File Exists.
+%
+:- meta_predicate(if_file_exists(:)).
+if_file_exists(M:Call):- arg(1,Call,MMFile),strip_module(MMFile,_,File),
+ (exists_source(File)-> must(M:Call);wdmsg(not_installing(M,Call))),!.
+
+
+
 
 % sets up and restore the subsystems
 :- meta_predicate(load_library_system(:)).
@@ -246,7 +266,7 @@ getenv_or(Name,ValueO,Default):-
 
 
 
-qsave_lm:-  is_startup_file(X),!,atom_concat(X,'.o',F),!,qsave_lm(F).
+qsave_lm:-  is_startup_script(X),!,atom_concat(X,'.o',F),!,qsave_lm(F).
 qsave_lm:- qsave_lm(qsaved_lm),!.
 qsave_lm(LM):- \+ access_file(LM,write),!,debug(logicmoo,'~N% NO FILE WRITE ~p~n',[qsave_lm(LM)]).
 qsave_lm(_):- predicate_property(kb7166:assertion_content(_,_,_),number_of_clauses(N)),N>0,!.
