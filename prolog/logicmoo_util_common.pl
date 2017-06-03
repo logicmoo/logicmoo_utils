@@ -19,7 +19,8 @@
 % We save the name of the module loading this module
 :- module(logicmoo_util_common,[add_history/1,add_history0/1,make_historial/2,
    normally/1,var_non_attvar/1,
-   qsave_lm/0,qsave_lm/1,ignore_not_not/1,fixup_exports/0,
+   whenever_flag_permits/2,
+   qsave_lm/0,qsave_lm/1,ignore_not_not/1, % fixup_exports/0,
           all_source_file_predicates_are_transparent/0,
           all_source_file_predicates_are_transparent/2,
           all_source_file_predicates_are_exported/0,
@@ -34,8 +35,9 @@
 
 
 
-:- meta_predicate(system:whenever_flag_permits(+,:)).
-system:whenever_flag_permits(Flag,G):- (current_prolog_flag(Flag,false) -> true ; G).
+:- meta_predicate(whenever_flag_permits(+,:)).
+
+whenever_flag_permits(Flag,G):- (current_prolog_flag(Flag,false) -> true ; G).
 
 
 
@@ -87,7 +89,7 @@ iff_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
 
 
 
-:- module_transparent((add_history/1,qsave_lm/1,ignore_not_not/1,load_library_system/1,fixup_exports/0,
+:- module_transparent((add_history/1,qsave_lm/1,ignore_not_not/1,load_library_system/1,
           all_source_file_predicates_are_transparent/0,
           all_source_file_predicates_are_transparent/2,
           all_source_file_predicates_are_exported/0,
@@ -210,10 +212,12 @@ all_source_file_predicates_are_transparent(S,_LC):-
   \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A])))))).
 
 
-:- module_transparent(fixup_exports/0).
-fixup_exports:- 
+:- module_transparent(system:fixup_exports/0).
+system:fixup_exports:- 
    all_source_file_predicates_are_exported,
    all_source_file_predicates_are_transparent.
+
+% :- export(fixup_exports/0).
 
 var_non_attvar(V):- var(V),\+ attvar(V).
 
@@ -240,10 +244,6 @@ getenv_or(Name,ValueO,Default):-
 */
 
 
-
-:- if( app_argv('--upgrade') ).
-:- whenever(run_network,pack_upgrade).
-:- endif.
 
 
 qsave_lm:-  is_startup_file(X),!,atom_concat(X,'.o',F),!,qsave_lm(F).
@@ -275,7 +275,7 @@ add_history(O):-
 ignore_not_not(G):- ignore((catch((( \+ \+ (ignore(once(G))))),_,fail))),!.
 
 make_historial(_:O,A):-!,make_historial(O,A).
-make_historial(whenever(_,O),A):-!,make_historial(O,A).
+make_historial(whenever_flag_permits(_,O),A):-!,make_historial(O,A).
 make_historial(add_history(O),A):-!,make_historial(O,A).
 make_historial(O,A):-ground(O),format(atom(A), '~W', [O, [fullstop(true),portrayed(true),quoted(true),numbervars(true)]]).
 make_historial(O,A):-
@@ -294,19 +294,17 @@ extend_varnames(ExpandedBindings):-
     append(NewVs,[],NewVs),
     nb_linkval_current('$variable_names',NewVs).
 
-:- user:dynamic(expand_query/4).
-:- user:multifile(expand_query/4).
-
 
 :- user:multifile(expand_answer/2).
 :- user:dynamic(expand_answer/2).
-
 user:expand_answer(Bindings, ExpandedBindings):- 
     nb_linkval_current('$expand_answer',Bindings),
     toplevel_variables:expand_answer(Bindings, ExpandedBindings),
     nb_linkval_current('$expand_answer',ExpandedBindings).
 
 
+:- user:dynamic(expand_query/4).
+:- user:multifile(expand_query/4).
 user:expand_query(Goal, _Expanded, Bindings, _ExpandedBindings):-        fail,
    ignore_not_not((once(( nb_linkval_current('$expand_query',Goal-Bindings),
     append(Bindings,[],Bindings),
@@ -316,7 +314,11 @@ user:expand_query(Goal, _Expanded, Bindings, _ExpandedBindings):-        fail,
    fail.
        
 
-:- fixup_exports.
-:- system:ensure_loaded(logicmoo_util_startup).
+:- use_module(logicmoo_util_startup).
 
+:- fixup_exports.
+
+:- if( app_argv('--upgrade') ).
+:- whenever_flag_permits(run_network,pack_upgrade).
+:- endif.
 

@@ -21,11 +21,15 @@
           maybe_notrace/1,
           startup_file/1,
           at_init/1,
+          during_init/1,
+          has_ran_once/1,
           app_argv/1,
           is_startup_file/1,
+          init_why/1,
           if_file_exists/1,
           run_pending_inits/0]).
 
+:- create_prolog_flag(dmsg_level,filter,[type(term),keep(true)]).
 
 %=======================================
 % Utils
@@ -157,8 +161,11 @@ during_init(M:Goal):- ignore(try_pending_init(maybe_notrace,M:Goal)), at_init(M:
 run_pending_inits(How):- 
    forall(lmconf:at_restore_goal(Goal),try_pending_init(How,Goal)).
 
+has_ran_once(Goal):- lmcache:called_startup_goal(GoalW), GoalW =@= Goal,!.
+
+
 :- meta_predicate try_pending_init(1,*).
-try_pending_init(_,Goal):- lmcache:called_startup_goal(GoalW), GoalW =@= Goal,!.
+try_pending_init(_,Goal):- has_ran_once(Goal),!.
 try_pending_init(How,Goal):- assert(lmcache:called_startup_goal(Goal)),
     ( \+ \+ call(How,Goal) 
       -> true ; 
@@ -207,9 +214,22 @@ user:expand_answer(_Bindings, _ExpandedBindings):- run_pending_inits,fail.
 :- user:multifile(expand_answer/2).
 :- user:dynamic(expand_answer/2).
 user:expand_query(_Goal, _Expanded, _Bindings, _ExpandedBindings):-  run_pending_inits,fail.
-%term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File),prolog_load_context(file,File),run_pending_inits, fail.
 :- endif.
 
+:- use_module(logicmoo_util_common).
 :- fixup_exports.
+
+:- if(false). 
+:- multifile(user:term_expansion/2).
+:- dynamic(user:term_expansion/2).
+
+% basically only run if is in 'user'
+user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File),prolog_load_context(file,File),
+  prolog_load_context(module,SourceModule), '$current_typein_module'(TypeIn),
+  wdmsg(File : '?='(SourceModule , TypeIn)),
+  SourceModule == TypeIn,
+  run_pending_inits, fail.
+:- endif.
+
 
 
