@@ -303,7 +303,7 @@ make_historial(O,A):-
     format(atom(A), '~W', [O, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]).
 
 add_history0(_):- \+ app_argv('--history'),!.
-add_history0(A):- prolog:history(user_input,add(A)).
+add_history0(A):- prolog:history(user_input,add(A)),prolog:history(current_input,add(A)).
 
 
 system:nb_linkval_current(N,V):-duplicate_term(V,VV),V=VV,nb_linkval(N,VV),nb_current(N,V).

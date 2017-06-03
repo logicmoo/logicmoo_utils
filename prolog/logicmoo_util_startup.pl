@@ -154,7 +154,7 @@ during_init(Goal):- ignore(try_pending_init(maybe_notrace,Goal)), at_init(Goal).
 
 
 
-:- meta_predicate(is_startup_script(0)).   	 
+:- meta_predicate(if_script(:)).   	 
 
 %% if_script( :Goal) is semidet.
 %
@@ -162,7 +162,7 @@ during_init(Goal):- ignore(try_pending_init(maybe_notrace,Goal)), at_init(Goal).
 %
 if_script(Call):- is_startup_script->Call;dmsg(\+ is_startup_script(Call)).
 
-      
+is_startup_file(File):- is_startup_script(File).
 
 %=======================================
 %= CALL BOOT HOOKS
