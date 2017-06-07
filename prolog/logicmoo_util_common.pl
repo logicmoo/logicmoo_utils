@@ -39,7 +39,7 @@
 :- meta_predicate(whenever_flag_permits(+,:)).
 
 whenever_flag_permits(Flag,G):- (current_prolog_flag(Flag,false) -> true ; G).
-
+whenever(Flag,G):- whenever_flag_permits(Flag,G).
 
 
 % startup_file0(File):- sub_argv(['-g',Opt]),atom_to_term(Opt,LoadsFile,_),is_loads_file(LoadsFile,File).
@@ -66,11 +66,17 @@ if_file_exists(M:Call):- arg(1,Call,MMFile),strip_module(MMFile,_,File),
 
 
 % sets up and restore the subsystems
-:- meta_predicate(load_library_system(:)).
-load_library_system(M:File):- load_library_system(M,File). 
 
+:- module_transparent(load_library_system/1).
+load_library_system(M:File):- load_library_system(M,File). 
+load_library_system(File):- context_module(M),load_library_system(M,File).
+
+:- system:import(load_library_system/1).
+
+:- module_transparent(load_library_system/2).
 load_library_system(user,File):-!, during_boot(gripe_time(40,(if_file_exists(ensure_loaded(system:File))))).
 load_library_system(M,File):- during_boot(gripe_time(40,(if_file_exists(ensure_loaded(M:File))))).
+
 :- system:import(load_library_system/2).
 
 during_boot(G):- during_init(G).
@@ -265,9 +271,10 @@ getenv_or(Name,ValueO,Default):-
 
 
 
-
+qsave_lm:-!.
 qsave_lm:-  is_startup_script(X),!,atom_concat(X,'.o',F),!,qsave_lm(F).
 qsave_lm:- qsave_lm(qsaved_lm),!.
+qsave_lm(_):- !.
 qsave_lm(LM):- \+ access_file(LM,write),!,debug(logicmoo,'~N% NO FILE WRITE ~p~n',[qsave_lm(LM)]).
 qsave_lm(_):- predicate_property(kb7166:assertion_content(_,_,_),number_of_clauses(N)),N>0,!.
 qsave_lm(LM):-qsave_lm0(LM),!.
