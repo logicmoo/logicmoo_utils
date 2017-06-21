@@ -208,9 +208,13 @@ init_why(Phase):-
 %= Register a hook after restore
 :- initialization(init_why(restore),restore).
 
+%= Register a hook after restore
+:- initialization(init_why(program),program).
+
+
 %= Register a hook after welcome
 :- multifile prolog:message//1.
-prolog:message(welcome) -->  {init_why(welcome),fail}.
+% prolog:message(welcome) -->  {init_why(welcome),fail}.
 
 %= Register a hook after our so-called startup file (Should be last file in list)
 :- multifile(system:'$init_goal'/3).

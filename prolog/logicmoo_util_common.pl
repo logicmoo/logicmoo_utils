@@ -83,15 +83,15 @@ during_boot(G):- during_init(G).
 after_boot(G):- at_init(G).
 
 % doesnt run if --nonet
-:- meta_predicate(system:during_net_boot(:)).
-system:during_net_boot(M:Goal):- during_boot(whenever_flag_permits(run_network,M:Goal)).
+:- meta_predicate(during_net_boot(:)).
+during_net_boot(M:Goal):- during_boot(whenever_flag_permits(run_network,M:Goal)).
 
 % --nonet
-:- meta_predicate(system:after_net_boot(:)).
-system:after_net_boot(M:Goal):- after_boot(whenever_flag_permits(run_network,M:Goal)).
+:- meta_predicate(after_net_boot(:)).
+after_net_boot(M:Goal):- after_boot(whenever_flag_permits(run_network,M:Goal)).
 
-:- meta_predicate(system:after_boot_sanity_test(:)).
-system:after_boot_sanity_test(M:Goal):- after_boot(M:sanity(M:Goal)).
+:- meta_predicate(after_boot_sanity_test(:)).
+after_boot_sanity_test(M:Goal):- after_boot(M:sanity(M:Goal)).
 
 
 
@@ -222,6 +222,9 @@ all_source_file_predicates_are_exported(S,LC):-
   ignore(((\+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F),LC:export(M:F/A), 
   (current_predicate(system:F/A)->true; system:import(M:F/A)))))))).
 
+:- meta_predicate(sexport(:)).
+sexport(M:F/A):- M:export(M:F/A),system:import(M:F/A).
+
 %% all_source_file_predicates_are_transparent() is det.
 %
 % All Module Predicates Are Transparent.
@@ -238,10 +241,13 @@ all_source_file_predicates_are_transparent(S,_LC):-
   \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A])))))).
 
 
+
 :- module_transparent(system:fixup_exports/0).
-system:fixup_exports:- 
+fixup_exports:- 
    all_source_file_predicates_are_exported,
    all_source_file_predicates_are_transparent.
+
+
 
 % :- export(fixup_exports/0).
 
@@ -313,7 +319,7 @@ add_history0(_):- \+ app_argv('--history'),!.
 add_history0(A):- prolog:history(user_input,add(A)),prolog:history(current_input,add(A)).
 
 
-system:nb_linkval_current(N,V):-duplicate_term(V,VV),V=VV,nb_linkval(N,VV),nb_current(N,V).
+nb_linkval_current(N,V):-duplicate_term(V,VV),V=VV,nb_linkval(N,VV),nb_current(N,V).
 
 extend_varnames(ExpandedBindings):- 
     prolog_load_context(variable_names,Vs),
@@ -340,10 +346,9 @@ user:expand_query(Goal, _Expanded, Bindings, _ExpandedBindings):-        fail,
     add_history0(A))))),
    fail.
        
+:- fixup_exports.
 
 :- use_module(logicmoo_util_startup).
-
-:- fixup_exports.
 
 :- if( app_argv('--upgrade') ).
 :- whenever_flag_permits(run_network,pack_upgrade).
