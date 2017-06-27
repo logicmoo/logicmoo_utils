@@ -879,7 +879,7 @@ functor_h(Obj,F,A):- var(Obj),!,trace_or_throw(var_functor_h(Obj,F,A)).
 functor_h('$VAR'(Obj),F,A):- !, trace_or_throw(var_functor_h('$VAR'(Obj),F,A)).
 % functor_h(Obj,F,A):- var(Obj),!,(number(A)->functor(Obj,F,A);((current_predicate(F/A);throw(var_functor_h(Obj,F,A))))).
 
-functor_h(M:Obj,MF,A):-(callable(Obj);atom(F)),!,functor_h(Obj,F,A),(MF=F;MF=M:F).
+functor_h(M:Obj,MF,A):-(callable(Obj);atom(M)),!,functor_h(Obj,F,A),(MF=F;MF=M:F).
 functor_h(F//A,F,Ap2):-number(A),!,Ap2 is A+2,( atom(F) ->  true ; current_predicate(F/Ap2)).
 functor_h(F/A,F,A):-number(A),!,( atom(F) ->  true ; current_predicate(F/A)).
 functor_h(Obj,F,A):-atom(F),strip_module(Obj,_M,P),functor(P,F,A).

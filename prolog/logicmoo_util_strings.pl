@@ -468,7 +468,7 @@ atomic_list_concat_safe(List,_,V):- (V=='';V==""),!,List=[].
 atomic_list_concat_safe(List,Sep,StringO):-ground(StringO),ground(Sep),not(atom_contains(StringO,Sep)),!,List=[D1O],any_to_string_or_var(StringO,D1O).
 atomic_list_concat_safe([Atom,A2|Bonus],Sep,V):-atomic(Atom),atomic(A2),atomic_list_concat_safe([Atom,Sep,A2],A3),atomic_list_concat_safe([A3|Bonus],Sep,V),!.
 atomic_list_concat_safe([Atom|Bonus],Sep,V):-atomic(Atom),atomic(V),atomic_list_concat_safe([Atom,Sep,NV],V),!,atomic_list_concat_safe(Bonus,NV).
-atomic_list_concat_safe([D1,PostAtom|Bonus],Sep,V):-var(D1),atomic(Atom),atomic(Sep),string_concat(Sep,PostAtom,Atom),
+atomic_list_concat_safe([D1,PostAtom|Bonus],Sep,V):-var(D1),atomic(V),atomic(Sep),string_concat(Sep,PostAtom,Atom),
   % We calc D1
   sub_string(V, NBefore, _Len, NumAfter, Atom),sub_string(V, 0, NBefore, _, D1O),
   sub_string(V,_,NumAfter,0,NewV),atomic_list_concat_safe(Bonus,Sep,NewV),!,
