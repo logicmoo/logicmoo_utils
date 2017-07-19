@@ -153,6 +153,21 @@ at_init(Goal):- system:assertz(lmconf:at_restore_goal(Goal)),add_history(Goal).
 during_init(Goal):- ignore(try_pending_init(maybe_notrace,Goal)), at_init(Goal).
 
 
+:- meta_predicate(call_last_is_var(0)).
+
+
+
+%% call_last_is_var( :GoalMCall) is semidet.
+%
+% Call Last If Is A Variable.
+%
+call_last_is_var(MCall):- strip_module(MCall,M,Call),
+   must((compound(Call),functor(Call,_,A))),
+   arg(A,Call,Last),nonvar(Last),Call=..FArgs,
+   append(Left,[Last],FArgs),
+   append(Left,[IsVar],NFArgs),NewCall=..NFArgs,!,
+    ( M:NewCall*->IsVar=Last;fail).
+
 
 :- meta_predicate(if_script(:)).   	 
 

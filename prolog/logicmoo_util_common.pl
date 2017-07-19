@@ -20,7 +20,7 @@
 :- module(logicmoo_util_common,[add_history/1,add_history0/1,make_historial/2,
    normally/1,var_non_attvar/1,
    whenever_flag_permits/2,
-   qsave_lm/0,qsave_lm/1,ignore_not_not/1, % fixup_exports/0,
+   qsave_lm/0,qsave_lm/1,ignore_not_not/1, fixup_exports/0,
           all_source_file_predicates_are_transparent/0,
           all_source_file_predicates_are_transparent/2,
           all_source_file_predicates_are_exported/0,
@@ -242,7 +242,8 @@ all_source_file_predicates_are_transparent(S,_LC):-
 
 
 
-:- module_transparent(system:fixup_exports/0).
+:- module_transparent(fixup_exports/0).
+
 fixup_exports:- 
    all_source_file_predicates_are_exported,
    all_source_file_predicates_are_transparent.
@@ -315,8 +316,11 @@ make_historial(O,A):-
     prolog_load_context(variable_names, Bindings),
     format(atom(A), '~W', [O, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]).
 
+:- multifile prolog:history/2.
+
 add_history0(_):- \+ app_argv('--history'),!.
-add_history0(A):- prolog:history(user_input,add(A)),prolog:history(current_input,add(A)).
+add_history0(A):- prolog:history(user_input,add(A)),
+                  prolog:history(current_input,add(A)).
 
 
 nb_linkval_current(N,V):-duplicate_term(V,VV),V=VV,nb_linkval(N,VV),nb_current(N,V).
