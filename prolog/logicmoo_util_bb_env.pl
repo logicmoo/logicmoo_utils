@@ -67,7 +67,7 @@ push_prefix_arg/4,
 term_expansion_add_context/5
 ]).
 
-:- kb_shared(baseKB:mpred_prop/3).
+:- kb_shared(baseKB:mpred_prop/4).
 
  :- meta_predicate % cmt :-
         env_call(+),
@@ -123,14 +123,14 @@ env_retractall(P):- must(env_mpred_op(retractall,P)),!.
 */
 
 env_clear(baseKB(Dom)):-nonvar(Dom),!,env_clear(Dom).
-env_clear(Dom):- forall(baseKB:mpred_prop(F,A,Dom),env_mpred_op(retractall(F/A))).
+env_clear(Dom):- forall(baseKB:mpred_prop(M,F,A,Dom),env_mpred_op(retractall(F/A))).
 env_mpred_op(OP_P):- OP_P=..[OP,P],env_mpred_op(OP,P).
 
 :- module_transparent(env_mpred_op/2).
 :- meta_predicate env_mpred_op(1,:).
 env_mpred_op(OP,P):- var(OP),!,P.
-%TODO env_mpred_op(OP,P):- baseKB:mpred_prop(F,A,P),!,forall(baseKB:mpred_prop(F,A,P),(nop(dtrace),env_mpred_op(OP,F/A) )).
-%TODO env_mpred_op(OP,F):- baseKB:mpred_prop(F,_,_),!,forall(baseKB:mpred_prop(F,A,_),(nop(dtrace),env_mpred_op(OP,F/A) )).
+%TODO env_mpred_op(OP,P):- baseKB:mpred_prop(M,F,A,P),!,forall(baseKB:mpred_prop(M,F,A,P),(nop(dtrace),env_mpred_op(OP,F/A) )).
+%TODO env_mpred_op(OP,F):- baseKB:mpred_prop(M,F,_,_),!,forall(baseKB:mpred_prop(M,F,A,_),(nop(dtrace),env_mpred_op(OP,F/A) )).
 env_mpred_op(OP,F/A):-integer(A),atom(F),!,functor(P,F,A),!,env_mpred_op(OP,P).
 env_mpred_op(OP,P):- t_l:push_env_ctx, do_prefix_arg(P, ZZ, PP, _Type),P\==PP,!,get_env_ctx(ZZ),call(OP,/*ocluser*/ocl:PP).
 env_mpred_op(OP,P):- functor_h(P,F,A),must(get_mpred_stubType(F,A,ENV)),!,env_mpred_op(ENV,OP,P).
@@ -151,16 +151,16 @@ get_mp_arity(F,A):- defaultAssertMt(M),if_defined(M:arity(F,A)).
 get_mp_arity(F,A):- get_current_default_tbox(M),if_defined(M:arity(F,A)).
 get_mp_arity(F,A):- arity_no_bc(F,A).
 
-% baseKB:mpred_prop(F,A,Prop):- get_current_default_tbox(M),M:isa(F,Prop),get_mp_arity(F,A).
+% baseKB:mpred_prop(M,F,A,Prop):- get_current_default_tbox(M),M:isa(F,Prop),get_mp_arity(F,A).
 
 get_mpred_stubType(_,_,dyn):-!.
 get_mpred_stubType(F,A,StubOut):-    
-   baseKB:mpred_prop(F,A,stubType(Stub)),!,must(StubIn=Stub),
+   baseKB:mpred_prop(M,F,A,stubType(Stub)),!,must(StubIn=Stub),
    % PREVENTS FAILURE
    nop(StubIn==dyn->true;dmsg(get_mpred_stubType(F,A,StubIn))),
    StubOut=dyn.
 
-get_mpred_stubType(F,A,dyn):-baseKB:mpred_prop(F,A,dyn).
+get_mpred_stubType(F,A,dyn):-baseKB:mpred_prop(M,F,A,dyn).
 get_mpred_stubType(_,_,dyn).
 
 :- ain(isa_kb:box_prop(l)).
@@ -207,7 +207,7 @@ abolish_and_make_static(F,A):-
   must_det_l((
    retractall(get_mp_arity(F,A)),
    retractall(arity(F,A)),
-   retractall(baseKB:mpred_prop(F,A,_)),
+   retractall(baseKB:mpred_prop(M,F,A,_)),
   functor(H,F,A),
   abolish(F,A),
   asserta((H:-trace_or_throw(H))),
@@ -235,7 +235,7 @@ decl_env_mpred_real(Prop,Pred,F,A):-
   ain(get_mp_arity(F,A)),
   ain(arity(F,A)),!,
   % dtrace,
-  ain(baseKB:mpred_prop(F,A,Prop)).
+  ain(baseKB:mpred_prop(M,F,A,Prop)).
 
 
 env_learn_pred(_,_):-nb_getval(disabled_env_learn_pred,true),!.
@@ -258,9 +258,9 @@ lg_op2(_,OP,OP).
 
 env_mpred_op(_,_,[]):-!.
 env_mpred_op(ENV,OP,F/A):- % dtrace,
-   var(A),!, forall(baseKB:mpred_prop(F,A,ENV),((functor(P,F,A),env_mpred_op(ENV,OP,P)))).
+   var(A),!, forall(baseKB:mpred_prop(M,F,A,ENV),((functor(P,F,A),env_mpred_op(ENV,OP,P)))).
 env_mpred_op(ENV,retractall,F/A):-functor(P,F,A),!,env_mpred_op(ENV,retractall,P).
-% env_mpred_op(ENV,OP,Dom):- isa_kb:box_prop(Dom),!,forall(baseKB:mpred_prop(F,A,Dom),env_mpred_op(ENV,OP,F/A)).
+% env_mpred_op(ENV,OP,Dom):- isa_kb:box_prop(Dom),!,forall(baseKB:mpred_prop(M,F,A,Dom),env_mpred_op(ENV,OP,F/A)).
 % env_mpred_op(ENV,OP,F/A):-!, functor(P,F,A), (((get_mpred_stubType(F,A,LG2),LG2\==ENV)  -> env_mpred_op(LG2,OP,P) ; env_mpred_op(ENV,OP,P) )).
 % env_mpred_op(_,retractall,P):-functor_h(P,F,A),must(get_mpred_stubType(F,A,_)),fail.
 % env_mpred_op(ENV,OP,P):- functor_h(P,F,A),  (((get_mpred_stubType(F,A,LG2),LG2\==ENV)  -> env_mpred_op(LG2,OP,P) ; fail )).
@@ -305,7 +305,7 @@ env_info(Pred,Infos):- (nonvar(Pred)-> env_predinfo(Pred,Infos) ; (get_mp_arity(
 
 
 harvest_preds(Type,Functors):-
- findall(functor(P,F,A),((get_mp_arity(F,A),(baseKB:mpred_prop(F,A,Type);Type=F),functor(P,F,A))),Functors).
+ findall(functor(P,F,A),((get_mp_arity(F,A),(baseKB:mpred_prop(M,F,A,Type);Type=F),functor(P,F,A))),Functors).
 
 env_1_info(Type,[predcount(NC)|Infos]):- 
  gensym(env_1_info,Sym),flag(Sym,_,0),
@@ -320,7 +320,7 @@ env_1_info(Type,[predcount(NC)|Infos]):-
 env_predinfo(PIn,Infos):- functor_h(PIn,F,A),get_mp_arity(F,A),functor(P,F,A),findall(Info,pred_1_info(P,F,A,Info),Infos).
 
 pred_1_info(P,_,_,Info):- member(Info:Prop,[count(NC):number_of_clauses(NC),mf:multifile,dyn:dynamic,vol:volitile,local:local]),predicate_property(P,Prop).
-pred_1_info(_,F,A,Info):- baseKB:mpred_prop(F,A,Info).
+pred_1_info(_,F,A,Info):- baseKB:mpred_prop(M,F,A,Info).
 pred_1_info(_,F,A,F/A).
 
 

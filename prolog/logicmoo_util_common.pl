@@ -215,16 +215,25 @@ lmconfig:never_export_named(project_attributes/2).
 lmconfig:never_export_named(attr_portray_hook/2).
 
 % :- module_transparent(all_source_file_predicates_are_exported/2).
+
+%:- set_prolog_flag(logicmoo_import_to_system, baseKB).
+all_source_file_predicates_are_exported(S,LC):- current_prolog_flag(logicmoo_import_to_system, BaseKB),!,
+ forall(source_file(M:H,S),
+ ignore((functor(H,F,A), \+ atom_concat('$',_,F), \+ lmconfig:never_export_named(F/A),
+  ignore(((atom(LC),atom(M), LC\==M,M:export(M:F/A),LC:multifile(M:F/A),fail,atom_concat('$',_,F),LC:import(M:F/A)))),
+  ignore(((\+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F),LC:export(M:F/A), 
+  ignore((M\==BaseKB,(current_predicate(system:F/A)->true; system:import(M:F/A)))))))))).
+
 all_source_file_predicates_are_exported(S,LC):-
  forall(source_file(M:H,S),
  ignore((functor(H,F,A), \+ atom_concat('$',_,F), \+ lmconfig:never_export_named(F/A),
-  ((ignore(((atom(LC),atom(M), LC\==M,M:export(M:F/A),LC:multifile(M:F/A),fail,atom_concat('$',_,F),LC:import(M:F/A)))))),
+  ignore(((atom(LC),atom(M), LC\==M,M:export(M:F/A),LC:multifile(M:F/A),fail,atom_concat('$',_,F),LC:import(M:F/A)))),
   ignore(((\+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F),LC:export(M:F/A), 
-  (current_predicate(system:F/A)->true; system:import(M:F/A)))))))).
+  ignore(((current_predicate(system:F/A)->true; system:import(M:F/A)))))))))).
 
 :- meta_predicate(sexport(:)).
 sexport(M:F/A):- M:export(M:F/A),system:import(M:F/A).
-
+                       
 %% all_source_file_predicates_are_transparent() is det.
 %
 % All Module Predicates Are Transparent.

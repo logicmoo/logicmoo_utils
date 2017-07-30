@@ -96,10 +96,12 @@ erase_clause(H,B):-
 %
 % @NOTE quietly/1 is the nondet version of notrace/1.
 
+maybe_notrace(Goal):- !,call(Goal).
 maybe_notrace(Goal):- tracing -> (debug,maybe_notrace(quietly(Goal), Goal)) ; maybe_notrace(Goal,rtrace(Goal)).
 
 :- meta_predicate(maybe_notrace(0,0)).
 
+maybe_notrace(Goal,Else):- !, (call(Goal)*-> true ; Else).
 maybe_notrace(Goal,Else):-   
   (catch(Goal,E1,(wdmsg(error_maybe_notrace(E1,Goal)),Else)) 
    -> ! 
@@ -237,7 +239,7 @@ init_why(Phase):-
 :- module_transparent(system:'$init_goal'/3).
 :- forall(absolute_startup_script(F),assertz(system:'$init_goal'(F,logicmoo_util_startup:init_why(after(F)),F:9999))).
 
-:- if(true).
+:- if(false).
 :- user:dynamic(expand_query/4).
 :- user:multifile(expand_query/4).
 user:expand_answer(_Bindings, _ExpandedBindings):- run_pending_inits,fail.
