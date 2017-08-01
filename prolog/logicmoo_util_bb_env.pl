@@ -67,7 +67,7 @@ push_prefix_arg/4,
 term_expansion_add_context/5
 ]).
 
-:- kb_shared(baseKB:mpred_prop/4).
+:- kb_global(baseKB:mpred_prop/4).
 
  :- meta_predicate % cmt :-
         env_call(+),
