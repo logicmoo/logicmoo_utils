@@ -1160,6 +1160,8 @@ load_dirrective(Term,_Options):-!,Term.
 %
 % Call No Cuts.
 %
+call_no_cuts(ereq(A)):-!,call_no_cuts(A).
+call_no_cuts(call_u(A)):-!,call_no_cuts(A).
 call_no_cuts((A,B)):-!,(call_no_cuts(A),call_no_cuts(B)).
 call_no_cuts((A;B)):-!,(call_no_cuts(A);call_no_cuts(B)).
 call_no_cuts((A->B)):-!,(call_no_cuts(A)->call_no_cuts(B)).
