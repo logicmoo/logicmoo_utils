@@ -355,7 +355,7 @@ is_s_string(I):-compound(I),functor(I,s,_),!.
 convert_to_cycString(I,O):- is_s_string(I),!,O=I.
 convert_to_cycString(I,O):- convert_to_string_list(I,M),delistify_single_element(M,O).
 
-convert_to_string(I,O):- convert_to_atoms_list(I,M),(is_list(M)->atomics_to_string(M," ",O);atom_to_string(M,O)).
+convert_to_string(I,O):- convert_to_atoms_list(I,M),(is_list(M)->atomics_to_string(M," ",O);text_to_string(M,O)).
 
 convert_to_atoms_list(I,O):- is_s_string(I),I=..[s|M],!,maplist_atom_string(O,M).
 convert_to_atoms_list(A,B):- \+ atomic(A),!,listify(A,B),nop(dmsg(convert_to_atoms_list(A,B))).
