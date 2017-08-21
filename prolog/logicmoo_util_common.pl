@@ -36,6 +36,48 @@
 
 
 
+
+fav_module:-
+  '$current_typein_module'(Module),prolog_load_context(module,SourceModule),
+  ((SourceModule==Module) -> true ;
+  ((SourceModule==user -> '$set_source_module'(Module) ; true),
+  (Module==user -> '$set_typein_module'(SourceModule) ; true))).
+
+
+fav_debug:- 
+ fav_module,
+ set_prolog_flag(access_level,system),
+ set_prolog_flag(backtrace, true),
+ set_prolog_flag(backtrace_goal_depth, 2000),
+ set_prolog_flag(backtrace_show_lines, true),
+ set_prolog_flag(debug,true),
+ set_prolog_flag(debug_on_error,true),
+ set_prolog_flag(debugger_show_context,true),
+ set_prolog_flag(debugger_write_options,[quoted(true), portray(true), max_depth(300), attributes(write)]),
+ set_prolog_flag(fileerrors,true),
+ set_prolog_flag(gc,false),
+ set_prolog_flag(report_error,true),
+ % set_prolog_flag(retry_undefined,trace),
+ set_prolog_flag(runtime_debug, 3), % 2 = important but dont sacrifice other features for it
+ set_prolog_flag(runtime_safety, 3),  % 3 = very important
+ set_prolog_flag(runtime_speed, 0), % 1 = default
+ set_prolog_flag(runtime_speed,0), % 0 = dont care
+ set_prolog_flag(unsafe_speedups, false),
+ set_prolog_flag(verbose_autoload,true),
+ !.
+
+
+bt:-
+ use_module(library(prolog_stack)),
+ dumpST9,
+ prolog_stack:export(prolog_stack:get_prolog_backtrace_lc/3),
+ use_module(library(prolog_stack),[print_prolog_backtrace/2,get_prolog_backtrace_lc/3]),
+  stream_property(S,file_no(1)),
+  prolog_stack:get_prolog_backtrace_lc(8000, Stack, [goal_depth(600)]),
+  print_prolog_backtrace(S, Stack).
+
+
+
 :- meta_predicate(whenever_flag_permits(+,:)).
 
 whenever_flag_permits(Flag,G):- (current_prolog_flag(Flag,false) -> true ; G).
