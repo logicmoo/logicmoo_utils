@@ -184,7 +184,7 @@ compound_name_arity_safe/3
          %upcase_atom_safe/2,
          %get_module_of/2,
           % concat_atom_safe/3,
-           %atom_concat_safe/3,
+           atom_concat_safe/3,
            %exists_file_safe/1,
            %exists_directory_safe/1,
            %eraseall/2,
@@ -1147,6 +1147,12 @@ load_assert(H,B,_Options):-assert((H:-B)),!.
 load_dirrective(include(PLNAME),_Options):- (atom_concat_safe(Key,'.pl',PLNAME) ; Key=PLNAME),!, dynamic_load_pl(Key).
 load_dirrective(CALL,_Options):- CALL=..[module,M,_Preds],!,module(M),call(CALL).
 load_dirrective(Term,_Options):-!,Term.
+
+%% atom_concat_safe( ?L, ?R, ?A) is semidet.
+%
+% Atom Concat Safely Paying Attention To Corner Cases.
+%
+atom_concat_safe(L,R,A):- ((atom(A),(atom(L);atom(R))) ; ((atom(L),atom(R)))), !, atom_concat(L,R,A),!.
 
 % =====================================================================================================================
 :- export((call_no_cuts/1)).
