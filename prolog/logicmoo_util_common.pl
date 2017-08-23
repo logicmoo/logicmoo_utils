@@ -51,29 +51,32 @@ fav_debug:-
  set_prolog_flag(backtrace_goal_depth, 2000),
  set_prolog_flag(backtrace_show_lines, true),
  set_prolog_flag(debug,true),
+ % set_prolog_flag(write_attributes,write),
  set_prolog_flag(debug_on_error,true),
  set_prolog_flag(debugger_show_context,true),
- set_prolog_flag(debugger_write_options,[quoted(true), portray(true), max_depth(300), attributes(write)]),
+ set_prolog_flag(debugger_write_options,[quoted(true), portray(true), max_depth(10), attributes(write)]),
  set_prolog_flag(fileerrors,true),
  set_prolog_flag(gc,false),
+ set_prolog_flag(occurs_check,true),
  set_prolog_flag(report_error,true),
- % set_prolog_flag(retry_undefined,trace),
+ % set_prolog_flag(retry_undefined, none),
  set_prolog_flag(runtime_debug, 3), % 2 = important but dont sacrifice other features for it
  set_prolog_flag(runtime_safety, 3),  % 3 = very important
  set_prolog_flag(runtime_speed, 0), % 1 = default
- set_prolog_flag(runtime_speed,0), % 0 = dont care
+ set_prolog_flag(runtime_speed, 1), % 0 = dont care
  set_prolog_flag(unsafe_speedups, false),
  set_prolog_flag(verbose_autoload,true),
+ set_prolog_flag(verbose_load,full),
  !.
 
 
 bt:-
- use_module(library(prolog_stack)),
- dumpST9,
+    use_module(library(prolog_stack)),
+  dumpST9,
  prolog_stack:export(prolog_stack:get_prolog_backtrace_lc/3),
  use_module(library(prolog_stack),[print_prolog_backtrace/2,get_prolog_backtrace_lc/3]),
   stream_property(S,file_no(1)),
-  prolog_stack:get_prolog_backtrace_lc(8000, Stack, [goal_depth(600)]),
+  prolog_stack:call(call,get_prolog_backtrace_lc,8000, Stack, [goal_depth(600)]),
   print_prolog_backtrace(S, Stack).
 
 
@@ -145,7 +148,7 @@ after_boot_sanity_test(M:Goal):- after_boot(M:sanity(M:Goal)).
 %
 % If Defined.
 %
-iff_defined(Goal):- iff_defined(Goal,((dmsg(warn_undefined(Goal))),!,fail)).
+iff_defined(Goal):- iff_defined(Goal,((print_message(warning,warn_undefined(Goal))),!,fail)).
 
 %% iff_defined( ?Goal, :GoalElse) is semidet.
 %
@@ -166,8 +169,8 @@ iff_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
 :- meta_predicate(ignore_not_not(0)).
 :- export(pack_upgrade/0).
 pack_upgrade:- call((user:use_module(library(prolog_pack)),use_module(library(predicate_streams)), 
-  with_input_from_predicate(({}/[X]>>(repeat,X='YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY')),
-    forall(call(prolog_pack:current_pack(Pack)),maybe_pack_upgrade(Pack))))).
+  with_input_from_predicate(({}/[X]>>(repeat,X='YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY')),
+    forall(call(call,prolog_pack:current_pack,Pack),maybe_pack_upgrade(Pack))))).
 
 maybe_pack_upgrade(Pack):- pack_property(Pack, directory(PackDir)),\+ access_file(PackDir,write),!.
 maybe_pack_upgrade(Pack):- pack_upgrade(Pack).
@@ -382,7 +385,7 @@ extend_varnames(ExpandedBindings):-
     append(NewVs,[],NewVs),
     nb_linkval_current('$variable_names',NewVs).
 
-
+:- if(false).
 :- user:multifile(expand_answer/2).
 :- user:dynamic(expand_answer/2).
 user:expand_answer(Bindings, ExpandedBindings):- 
@@ -400,12 +403,10 @@ user:expand_query(Goal, _Expanded, Bindings, _ExpandedBindings):-        fail,
     format(atom(A), '~W', [Goal, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]),
     add_history0(A))))),
    fail.
-       
+:- endif.
+
+
 :- fixup_exports.
 
-:- use_module(logicmoo_util_startup).
-
-:- if( app_argv('--upgrade') ).
-:- whenever_flag_permits(run_network,pack_upgrade).
-:- endif.
+% :- use_module(logicmoo_util_startup).
 

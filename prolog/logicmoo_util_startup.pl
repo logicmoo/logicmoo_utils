@@ -240,18 +240,20 @@ init_why(Phase):-
 :- forall(absolute_startup_script(F),assertz(system:'$init_goal'(F,logicmoo_util_startup:init_why(after(F)),F:9999))).
 
 :- if(false).
-:- user:dynamic(expand_query/4).
-:- user:multifile(expand_query/4).
-user:expand_answer(_Bindings, _ExpandedBindings):- run_pending_inits,fail.
 :- user:multifile(expand_answer/2).
 :- user:dynamic(expand_answer/2).
+user:expand_answer(_Bindings, _ExpandedBindings):- run_pending_inits,fail.
+:- user:dynamic(expand_query/4).
+:- user:multifile(expand_query/4).
 user:expand_query(_Goal, _Expanded, _Bindings, _ExpandedBindings):-  run_pending_inits,fail.
 :- endif.
 
-:- use_module(logicmoo_util_common).
+%:- use_module(logicmoo_util_common).
 :- fixup_exports.
 
-
+:- if( app_argv('--upgrade') ).
+:- whenever_flag_permits(run_network,pack_upgrade).
+:- endif.
 
 :- if(false). 
 :- multifile(user:term_expansion/2).

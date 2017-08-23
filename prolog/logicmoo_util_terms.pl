@@ -110,6 +110,7 @@ wsubst/4,
 append_termlist/3,            
 append_term/3,            
 apply_term/3,
+atom_concat_safe/3,
 compound_name_args_safe/3,
 compound_name_arity_safe/3
           ]).
@@ -184,7 +185,7 @@ compound_name_arity_safe/3
          %upcase_atom_safe/2,
          %get_module_of/2,
           % concat_atom_safe/3,
-           atom_concat_safe/3,
+           
            %exists_file_safe/1,
            %exists_directory_safe/1,
            %eraseall/2,
@@ -696,7 +697,8 @@ univ_safe(P,L):- must_det(is_list(L)),on_x_debug((P=..L)).
 %
 % Subst.
 %
-subst(A,B,C,D):-  quietly((catchv(quietly(nd_subst(A,B,C,D)),E,(dumpST,dmsg(E:nd_subst(A,B,C,D)),fail)))),!.
+% subst(A,B,C,D):-  quietly((catchv(quietly(nd_subst(A,B,C,D)),E,(dumpST,dmsg(E:nd_subst(A,B,C,D)),fail)))),!.
+subst(A,B,C,D):-  must(nd_subst(A,B,C,D0)),on_x_debug(D=D0).
 subst(A,_B,_C,A).
 
 
@@ -707,10 +709,10 @@ subst(A,_B,_C,A).
 % Nd Subst.
 %
 nd_subst(  Var, VarS,SUB,SUB ) :- Var==VarS,!.
-nd_subst(  Var, _,_,Var ) :- var(Var),!.
-
+% nd_subst(  Var, _,_,Var ) :- var(Var),!.
+nd_subst(  Var, _,_,Var ) :- \+ compound(Var),!.
 nd_subst(  P, X,Sk, P1 ) :- 
-  compound_name_arity_safe(P,_,N),
+  compound_name_arity(P,_,N),
   nd_subst1( X, Sk, P, N, P1 ).
 
 
