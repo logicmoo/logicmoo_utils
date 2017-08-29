@@ -698,7 +698,7 @@ univ_safe(P,L):- must_det(is_list(L)),on_x_debug((P=..L)).
 % Subst.
 %
 % subst(A,B,C,D):-  quietly((catchv(quietly(nd_subst(A,B,C,D)),E,(dumpST,dmsg(E:nd_subst(A,B,C,D)),fail)))),!.
-subst(A,B,C,D):-  must(nd_subst(A,B,C,D0)),on_x_debug(D=D0).
+subst(A,B,C,D):-  must(nd_subst(A,B,C,D0)),on_x_debug(D=D0),!.
 subst(A,_B,_C,A).
 
 
@@ -713,7 +713,7 @@ nd_subst(  Var, VarS,SUB,SUB ) :- Var==VarS,!.
 nd_subst(  Var, _,_,Var ) :- \+ compound(Var),!.
 nd_subst(  P, X,Sk, P1 ) :- 
   compound_name_arity(P,_,N),
-  nd_subst1( X, Sk, P, N, P1 ).
+  nd_subst1( X, Sk, P, N, P1 ),!.
 
 
 %= 	 	 
