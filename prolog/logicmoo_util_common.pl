@@ -51,7 +51,7 @@ fav_debug:-
  set_prolog_flag(backtrace_goal_depth, 2000),
  set_prolog_flag(backtrace_show_lines, true),
  set_prolog_flag(debug,true),
- % set_prolog_flag(write_attributes,write),
+ set_prolog_flag(write_attributes,ignore),
  set_prolog_flag(debug_on_error,true),
  set_prolog_flag(debugger_show_context,true),
  set_prolog_flag(debugger_write_options,[quoted(true), portray(true), max_depth(10), attributes(write)]),
