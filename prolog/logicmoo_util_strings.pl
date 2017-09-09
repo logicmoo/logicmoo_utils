@@ -1197,7 +1197,7 @@ catch_read_term_from_atom(Sub,Term,NewOnes):-
 %
 % Splt Words.
 %
-splt_words(Atom,Terms,Var):- on_x_fail((notrace(once(splt_words_0(Atom,Terms,Var))))),!.
+splt_words(Atom,Terms,Var):- on_x_fail((quietly(once(splt_words_0(Atom,Terms,Var))))),!.
 splt_words(Atom,Words1,[]):- on_x_fail(atomic_list_concat_safe(Words1,' ',Atom)),!.
 
 
@@ -1274,7 +1274,7 @@ vars_to_ucase_0([N=V|Vars],List):-
 % Atom Split.
 %
 atomSplit(In,List):- convert_to_cycString(In,M),listify(M,List).
-%atomSplit(In,List):- notrace(( ground(In),
+%atomSplit(In,List):- quietly(( ground(In),
 % any_to_string(In,String),
 %    splt_words(String,List,Vars),vars_to_ucase(Vars,List))),!.
 
@@ -1289,7 +1289,7 @@ atomSplit(In,List):- convert_to_cycString(In,M),listify(M,List).
 % Atom Split Easy.
 %
 atomSplitEasy_unused(Atom,WordsO):-
-   notrace((atomSplit(Atom,WordsO,[' ','\t','\n','\v','\f','\r',' ','!','"','#','$','%','&','\'',
+   quietly((atomSplit(Atom,WordsO,[' ','\t','\n','\v','\f','\r',' ','!','"','#','$','%','&','\'',
     '(',')','*','+',',','-','.','/',':',';','<',
     '=','>','?','@','[',\,']','^','_',
     '`','{','|','}','~']
@@ -1304,9 +1304,9 @@ atomSplitEasy_unused(Atom,WordsO):-
 %
 % Atom Split.
 %
-atomSplit(S,WordsO,List):- notrace(( atomic(S),atomic_list_concat_safe(Words1,' ',S),!, atomSplit2_unused(Words1,Words,List),!, Words=WordsO )).
-atomSplit(Atom,WordsO,List):- notrace(( atom(Atom), atomic_list_concat_safe(Words1,' ',Atom),!, atomSplit2_unused(Words1,Words,List),!, Words=WordsO )).
-atomSplit(Atom,Words,[Space|AtomO]):-notrace((var(Atom),ground(Words),!,atomic_list_concat_safe(Words,Space,AtomO),!,Atom=AtomO)).
+atomSplit(S,WordsO,List):- quietly(( atomic(S),atomic_list_concat_safe(Words1,' ',S),!, atomSplit2_unused(Words1,Words,List),!, Words=WordsO )).
+atomSplit(Atom,WordsO,List):- quietly(( atom(Atom), atomic_list_concat_safe(Words1,' ',Atom),!, atomSplit2_unused(Words1,Words,List),!, Words=WordsO )).
+atomSplit(Atom,Words,[Space|AtomO]):-quietly((var(Atom),ground(Words),!,atomic_list_concat_safe(Words,Space,AtomO),!,Atom=AtomO)).
 
 
 
@@ -1509,7 +1509,7 @@ member_ci(W,WL):-to_word_list(WL,ListI),member(LL2,ListI),string_equal_ci(LL2,W)
 % String Ci.
 %
 string_ci(A,LIC):-ground(string_ci(A,LIC)),!,string_ci(A,LIC1),string_ci(LIC,LIC2),LIC1=LIC2.
-string_ci(A,LIC):-notrace((must(nonvar(A)),non_empty(A),any_to_string(A,S),!,text_to_string(S,SS),
+string_ci(A,LIC):-quietly((must(nonvar(A)),non_empty(A),any_to_string(A,S),!,text_to_string(S,SS),
    string_lower(SS,SL),
   atomics_to_string(SLIC,'_',SL),
    atomics_to_string(SLIC,' ',LIC))),!.
@@ -1741,7 +1741,7 @@ to_word_list([],[]):-!.
 to_word_list([I|L],List):-L==[],!,to_word_list(I,List).
 to_word_list(I,List):-convert_to_cycString(I,M),listify(M,List).
 /*
-to_word_list(A,SL):-once(notrace((unused_to_word_list_0(A,S0),(is_list(S0)->delete(S0,'',S);S=S0)))),
+to_word_list(A,SL):-once(quietly((unused_to_word_list_0(A,S0),(is_list(S0)->delete(S0,'',S);S=S0)))),
    maplist(as_atom,S,SSL),!,
    must(SSL=SL),!.
 */

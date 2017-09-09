@@ -96,7 +96,7 @@ erase_clause(H,B):-
 %
 % @NOTE quietly/1 is the nondet version of notrace/1.
 
-maybe_notrace(Goal):- !,call(Goal).
+% maybe_notrace(Goal):- !, call(Goal).
 maybe_notrace(Goal):- tracing -> (debug,maybe_notrace(quietly(Goal), Goal)) ; maybe_notrace(Goal,rtrace(Goal)).
 
 :- meta_predicate(maybe_notrace(0,0)).
