@@ -311,7 +311,8 @@ var_non_attvar(V):- var(V),\+ attvar(V).
 
 getenv_or(Name,ValueO,Default):-
    (getenv(Name,RV)->Value=RV;Value=Default),
-   ( \+ number(Value) -> atom_number(Value,ValueO); Value=ValueO).
+   (number(Default) -> ( \+ number(Value) -> atom_number(Value,ValueO); Value=ValueO);
+      Value=ValueO).
 
 
 /*
