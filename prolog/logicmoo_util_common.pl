@@ -69,6 +69,9 @@ fav_debug:-
  set_prolog_flag(verbose_load,full),
  !.
 
+setup_hist:-  '$toplevel':setup_history.
+:- setup_hist.
+
 
 bt:-
     use_module(library(prolog_stack)),
@@ -242,6 +245,7 @@ system:logicmoo_user_stacks:- Six = 6, set_prolog_stack(global, limit(Six*10**9)
 %
 set_prolog_stack_gb(Six):-set_prolog_stack(global, limit(Six*10**9)),set_prolog_stack(local, limit(Six*10**9)), set_prolog_stack(trail, limit(Six*10**9)).
 
+:- set_prolog_stack_gb(16).
 
 
 %% all_source_file_predicates_are_exported() is det.
@@ -271,7 +275,7 @@ all_source_file_predicates_are_exported(S,LC):- current_prolog_flag(logicmoo_imp
 
 all_source_file_predicates_are_exported(S,LC):-
  forall(source_file(M:H,S),
- ignore((functor(H,F,A), \+ atom_concat('$',_,F), \+ lmconfig:never_export_named(F/A),
+ ignore((functor(H,F,A), \+ atom_concat('$',_,F), \+ lmconfig:never_export_named(F/_),
   ignore(((atom(LC),atom(M), LC\==M,M:export(M:F/A),LC:multifile(M:F/A),fail,atom_concat('$',_,F),LC:import(M:F/A)))),
   ignore(((\+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F),LC:export(M:F/A), 
   ignore(((current_predicate(system:F/A)->true; system:import(M:F/A)))))))))).
