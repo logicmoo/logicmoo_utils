@@ -103,10 +103,10 @@ maybe_notrace(Goal):- tracing -> (debug,maybe_notrace(quietly(Goal), Goal)) ; ma
 
 maybe_notrace(Goal,Else):- !, (call(Goal)*-> true ; Else).
 maybe_notrace(Goal,Else):-   
-  (catch(Goal,E1,(wdmsg(error_maybe_notrace(E1,Goal)),Else)) 
+  (catch(Goal,E1,(wdmsg(error_maybe_zotrace(E1,Goal)),Else)) 
    -> ! 
-   ; (( wdmsg(failed_maybe_notrace(Goal)),
-     ignore(catch(Else,E2,(wdmsg(else_error_maybe_notrace(E2, Else, goal(Goal))),(nonvar(E1)->throw(E1);throw(E2)))))))).
+   ; (( wdmsg(failed_maybe_zotrace(Goal)),
+     ignore(catch(Else,E2,(wdmsg(else_error_maybe_zotrace(E2, Else, goal(Goal))),(nonvar(E1)->throw(E1);throw(E2)))))))).
 
 
 %=======================================
