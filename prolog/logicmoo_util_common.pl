@@ -248,6 +248,8 @@ set_prolog_stack_gb(Six):-set_prolog_stack(global, limit(Six*10**9)),set_prolog_
 :- set_prolog_stack_gb(16).
 
 
+if_debugging(Topic,Goal):- debugging(Topic)->call(Goal);true.
+
 %% all_source_file_predicates_are_exported() is det.
 %
 % All Module Predicates Are Exported.
@@ -258,27 +260,27 @@ all_source_file_predicates_are_exported:-
  source_location(S,_), prolog_load_context(module,LC),
  all_source_file_predicates_are_exported(S,LC).
 
-lmconfig:never_export_named(attr_unify_hook/2).
-lmconfig:never_export_named(attribute_goals/3).
-lmconfig:never_export_named(project_attributes/2).
-lmconfig:never_export_named(attr_portray_hook/2).
+lmconfig:never_export_named(_,attr_unify_hook,2).
+lmconfig:never_export_named(_,attribute_goals,3).
+lmconfig:never_export_named(_,project_attributes,2).
+lmconfig:never_export_named(_,attr_portray_hook,2).
+% lmconfig:never_export_named(_M,F,A):- current_predicate(user:F/A).
 
 % :- module_transparent(all_source_file_predicates_are_exported/2).
 
 %:- set_prolog_flag(logicmoo_import_to_system, baseKB).
-all_source_file_predicates_are_exported(S,LC):- current_prolog_flag(logicmoo_import_to_system, BaseKB),!,
+all_source_file_predicates_are_exported(S,LC)
+ :- 
+ ignore(source_location(S,_);prolog_load_context(source,S)),
+ ignore(prolog_load_context(module,LC)),
+ (current_prolog_flag(logicmoo_import_to_system, BaseKB)->true;BaseKB=[]),
  forall(source_file(M:H,S),
- ignore((functor(H,F,A), \+ atom_concat('$',_,F), \+ lmconfig:never_export_named(F/A),
-  ignore(((atom(LC),atom(M), LC\==M,M:export(M:F/A),LC:multifile(M:F/A),fail,atom_concat('$',_,F),LC:import(M:F/A)))),
+ ignore((functor(H,F,A), 
+  %(module_property(M,exports(List))-> \+ member(F/A,List); true),
+  \+ lmconfig:never_export_named(M,F,A),
+  ignore((atom(LC),atom(M),LC\==M, M:multifile(M:F/A),fail,LC:export(M:F/A),ignore(atom_concat('$',_,F)),LC:import(M:F/A))),
   ignore(((\+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F),LC:export(M:F/A), 
-  ignore((M\==BaseKB,(current_predicate(system:F/A)->true; system:import(M:F/A)))))))))).
-
-all_source_file_predicates_are_exported(S,LC):-
- forall(source_file(M:H,S),
- ignore((functor(H,F,A), \+ atom_concat('$',_,F), \+ lmconfig:never_export_named(F/_),
-  ignore(((atom(LC),atom(M), LC\==M,M:export(M:F/A),LC:multifile(M:F/A),fail,atom_concat('$',_,F),LC:import(M:F/A)))),
-  ignore(((\+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F),LC:export(M:F/A), 
-  ignore(((current_predicate(system:F/A)->true; system:import(M:F/A)))))))))).
+  ignore((M\==BaseKB, \+ current_predicate(system:F/A), system:import(M:F/A))))))))).
 
 :- meta_predicate(sexport(:)).
 sexport(M:F/A):- M:export(M:F/A),system:import(M:F/A).
@@ -287,6 +289,7 @@ sexport(M:F/A):- M:export(M:F/A),system:import(M:F/A).
 %
 % All Module Predicates Are Transparent.
 :- module_transparent(all_source_file_predicates_are_transparent/0).
+all_source_file_predicates_are_transparent:- current_prolog_flag(xref,true),!.
 all_source_file_predicates_are_transparent:-
  source_location(S,_), prolog_load_context(module,LC),
  all_source_file_predicates_are_transparent(S,LC).
@@ -297,7 +300,6 @@ all_source_file_predicates_are_transparent(S,_LC):-
  (functor(H,F,A),
   ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), 
   \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A])))))).
-
 
 
 :- module_transparent(fixup_exports/0).
