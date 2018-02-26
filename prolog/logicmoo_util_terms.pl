@@ -956,7 +956,7 @@ run_at_start:- forall(lmcache:needs_started(Named,Goal),remember_at_start(Named,
 % List Converted To Set Safely Paying Attention To Corner Cases.
 %
 list_to_set_safe(A,A):-(var(A);atomic(A)),!.
-list_to_set_safe([A|AA],BB):- (not(not(lastMember2(A,AA))) -> list_to_set_safe(AA,BB) ; (list_to_set_safe(AA,NB),BB=[A|NB])),!.
+list_to_set_safe([A|AA],BB):- ( \+ ( \+ (lastMember2(A,AA))) -> list_to_set_safe(AA,BB) ; (list_to_set_safe(AA,NB),BB=[A|NB])),!.
 
 
 
@@ -1173,9 +1173,10 @@ call_no_cuts(call_u(A)):-!,call_no_cuts(A).
 call_no_cuts((A,B)):-!,(call_no_cuts(A),call_no_cuts(B)).
 call_no_cuts((A;B)):-!,(call_no_cuts(A);call_no_cuts(B)).
 call_no_cuts((A->B)):-!,(call_no_cuts(A)->call_no_cuts(B)).
+call_no_cuts((A*->B;C)):-!,(call_no_cuts(A)->call_no_cuts(B);call_no_cuts(C)).
 call_no_cuts((A->B;C)):-!,(call_no_cuts(A)->call_no_cuts(B);call_no_cuts(C)).
-call_no_cuts(M:CALL):-atom(M),!,functor(CALL,F,A),functor(C,F,A),must(once(not(not(clause_safe(M:C,_))))),!,clause_safe(M:CALL,TEST),M:on_x_debug(TEST).
-call_no_cuts(CALL):-functor(CALL,F,A),functor(C,F,A),must(once(not(not(clause_safe(C,_))))),!,clause_safe(CALL,TEST),on_x_debug(TEST).
+call_no_cuts(M:CALL):-atom(M),!,functor(CALL,F,A),functor(C,F,A),must(once( \+ ( \+ (clause_safe(M:C,_))))),!,clause_safe(M:CALL,TEST),M:on_x_debug(TEST).
+call_no_cuts(CALL):-functor(CALL,F,A),functor(C,F,A),must(once( \+ ( \+ (clause_safe(C,_))))),!,clause_safe(CALL,TEST),on_x_debug(TEST).
 
 
 % this is a backwards compatablity block for SWI-Prolog 6.6.6
