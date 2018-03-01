@@ -845,8 +845,10 @@ ctype_switcher(white).
 % Breaked Codes.
 %
 breaked_codes(S,C0):- nonvar(S),on_x_fail(write_to_codes(S,C)),!,C=C0.
-breaked_codes(S,C):- catch(number_codes(S,C),_,
-  string_codes(S,C)->true;(atom_codes(S,C)->true;string_equal_ci(S,C))).
+breaked_codes(S,C):- notrace(catch(number_codes(S,C),_,
+  (string_codes(S,C)->true;
+    (atom_codes(S,C)->true;
+       string_equal_ci(S,C))))).
 
 
 %= 	 	 

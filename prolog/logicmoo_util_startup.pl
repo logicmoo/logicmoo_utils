@@ -71,9 +71,17 @@ sub_argv(X,Y):-app_argv(List),
 
 
 :- dynamic(lmconf:saved_app_argv/1).
-app_argv(List):- lmconf:saved_app_argv(List).
-app_argv(List):- current_prolog_flag(os_argv,List).
-app_argv(Atom):- atom(Atom),app_argv(List),memberchk(Atom,List).
+app_argv(Atom):- \+ atom(Atom),!,app_argv_l(Atom).
+app_argv(Atom):- app_argv1(Atom),!.
+app_argv(Atom):- atom_concat(Pos,'=yes',Atom),!,app_argv1(Pos).
+app_argv(Atom):- atom_concat('--',Pos,Atom), atom_concat('--no',Pos,Neg),app_argv1(Neg),!,fail.
+app_argv(Atom):- app_argv1('--all'), atom_concat('--',_,Atom), \+ atom_concat('--no',_,Atom),!.
+
+app_argv1(Atom):- app_argv_l(List),member(Atom,List).
+app_argv1(Atom):- lmconf:saved_app_argv(Atom).
+
+app_argv_l(List):- lmconf:saved_app_argv(List).
+app_argv_l(List):- current_prolog_flag(os_argv,List).
 
 
 erase_clause(H,B):- 
@@ -251,7 +259,7 @@ user:expand_query(_Goal, _Expanded, _Bindings, _ExpandedBindings):-  run_pending
 %:- use_module(logicmoo_util_common).
 :- fixup_exports.
 
-:- if( app_argv('--upgrade') ).
+:- if( app_argv1('--upgrade') ).
 :- whenever_flag_permits(run_network,pack_upgrade).
 :- endif.
 
