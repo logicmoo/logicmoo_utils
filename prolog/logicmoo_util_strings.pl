@@ -352,10 +352,16 @@ convert_to_string_list(I,O):-convert_to_atoms_list(I,M),maplist_atom_string(M,O)
 
 is_s_string(I):-compound(I),functor(I,s,_),!.
 
+:- thread_local(t_l:no_cycstrings/0).
+
+convert_to_cycString(I,O):- t_l:no_cycstrings,!,any_to_string(I,O).
 convert_to_cycString(I,O):- is_s_string(I),!,O=I.
 convert_to_cycString(I,O):- convert_to_string_list(I,M),delistify_single_element(M,O).
 
-convert_to_string(I,O):- convert_to_atoms_list(I,M),(is_list(M)->atomics_to_string(M," ",O);text_to_string(M,O)).
+
+convert_to_string(I,O):- string(I),!,O=I.
+convert_to_string(I,O):- catch((convert_to_atoms_list(I,M),(is_list(M)->atomics_to_string(M," ",O);text_to_string(M,O))),_,fail),!.
+convert_to_string(I,O):- sformat(O,'~w',[I]).
 
 convert_to_atoms_list(I,O):- is_s_string(I),I=..[s|M],!,maplist_atom_string(O,M).
 convert_to_atoms_list(A,B):- \+ atomic(A),!,listify(A,B),nop(dmsg(convert_to_atoms_list(A,B))).

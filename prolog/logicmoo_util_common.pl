@@ -44,22 +44,27 @@ fav_module:-
   (Module==user -> '$set_typein_module'(SourceModule) ; true))).
 
 
+
+fav_debug9:- 
+  fav_module,
+  fav_debug,
+   set_prolog_flag(access_level,system),
+   set_prolog_flag(write_attributes,ignore),
+   set_prolog_flag(fileerrors,true),
+   set_prolog_flag(gc,false),
+   %set_prolog_flag(occurs_check,true),
+ % set_prolog_flag(retry_undefined, none),
+   !.
+
 fav_debug:- 
- fav_module,
- set_prolog_flag(access_level,system),
  set_prolog_flag(backtrace, true),
  set_prolog_flag(backtrace_goal_depth, 2000),
  set_prolog_flag(backtrace_show_lines, true),
  set_prolog_flag(debug,true),
- set_prolog_flag(write_attributes,ignore),
  set_prolog_flag(debug_on_error,true),
  set_prolog_flag(debugger_show_context,true),
  set_prolog_flag(debugger_write_options,[quoted(true), portray(true), max_depth(10), attributes(write)]),
- set_prolog_flag(fileerrors,true),
- set_prolog_flag(gc,false),
- set_prolog_flag(occurs_check,true),
  set_prolog_flag(report_error,true),
- % set_prolog_flag(retry_undefined, none),
  set_prolog_flag(runtime_debug, 3), % 2 = important but dont sacrifice other features for it
  set_prolog_flag(runtime_safety, 3),  % 3 = very important
  set_prolog_flag(runtime_speed, 0), % 1 = default
@@ -116,7 +121,7 @@ if_file_exists(M:Call):- arg(1,Call,MMFile),strip_module(MMFile,_,File),
 % sets up and restore the subsystems
 
 :- module_transparent(load_library_system/1).
-load_library_system(M:File):- load_library_system(M,File). 
+load_library_system(M:File):- !, load_library_system(M,File). 
 load_library_system(File):- context_module(M),load_library_system(M,File).
 
 :- system:import(load_library_system/1).
