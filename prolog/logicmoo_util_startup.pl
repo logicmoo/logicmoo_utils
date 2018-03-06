@@ -24,6 +24,9 @@
           during_init/1,
           has_ran_once/1,
           app_argv/1,
+          app_argv1/1,
+          app_argv_ok/1,
+          app_argv_off/1,
           is_startup_script/1,
           init_why/1,
           run_pending_inits/0]).
@@ -74,11 +77,16 @@ sub_argv(X,Y):-app_argv(List),
 app_argv(Atom):- \+ atom(Atom),!,app_argv_l(Atom).
 app_argv(Atom):- app_argv1(Atom),!.
 app_argv(Atom):- atom_concat(Pos,'=yes',Atom),!,app_argv1(Pos).
-app_argv(Atom):- atom_concat('--',Pos,Atom), atom_concat('--no',Pos,Neg),app_argv1(Neg),!,fail.
+app_argv(Atom):- app_argv_off(Atom),!,fail.
 app_argv(Atom):- app_argv1('--all'), atom_concat('--',_,Atom), \+ atom_concat('--no',_,Atom),!.
 
+app_argv_ok(Atom):- app_argv1(Atom),!.
+app_argv_ok(Atom):- \+ app_argv_off(Atom).
+
+app_argv_off(Atom):- atom_concat('--',Pos,Atom), atom_concat('--no',Pos,Neg),app_argv1(Neg),!,fail.
+
 app_argv1(Atom):- app_argv_l(List),member(Atom,List).
-app_argv1(Atom):- lmconf:saved_app_argv(Atom).
+app_argv1(Atom):- lmconf:saved_app_argv(Atom),\+ is_list(Atom).
 
 app_argv_l(List):- lmconf:saved_app_argv(List).
 app_argv_l(List):- current_prolog_flag(os_argv,List).
