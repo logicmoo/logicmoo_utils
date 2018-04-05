@@ -89,8 +89,17 @@ app_argv1(Atom):- app_argv_l(List),member(Atom,List).
 app_argv1(Atom):- lmconf:saved_app_argv(Atom),\+ is_list(Atom).
 
 app_argv_l(List):- lmconf:saved_app_argv(List).
+app_argv_l(List):- current_prolog_flag(argv,List),List\==[].
 app_argv_l(List):- current_prolog_flag(os_argv,List).
 
+shell_format(Fmt,Args):-format(string(S),Fmt,Args),shell(S),!.
+start_tty_redirect(PORT):-
+  PORT100 is PORT + 100,  
+  shell_format('lsof -t -i:~w | xargs --no-run-if-empty kill -9',[PORT100]),
+  % shell_format('nohup node app.js -p ~w -c rlwrap -a -A -r -c -N -r --file=completion_~w --history-filename=history_~w -s 1000 telnet localhost ~w &',[PORT100,PORT,PORT,PORT]),
+  shell_format('nohup ttyd -r 100 -p ~w rlwrap -a -A -r -c -N -r --file=completion_~w --history-filename=history_~w -s 1000 telnet localhost ~w &',[PORT100,PORT,PORT,PORT]),
+  !.
+  
 
 erase_clause(H,B):- 
   BH=B+H,BHC=BC+HC,
