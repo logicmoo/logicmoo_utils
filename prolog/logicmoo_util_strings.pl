@@ -268,7 +268,7 @@
         double_quotes_was_strings/1,
         to_string_hook/3.
 
-:- user:use_module(library('file_scope')).
+%:- user:use_module(library('file_scope')).
 
 
 :- meta_predicate toCase(2,?,?).
@@ -343,8 +343,7 @@ list_to_atomics_list0([],[]):-!.
 
 maplist_atom_string(M,O):- catch(maplist(atom_string,M,O),_,fail).
 
-text_to_uq_atom(A,Sub):- atom_prefix(A,'"'),ifprolog:atom_suffix(A,1,'"'),sub_atom(A,1,_,1,Sub),!.
-text_to_uq_atom(A,A).
+text_to_uq_atom(A,InOut):- (atom_concat('"',R,A),atom_concat(Sub,'"',R))->Sub=InOut;A=InOut.
 
 convert_to_string_list(I,O):-string(I), (atom_contains(I,'\n');atom_contains(I,'*')),!,O=[I].
 convert_to_string_list(I,O):-is_s_string(I),I=..[s|M],!,maplist_atom_string(M,O).

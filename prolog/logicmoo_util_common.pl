@@ -36,6 +36,8 @@
 
 
 
+:- meta_predicate if_debugging(*,0).
+
 
 fav_module:-
   '$current_typein_module'(Module),prolog_load_context(module,SourceModule),
