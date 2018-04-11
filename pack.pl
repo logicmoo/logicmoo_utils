@@ -7,4 +7,5 @@ packager( 'TeamSPoon/LogicMoo', 'https://github.com/TeamSPoon/' ).
 maintainer( 'TeamSPoon', 'https://github.com/TeamSPoon/' ).
 home( 'https://github.com/TeamSPoon/logicmoo_utils' ).
 download( 'https://github.com/TeamSPoon/logicmoo_utils/release/*.zip' ).
+requires(predicate_streams).
 autoload(true).

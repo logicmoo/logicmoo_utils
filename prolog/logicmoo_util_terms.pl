@@ -77,8 +77,8 @@ load_term/2,
 load_term2/2,
 logicmoo_library_file_loaded/0,
 make_list/3,
-makeArgIndexes/1,
-makeArgIndexes/2,
+%makeArgIndexes/1,
+%makeArgIndexes/2,
 maptree/3,
 nd_predsubst/3,
 nd_predsubst1/4,
@@ -464,7 +464,8 @@ each_subterm(A,Pred,O):-
 % :-index(argNFound(1,1,1)).
 
 
-%= 	 	 
+/*
+%= 	 	                         
 
 %% makeArgIndexes( ?CateSig) is semidet.
 %
@@ -478,11 +479,13 @@ makeArgIndexes(CateSig):-functor_catch(CateSig,F,_),makeArgIndexes(CateSig,F),!.
 %
 % Make Argument Indexes.
 %
-makeArgIndexes(CateSig,F):- argNumsTracked(F,Atom,Number),arg(Number,CateSig,Arg), nonvar(Arg),
+makeArgIndexes(CateSig,F):- 
+  ignore((argNumsTracked(F,Atom,Number),arg(Number,CateSig,Arg), nonvar(Arg),
      % Number<10, nonvar(Arg),atom_number(Atom,Number),
-     assert_if_new(argNFound(F,Atom,Arg)),fail.
-makeArgIndexes(_NEW,_F).
+     ( \+ argNFound(F,Atom,Arg),assert(argNFound(F,Atom,Arg))))).
 
+
+*/
 
 %= 	 	 
 
@@ -1175,8 +1178,8 @@ call_no_cuts((A;B)):-!,(call_no_cuts(A);call_no_cuts(B)).
 call_no_cuts((A->B)):-!,(call_no_cuts(A)->call_no_cuts(B)).
 call_no_cuts((A*->B;C)):-!,(call_no_cuts(A)->call_no_cuts(B);call_no_cuts(C)).
 call_no_cuts((A->B;C)):-!,(call_no_cuts(A)->call_no_cuts(B);call_no_cuts(C)).
-call_no_cuts(M:CALL):-atom(M),!,functor(CALL,F,A),functor(C,F,A),must(once( \+ ( \+ (clause_safe(M:C,_))))),!,clause_safe(M:CALL,TEST),M:on_x_debug(TEST).
-call_no_cuts(CALL):-functor(CALL,F,A),functor(C,F,A),must(once( \+ ( \+ (clause_safe(C,_))))),!,clause_safe(CALL,TEST),on_x_debug(TEST).
+call_no_cuts(M:CALL):-atom(M),!,functor(CALL,F,A),functor(C,F,A),must(once( \+ ( \+ (clause(M:C,_))))),!,clause(M:CALL,TEST),M:on_x_debug(TEST).
+call_no_cuts(CALL):-functor(CALL,F,A),functor(C,F,A),must(once( \+ ( \+ (clause(C,_))))),!,clause(CALL,TEST),on_x_debug(TEST).
 
 
 % this is a backwards compatablity block for SWI-Prolog 6.6.6
