@@ -119,13 +119,11 @@ if_file_exists(M:Call):- arg(1,Call,MMFile),strip_module(MMFile,_,File),
 
 
 
-
 % sets up and restore the subsystems
 
 :- module_transparent(load_library_system/1).
 load_library_system(M:File):- !, load_library_system(M,File). 
 load_library_system(File):- context_module(M),load_library_system(M,File).
-
 :- system:import(load_library_system/1).
 
 :- module_transparent(load_library_system/2).
@@ -133,21 +131,6 @@ load_library_system(user,File):-!, during_boot(gripe_time(40,(if_file_exists(ens
 load_library_system(M,File):- during_boot(gripe_time(40,(if_file_exists(ensure_loaded(M:File))))).
 
 :- system:import(load_library_system/2).
-
-during_boot(G):- during_init(G).
-after_boot(G):- at_init(G).
-
-% doesnt run if --nonet
-:- meta_predicate(during_net_boot(:)).
-during_net_boot(M:Goal):- during_boot(whenever_flag_permits(run_network,M:Goal)).
-
-% --nonet
-:- meta_predicate(after_net_boot(:)).
-after_net_boot(M:Goal):- after_boot(whenever_flag_permits(run_network,M:Goal)).
-
-:- meta_predicate(after_boot_sanity_test(:)).
-after_boot_sanity_test(M:Goal):- after_boot(M:sanity(M:Goal)).
-
 
 
 :- meta_predicate iff_defined(*).

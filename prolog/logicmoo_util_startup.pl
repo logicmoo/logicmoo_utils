@@ -180,14 +180,25 @@ at_init(Goal):- system:assertz(lmconf:at_restore_goal(Goal)),add_history(Goal).
 during_init(Goal):- ignore(try_pending_init(maybe_notrace,Goal)), at_init(Goal).
 
 
-:- meta_predicate(call_last_is_var(0)).
+during_boot(G):- during_init(G).
+after_boot(G):- at_init(G).
 
+% doesnt run if --nonet
+:- meta_predicate(during_net_boot(:)).
+during_net_boot(M:Goal):- during_boot(whenever_flag_permits(run_network,M:Goal)).
 
+% --nonet
+:- meta_predicate(after_net_boot(:)).
+after_net_boot(M:Goal):- after_boot(whenever_flag_permits(run_network,M:Goal)).
+
+:- meta_predicate(after_boot_sanity_test(:)).
+after_boot_sanity_test(M:Goal):- after_boot(M:sanity(M:Goal)).
 
 %% call_last_is_var( :GoalMCall) is semidet.
 %
 % Call Last If Is A Variable.
 %
+:- meta_predicate(call_last_is_var(0)).
 call_last_is_var(MCall):- strip_module(MCall,M,Call),
    must((compound(Call),functor(Call,_,A))),
    arg(A,Call,Last),nonvar(Last),Call=..FArgs,
