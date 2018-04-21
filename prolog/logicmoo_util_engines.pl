@@ -18,7 +18,7 @@
     on_diff_throw/2,
     call_diff/3,
     intersect_eq0/3,
-    member_eq0/2,
+   % member_eq0/2,
     collecting_list/4,
 
     start_listening/1,
@@ -141,8 +141,6 @@ start_listening(G):-
     flag(sol,X,X),thread_send_answer(X,G,false,true))
     ),fail))))).
   
-
-member_eq0(X, [Y|Ys]) :- X==Y;member_eq0(X,Ys).
 
 intersect_eq0([], _, []).
 intersect_eq0([X|Xs], Ys, L) :-

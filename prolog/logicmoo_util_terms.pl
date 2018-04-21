@@ -200,6 +200,7 @@ compound_name_arity_safe/3
 :- current_prolog_flag(double_quotes,WAS),asserta(double_quotes_was_lib(WAS)).
 :- set_prolog_flag(double_quotes,string).
 
+:- use_module(library(logicmoo_util_startup)).
 
 expire_tabled_list(_).
 
