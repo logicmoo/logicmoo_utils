@@ -166,7 +166,7 @@ get_mpred_stubType(_,_,dyn).
 :- ain(isa_kb:box_prop(l)).
 :- ain(isa_kb:box_prop(g)).
 :- ain(isa_kb:box_prop(dyn)).
-:- nb_setval(disabled_env_learn_pred,false).
+:- thread_initialization(nb_setval(disabled_env_learn_pred,false)).
 
 :- thread_local(t_l:env_ctx/2).
 

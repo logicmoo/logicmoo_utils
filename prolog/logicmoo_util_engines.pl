@@ -76,7 +76,7 @@ collecting_list(G,Vs,At,S):-
    arg(At,S,Was),nb_setarg(At,S,[CVs|Was]).
 
 
-:- nb_setval(query_result,sol(0,1,false,false)).
+:- thread_initialization(nb_setval(query_result,sol(0,1,false,false))).
 
 % sol(number,G,successfull,done)
 next_solution:- quietly(next_solution(How)),call(How).
