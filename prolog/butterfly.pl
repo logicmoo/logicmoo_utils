@@ -49,7 +49,7 @@ bfly_fmt(P):- pre_style,format("P;HTML|~wP",[P]).
 
 bformat(P):- t_l:in_block_format,!,format("~w",[P]),!.
 bformat(P):- on_x_log_fail(httpd_wrapper:http_current_request(_)),!,format("~w",[P]).
-bformat(P):- is_visible_output,is_butterfly_console,format(string(S),'~w',[P]),atom_contains(S,'<'),!,bfly_fmt(S).
+%bformat(P):- is_visible_output,is_butterfly_console,format(string(S),'~w',[P]),atom_contains(S,'<'),!,bfly_fmt(S).
 bformat(P):- format("~w",[P]),!.
 
 bformat(Fmt,Args):- sformat(P,Fmt,Args),bformat(P).

@@ -78,15 +78,16 @@ sub_argv(X,Y):-app_argv(List),
 
 :- dynamic(lmconf:saved_app_argv/1).
 app_argv(Atom):- \+ atom(Atom),!,app_argv_l(Atom).
+app_argv(Atom):- app_argv_off(Atom),!,fail.
 app_argv(Atom):- app_argv1(Atom),!.
 app_argv(Atom):- atom_concat(Pos,'=yes',Atom),!,app_argv1(Pos).
-app_argv(Atom):- app_argv_off(Atom),!,fail.
 app_argv(Atom):- app_argv1('--all'), atom_concat('--',_,Atom), \+ atom_concat('--no',_,Atom),!.
 
 app_argv_ok(Atom):- app_argv1(Atom),!.
 app_argv_ok(Atom):- \+ app_argv_off(Atom).
 
-app_argv_off(Atom):- atom_concat('--',Pos,Atom), atom_concat('--no',Pos,Neg),app_argv1(Neg),!,fail.
+app_argv_off(Atom):- atom_concat('--',Pos,Atom), atom_concat('--no',Pos,Neg),app_argv1(Neg),!.
+app_argv_off(Pos):- atom_concat('--no',Pos,Neg),app_argv1(Neg),!.
 
 app_argv1(Atom):- app_argv_l(List),member(Atom,List).
 app_argv1(Atom):- lmconf:saved_app_argv(Atom),\+ is_list(Atom).
@@ -531,12 +532,24 @@ all_source_file_predicates_are_exported(S,LC)
  (current_prolog_flag(logicmoo_import_to_system, BaseKB)->true;BaseKB=[]),
  forall(source_file(M:H,S),
  ignore((functor(H,F,A), 
-  %(module_property(M,exports(List))-> \+ member(F/A,List); true),
-  \+ lmconfig:never_export_named(M,F,A),
-  ignore(con_x_fail((atom(LC),atom(M),LC\==M, M:multifile(M:F/A),fail,LC:export(M:F/A),ignore(atom_concat('$',_,F)),LC:import(M:F/A)))),
   \+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F),
-  ignore(con_x_fail(((\+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F), ignore(( \+ current_predicate(baseKB:F/A)))), LC:export(M:F/A)))), 
-  ignore(con_x_fail((M\==BaseKB,\+ atom_concat('$',_,F), \+ current_predicate(system:F/A), ignore(( \+ current_predicate(baseKB:F/A))), system:import(M:F/A))))))).
+  \+ lmconfig:never_export_named(M,F,A),
+  %(module_property(M,exports(List))-> \+ member(F/A,List); true),
+
+  ignore(con_x_fail((atom(LC),atom(M),LC\==M, M:multifile(M:F/A),
+    M:export(M:F/A),ignore(atom_concat('$',_,F)),LC:import(M:F/A),LC:export(M:F/A)))),
+
+  ignore(con_x_fail(((\+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F), 
+     nop(ignore(( \+ current_predicate(baseKB:F/A))))),
+     M:export(M:F/A),
+     LC:export(M:F/A)))),
+
+  ignore(con_x_fail(
+    (M\==BaseKB,
+     \+ atom_concat('$',_,F), 
+     \+ current_predicate(system:F/A), 
+     % ignore(( \+ current_predicate(baseKB:F/A))),
+     sexport(M:F/A))))))).
 
 con_x_fail(G):-catch(G,_,fail).
 
