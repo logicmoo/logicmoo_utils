@@ -9,6 +9,7 @@
 % ===================================================================
 
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_strings.pl
+
 :- module(logicmoo_util_strings,
           [ addSpaceBeforeSym/2,
             all_upper_atom/1,
@@ -93,9 +94,6 @@
             replace_periods/2,
             replace_periods_string_list/2,
             sort_by_strlen/2,
-            /*splt_words/3,
-            splt_words_0/3,
-            splt_words_0_atom/3,*/
             starts_or_ends_with_icase/2,
             convert_to_string_list/2,
             convert_to_atoms_list/2,
@@ -137,9 +135,7 @@
             vars_to_ucase_0/2
           ]).
 % autoloading user:portray_clause_pi/2 from /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_first
-:- multifile % (multifile) :-
-        
-        
+:- multifile 
         double_quotes_was_strings/1,
         string_predicate/1,
         to_string_hook/3.
@@ -1900,6 +1896,8 @@ longest_string(Order,TStr1,TStr2):-
 
 % this is a backwards compatablity block for SWI-Prolog 6.6.6
 :- retract(double_quotes_was_strings(WAS)),set_prolog_flag(double_quotes,WAS).
+
+:- use_module(library(logicmoo_util_startup)).
 
 :- fixup_exports.
 

@@ -33,7 +33,6 @@
 
 
 %:- use_module(library(logicmoo_util_common)).
-:- use_module(library(each_call_cleanup)).
 :- create_prolog_flag(dmsg_level,filter,[type(term),keep(true)]).
 
 %=======================================
@@ -551,6 +550,8 @@ all_source_file_predicates_are_exported(S,LC)
      % ignore(( \+ current_predicate(baseKB:F/A))),
      sexport(M:F/A))))))).
 
+:- export(con_x_fail/1).
+:- meta_predicate(con_x_fail(:)).
 con_x_fail(G):-catch(G,_,fail).
 
 :- meta_predicate(sexport(:)).
@@ -697,4 +698,5 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
   run_pending_inits, fail.
 :- endif.
 
+:- use_module(library(each_call_cleanup)).
 
