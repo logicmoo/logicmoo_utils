@@ -686,6 +686,16 @@ fixup_exports:-
 
 :- fixup_exports.
 
+%:- logicmoo_util_startup:use_module(library(option),[options/3]).
+
+logicmoo_base_port(Base):- app_argv1(One),\+ is_list(One),
+   (atom(One)-> (atomic_list_concat([_,Atom],'port=',One),atom_number(Atom,Base))),!.
+logicmoo_base_port(Base):- getenv_or('LOGICMOO_BASE_PORT',Base,3000),!.
+:- export(logicmoo_base_port/1).
+:- system:import(logicmoo_base_port/1).
+
+:- fixup_exports.
+
 :- if(false). 
 :- multifile(user:term_expansion/2).
 :- dynamic(user:term_expansion/2).

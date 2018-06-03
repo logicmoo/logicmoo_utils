@@ -705,6 +705,13 @@ univ_safe(P,L):- must_det(is_list(L)),on_x_debug((P=..L)).
 subst(A,B,C,D):-  must(nd_subst(A,B,C,D0)),on_x_debug(D=D0),!.
 subst(A,_B,_C,A).
 
+subst_each(A,[NV|List],D):-
+  (NV=..[_,N,V]->true;NV=..[N,V]),!,
+  subst(A,N,V,M),
+  subst_each(M,List,D).
+subst_each(A,_,A).
+
+
 
 %= 	 	 
 
