@@ -80,7 +80,7 @@ app_argv(Atom):- \+ atom(Atom),!,app_argv_l(Atom).
 app_argv(Atom):- app_argv_off(Atom),!,fail.
 app_argv(Atom):- app_argv1(Atom),!.
 app_argv(Atom):- atom_concat(Pos,'=yes',Atom),!,app_argv1(Pos).
-app_argv(Atom):- app_argv1('--all'), atom_concat('--',_,Atom), \+ atom_concat('--no',_,Atom),!.
+app_argv(Atom):- app_argv1('--all'), atom_concat('--',_Stem,Atom), \+ atom_concat('--no',_Stem2,Atom),!.
 
 app_argv_ok(Atom):- app_argv1(Atom),!.
 app_argv_ok(Atom):- \+ app_argv_off(Atom).
