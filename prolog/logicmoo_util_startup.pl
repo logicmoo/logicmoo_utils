@@ -539,7 +539,7 @@ all_source_file_predicates_are_exported(S,LC)
     M:export(M:F/A),ignore(atom_concat('$',_,F)),LC:import(M:F/A),LC:export(M:F/A)))),
 
   ignore(con_x_fail(((\+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F), 
-     nop(ignore(( \+ current_predicate(baseKB:F/A))))),
+     (true->true;ignore(( \+ current_predicate(baseKB:F/A))))),
      M:export(M:F/A),
      LC:export(M:F/A)))),
 
