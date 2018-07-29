@@ -228,7 +228,7 @@ is_startup_file(File):- is_startup_script(File).
 
 :- meta_predicate run_pending_inits(1).
 run_pending_inits(How):- 
-   forall(lmconf:at_restore_goal(Goal),try_pending_init(How,Goal)).
+   forall(lmconf:at_restore_goal(Goal),(try_pending_init(How,Goal))).
 
 has_ran_once(Goal):- lmcache:called_startup_goal(GoalW), GoalW =@= Goal,!.
 
@@ -276,7 +276,8 @@ init_why(Phase):-
 :- multifile(system:'$init_goal'/3).
 :- dynamic(system:'$init_goal'/3).
 :- module_transparent(system:'$init_goal'/3).
-:- forall(absolute_startup_script(F),assertz(system:'$init_goal'(F,logicmoo_util_startup:init_why(after(F)),F:9999))).
+:- forall(absolute_startup_script(F),
+    (assertz(system:'$init_goal'(F,logicmoo_util_startup:init_why(after(F)),F:9999)))).
 
 :- if(false).
 :- user:multifile(expand_answer/2).
@@ -709,4 +710,4 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
 :- endif.
 
 :- use_module(library(each_call_cleanup)).
-
+                                                                                            
