@@ -425,7 +425,7 @@ iff_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
 :- meta_predicate(ignore_not_not(0)).
 :- export(pack_upgrade/0).
 pack_upgrade:- call((user:use_module(library(prolog_pack)),use_module(library(predicate_streams)), 
-  with_input_from_predicate(({}/[X]>>(repeat,X='YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY')),
+  with_input_from_predicate(({}/[X]>>(repeat,X='YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY')),
     forall(call(call,prolog_pack:current_pack,Pack),maybe_pack_upgrade(Pack))))).
 
 maybe_pack_upgrade(Pack):- pack_property(Pack, directory(PackDir)),\+ access_file(PackDir,write),!.
@@ -501,7 +501,7 @@ system:logicmoo_user_stacks:- Six = 6, set_prolog_stack(global, limit(Six*10**9)
 %
 set_prolog_stack_gb(Six):-set_prolog_stack(global, limit(Six*10**9)),set_prolog_stack(local, limit(Six*10**9)), set_prolog_stack(trail, limit(Six*10**9)).
 
-:- set_prolog_stack_gb(16).
+%:- set_prolog_stack_gb(16).
 
 
 if_debugging(Topic,Goal):- debugging(Topic)->call(Goal);true.

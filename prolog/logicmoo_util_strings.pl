@@ -47,6 +47,8 @@
             convert_members/3,
             convert_to_string/2,
             convert_to_cycString/2,
+            convert_to_s_string/2,
+            convert_to_sel_string/5,
             is_s_string/1,
             delistify_single_element/2,
             ctype_continue/2,
@@ -341,28 +343,99 @@ maplist_atom_string(M,O):- catch(maplist(atom_string,M,O),_,fail).
 
 text_to_uq_atom(A,InOut):- (atom_concat('"',R,A),atom_concat(Sub,'"',R))->Sub=InOut;A=InOut.
 
-convert_to_string_list(I,O):-string(I), (atom_contains(I,'\n');atom_contains(I,'*')),!,O=[I].
-convert_to_string_list(I,O):-is_s_string(I),I=..[s|M],!,maplist_atom_string(M,O).
-convert_to_string_list(I,O):-convert_to_atoms_list(I,M),maplist_atom_string(M,O).
-
 is_s_string(I):-compound(I),functor(I,s,_),!.
 
 :- thread_local(t_l:no_cycstrings/0).
 
 convert_to_cycString(I,O):- t_l:no_cycstrings,!,any_to_string(I,O).
-convert_to_cycString(I,O):- is_s_string(I),!,O=I.
+%convert_to_cycString(I,O):- is_s_string(I),!,O=I.
 convert_to_cycString(I,O):- convert_to_string_list(I,M),delistify_single_element(M,O).
+   
+                                                                            
+convert_to_s_string(I,O):- convert_to_sel_string(fail,=,sl,I,O).
+
+/* 
+   "Hi there" 
+   s("Hi",there).
+   s('Hi',there).
+   s(['Hi',there]).
+
+
+   convert_to_sel_string(=,a,=,"Hi there",O).
+   [hi,there]
+   convert_to_sel_string(=,a,=,["Hi"],O).
+
+   convert_to_sel_string(fail,=,s,"Hi there",O).
+
+   s(hi).
+   s([hi]).
+
+   s(hi,there).
+   s([hi,there]).
+   
+
+*/
+
+convert_to_sel_string(_,_,_,I,O):- notrace(is_ftVar(I)),!,O=I.
+convert_to_sel_string(S,a,L,I,O):- !, quietly(must((convert_to_atoms_list(I,M),must_maplist(any_to_atom,M,MM),to_sel_string(S,a,L,MM,O)))),!.
+convert_to_sel_string(S,s,L,I,O):- !, quietly(must((convert_to_string_list(I,M),must_maplist(any_to_string,M,MM),to_sel_string(S,s,L,MM,O)))),!.
+convert_to_sel_string(S,E,L,I,O):- quietly((convert_to_atoms_list(I,SL),must_maplist(E,SL,M),to_sel_string(S,E,L,M,O))),!.
+
+
+to_sel_1e_string(sf,M,s(O)):-!,M=O.
+to_sel_1e_string(l,M,[O]):-!,M=O.                     
+to_sel_1e_string(sl,M,s([O])):-!,M=O.
+to_sel_1e_string(=,M,O):-!,M=O.
+to_sel_1e_string(U,M,O):- must(call(call,U,M,O)).
+
+to_sel_string(S,a,_,[],O):- !,to_sel_1e_string(S,'',O),!.
+to_sel_string(S,s,_,[],O):- !,to_sel_1e_string(S,"",O),!.
+to_sel_string(S,_,_,[],O):- S\==fail,!, M=[], to_sel_1e_string(S,M,O).
+to_sel_string(S,_,_,[M],O):- S\==fail,!, to_sel_1e_string(S,M,O).
+to_sel_string(_,_,sf,M,O):-!,must((O=..[s|M])).
+to_sel_string(_,_,l,M,O):- !,M=O.
+to_sel_string(_,_,sl,M,s(O)):- !,M=O.
+to_sel_string(_,_,L,M,O):- must(call(call,L,M,O)).
 
 
 convert_to_string(I,O):- string(I),!,O=I.
-convert_to_string(I,O):- catch((convert_to_atoms_list(I,M),(is_list(M)->atomics_to_string(M," ",O);text_to_string(M,O))),_,fail),!.
+convert_to_string(I,O):- catch((convert_to_atoms_list(I,M),joined_string(M,O)),_,fail),!.
 convert_to_string(I,O):- sformat(O,'~w',[I]).
 
-convert_to_atoms_list(I,O):- is_s_string(I),I=..[s|M],!,maplist_atom_string(O,M).
-convert_to_atoms_list(A,B):- \+ atomic(A),!,listify(A,B),nop(dmsg(convert_to_atoms_list(A,B))).
-convert_to_atoms_list(A,B):- atom_length(A,L),convert_to_atoms_by_len(A,L,B),!.
-convert_to_atoms_list(A,B):- text_to_string_safe(A,S),string_to_atom(S,M),listify(M,B),!.
-convert_to_atoms_list(M,B):- listify(M,B).
+
+convert_to_string_list(I,O):-string(I),(atom_contains(I,'\n');atom_contains(I,'*')),!,O=[I].
+convert_to_string_list(I,O):-convert_to_atoms_list(I,M),maplist_atom_string(M,O),!.
+
+convert_to_atoms_list(A,B):- is_ftVar(A),!,A=B.
+convert_to_atoms_list(I,O):- is_s_string(I),I=..[s,E|M],!,must_maplist(convert_to_string,[E|M],O),!.
+convert_to_atoms_list([A|AA],B):- []==AA,!,convert_to_atoms_list(A,B),!.
+convert_to_atoms_list(A,B):- convert_to_string_m(A,M),!,listify(M,B),!.
+convert_to_atoms_list(A,B):- listify(A,B),nop(dmsg(convert_to_atoms_list(A,B))),!.
+
+convert_to_string_m([A|AA],O):- []==AA,!,convert_to_string_m(A,B),break_string(B,O),!.
+convert_to_string_m(A,O):- catch(text_to_string(A,M),_,fail),!,break_string(M,O),!.
+convert_to_string_m(A,O):- is_list(A),catch(atomics_to_string(A," ",B),_,fail),!,break_string(B,O),!.
+convert_to_string_m(A,B):- catch(atom_length(A,L),_,fail),convert_to_atoms_by_len(A,L,B),!.
+convert_to_string_m(A,B):- break_string(A,B),!.
+convert_to_string_m(M,M).
+
+% >-  do_renames(textCached([']'], [txt, s(a,b,c)]),O).
+
+
+break_string(A,O):- is_ftVar(A),!,A=O.
+break_string(A,O):- is_list(A),!,A=O.
+break_string(A,O):- atomic(A),catch(atomics_to_string(O," ",A),_,fail),!.
+break_string(A,O):- atomic(A),catch(atomic_list_concat(O," ",A),_,fail),!.
+break_string(A,O):- catch(atom_length(A,L),_,fail),convert_to_atoms_by_len(A,L,O),!.
+break_string(A,O):- listify(A,O),!.
+
+joined_string(A,O):- is_ftVar(A),!,A=O.
+joined_string(A,O):- string(A),!,A=O.
+joined_string(A,O):- atomic(A),!,A=O.
+joined_string(I,O):- is_s_string(I),I=..[s,E|M],!,joined_string([E|M],B),O=s(B),!.
+joined_string(A,O):- sanity(is_list(A)),catch(atomics_to_string(A," ",O),_,fail),!.
+joined_string(A,O):- sanity(is_list(A)),catch(atomic_list_concat(A," ",O),_,fail),!.
+
 
 is_upcased(U):- \+ downcase_atom(U,U), upcase_atom(U,U).
 
@@ -1686,25 +1759,25 @@ replace_in_string(Find,Repl,OriginalString,ModifiedString):-  atomic_list_concat
 replace_periods(A,S):-
  convert_members([
    %  white space
-    replace_in_string(`\r`,` `),
-    replace_in_string(`\n`,` `),
-    % replace_in_string(`\s`,` `),
-    replace_in_string(`'`,` apostraphyMARK `),
-    replace_in_string(`\t`,` `),
+    replace_in_string('\r',' ' ),
+    replace_in_string('\n',' '),
+    % replace_in_string('\s',' '),
+    replace_in_string('\'',' apostraphyMARK '),
+    replace_in_string('\t',' '),
     % only remove leading and trailing white space
-   % at(split_string(``, `\s\t\n`)),
+   % at(split_string('', '\s\t\n')),
     % respace the spaces
-    replace_in_string(` `, ` `, ` `),
+    replace_in_string(' ', ' ', ' '),
     % add a space on the end
-    ht(string_concat(` `)),
-    replace_in_string(`?`,` ? `),
-    replace_in_string(`!`,` ! `),
-    replace_in_string(`.`,` . `),
+    ht(string_concat(' ')),
+    replace_in_string('?',' ? '),
+    replace_in_string('!',' ! '),
+    replace_in_string('.',' . '),
     % replace periods
-   replace_in_string(`. `,` periodMARK `)
+   replace_in_string('. ',' periodMARK ')
    ],A,S).
 
-% ?- replace_periods_string_list("hi there bub. how are you.",X),to_list_of_sents(X,L).
+% ?- replace_periods("hi there bub. how are you.",X),to_list_of_sents(X,L).
 % X = [hi, there, bub, '.', how, are, you, '.'],
 % L = [[hi, there, bub, '.'], [how, are, you, '.']] .
 %
