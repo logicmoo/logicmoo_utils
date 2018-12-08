@@ -33,8 +33,7 @@
           pack_upgrade/0,run_prologmud/0,init_logicmoo/0,
           shared_vars/3 */]).
 
-:- reexport(library(logicmoo_util_startup)).
-
+:- reexport(library(logicmoo_startup)).
 
 % :- use_module(logicmoo_util_startup).
 

@@ -1,7 +1,7 @@
 name(logicmoo_utils).
-version('1.1.118').
-title('Common predicates used by external Logicmoo Utils and Base').
-keywords([source]).
+version('1.2.0').
+title('Common predicates that are used throughout LogicMOO Software').
+keywords([local_scoping,utilities,debugging,loop_checking]).
 author( 'Douglas Miles', 'http://www.linkedin.com/in/logicmoo' ).
 packager( 'TeamSPoon/LogicMoo', 'https://github.com/TeamSPoon/' ).
 maintainer( 'TeamSPoon', 'https://github.com/TeamSPoon/' ).
