@@ -1803,8 +1803,24 @@ to_list_of_sents(WList,[sent(WList)]).
 %
 % Replace Periods String List.
 %
-replace_periods_string_list(A,S):-replace_periods(A,AR),to_word_list(AR,WL),subst(WL,periodMARK,'.',WLS),subst(WLS,apostraphyMARK,'\'',S).
+replace_periods_string_list(A,S):-replace_periods(A,AR),to_word_list(AR,WL),replace_subst4(WL,periodMARK,'.',WLS),replace_subst4(WLS,apostraphyMARK,'\'',S).
 
+
+replace_subst4( T1, S1, S2, T2 ) :-
+    segment_subst4( T1, Pre, S1, Post ),
+    append_subst4( S2, Post, S2_plus_Post ),
+    append_subst4( Pre, S2_plus_Post, T2 ).
+segment_subst4( T, Pre, S, Post ) :-
+    segment_1_subst4( S, T, Pre, Post ).
+segment_1_subst4( [], L, [], L ) :- !.
+segment_1_subst4( [H|T_], [H|T], [], Post ) :-
+    segment_1_subst4( T_, T, [], Post ),
+    !.
+segment_1_subst4( S, [H|T], [H|U], Post ) :-
+    segment_1_subst4( S, T, U, Post ).
+append_subst4( [], L, L ).
+append_subst4( [H|T], L, [H|T1] ) :-
+    append_subst4( T, L, T1 ).
 
 %= 	 	 
 
