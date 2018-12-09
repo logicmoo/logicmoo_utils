@@ -200,6 +200,7 @@ true.
 
 ```
 
+
 ## loop_check
 New simple loop checking
 
@@ -209,9 +210,11 @@ Allows code to declare special locations that loop prevention will occur
 ?- use_module(library(lm_utils/no_loops)).
 true.
 
-?- 
-
 ```
+TODO Doc this
+
+
+
 ## no_repeats
 New ways to avoid duplicate solutions
 
@@ -247,17 +250,21 @@ More specific versions of term/goal expansion hooks
 
 ## Not _obligated_ to maintain a git fork just to contribute
 
-Dislike having tons of forks that are several commits behind the main git repo?
+( Please ask to be added to TeamSPoon and Contribute directly ! )
 
-Be old school - Please ask to be added to TeamSPoon and Contribute directly !
+I really dislike having tons of forks that are several commits behind the main git repo.
+
+Rather just give you commit access (feel free to work from a branch)
+
 
 Still, we wont stop you from doing it the Fork+PullRequest method
 
+
 ## [BSD 2-Clause License](LICENSE.md)
 
-Copyright (c) 2017, 
+Copyright (c) 1997 - 2018 
 TeamSPoon and Douglas Miles <logicmoo@gmail.com> 
-All rights reserved.
+
 
 
 ## Some TODOs
