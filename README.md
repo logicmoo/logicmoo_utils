@@ -143,6 +143,10 @@ Instead it turns off the leash to allow you to trace with your eyeballs instead 
 
 :- must(member(3,[4,5])).
 
+..... TODO Doc this .....
+
+```
+
 
 ```
 
@@ -154,6 +158,8 @@ Wrap `sanity/1` over parts of your code you want to turn on/off that is only use
 ```prolog
 
 :- sanity(sleep(10)).
+
+..... TODO Doc this .....
 
 ```
 
@@ -169,56 +175,15 @@ Wrap `nop/1` over parts of your code you do not want to quickly comment out yet 
 
 nop(_).
 
-```
+..... TODO Doc this .....
 
-## sub_clause_expansion
-
-```prolog
-
-:- use_module(library(file_scope)).
-
-:- set_prolog_flag_until_eof(access_level, system).
-
-:- assert_until_eof(( term_expansion(.,.) :- .. )).
 
 ```
-
-
-## clause_attvars
-An alternate interface to the clause database to allow attributed variables to be asserted/read
-
-?- use_module(library(hook_hybrid)).
-
-## hook_hybrid
-Hook and/or override assert, retract, call, clause, erase, etc for specific predicates
-
-```prolog
-?- use_module(library(hook_hybrid)).
-true.
-
-?- 
-
-```
-
-
-## loop_check
-New simple loop checking
-
-Allows code to declare special locations that loop prevention will occur
-
-```prolog
-?- use_module(library(lm_utils/no_loops)).
-true.
-
-```
-TODO Doc this
 
 
 
 ## no_repeats
 New ways to avoid duplicate solutions
-
-
 
 ```prolog
 
@@ -240,11 +205,67 @@ New ways to avoid duplicate solutions
 
 
 
+## loop_check
+New simple loop checking
+
+Allows code to declare special locations that loop prevention will occur
+
+```prolog
+?- use_module(library(lm_utils/no_loops)).
+true.
+
+?-  TODO Doc this
+
+```
+
+
 
 ## sub_clause_expansion
-More specific versions of term/goal expansion hooks
 
- TODO Doc this
+```prolog
+
+:- use_module(library(file_scope)).
+
+:- set_prolog_flag_until_eof(access_level, system).
+
+:- assert_until_eof(( term_expansion(.,.) :- .. )).
+
+```
+
+## hook_hybrid
+Hook and/or override assert, retract, call, clause, erase, etc for specific predicates
+
+```prolog
+?- use_module(library(hook_hybrid)).
+true.
+
+?-  TODO Doc this
+
+```
+
+
+## clause_attvars
+An alternate interface to the clause database to allow attributed variables to be asserted/read
+
+```prolog
+?- use_module(library(hybrid_db/clause_attvars)).
+true.
+
+?-  TODO Doc this
+
+```
+
+
+## attvar_reader
+
+```prolog
+?- use_module(library(hybrid_db/attvar_reader)).
+true.
+
+?-  TODO Doc this
+
+```
+ 
 
 
 
