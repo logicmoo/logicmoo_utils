@@ -16,10 +16,9 @@
 % ===================================================================
 */
 
-:- module(logicmoo_utils_common,[]).
+:- module(logicmoo_utils_all,[]).
 
-:- reexport(library(logicmoo_startup)).
-:- reexport(library(must_sanity)).
-:- reexport(library(hook_database)).
+:- reexport(library(logicmoo_common)).
+
 
 

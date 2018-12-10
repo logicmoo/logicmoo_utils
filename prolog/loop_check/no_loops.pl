@@ -39,8 +39,8 @@
 
 
 %:- use_module(library(tabling)).
-:- use_module(library(each_call_cleanup)).
-%:- use_module(library(logicmoo_util_startup)).
+:- use_module(library(scope_locally/each_call_cleanup)).
+%:- use_module(library(logicmoo_startup)).
 
 
 :- meta_predicate  

@@ -32,8 +32,7 @@
         scce_orig(0,0,0).
 
 :- set_module(class(library)).
-:- use_module(library(logicmoo_util_common)).
-:- use_module(library(logicmoo_util_startup)).
+:- use_module(library(logicmoo_utils_all)).
 
 :- reexport(library(debug),[debug/3]).
  
@@ -207,13 +206,13 @@ scce_orig(Setup,Goal,Cleanup):-
       ('$sig_atomic'(Cleanup),throw(E))). 
 */
 
-:- ensure_loaded(library('first')).
-:- ensure_loaded(library('ucatch')).
-:- ensure_loaded(library('dmsg')).
-:- ensure_loaded(library('rtrace')).
-:- ensure_loaded(library('bugger')).
-:- ensure_loaded(library('dumpst')).
-:- ensure_loaded(library('frames')).
+:- reexport(library('debuggery/first')).
+:- reexport(library('debuggery/ucatch')).
+:- reexport(library('debuggery/dmsg')).
+:- reexport(library('debuggery/rtrace')).
+:- reexport(library('debuggery/bugger')).
+:- reexport(library('debuggery/dumpst')).
+:- reexport(library('debuggery/frames')).
 
 
 

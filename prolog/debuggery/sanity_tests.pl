@@ -1,5 +1,5 @@
 
-:- use_module(library(must_trace)).
+:- use_module(library(must_sanity)).
 :- use_module(library(bugger)).
 :- ensure_loaded(library(ansimesg)).
 

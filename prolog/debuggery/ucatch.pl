@@ -146,8 +146,8 @@
 
           ]).
 
-:- use_module(library(dmsg)).
-:- use_module(library(must_trace)).
+:- use_module((dmsg)).
+:- use_module(library(must_sanity)).
 
 vsubst(In,B,A,Out):-var(In),!,(In==B->Out=A;Out=In).
 vsubst(In,B,A,Out):-subst(In,B,A,Out).

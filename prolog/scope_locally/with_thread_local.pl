@@ -28,8 +28,8 @@
         wtl(+,*,0,3),
         wtl_how(3,0,0,0,0).        
 
-:- use_module(library(logicmoo_util_startup)).
-:- use_module(library(must_trace)).
+:- use_module(library(logicmoo_startup)).
+:- use_module(library(must_sanity)).
 
         
 :- module_transparent
@@ -46,7 +46,7 @@
 :- set_module(class(library)).
 
 %:- use_module(library(no_repeats)).
-:- system:use_module(library(each_call_cleanup)).
+:- system:use_module(library(scope_locally/each_call_cleanup)).
 
 
 %% locally_hide_each( :Fact, :Call) is nondet.

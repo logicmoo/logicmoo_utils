@@ -41,7 +41,7 @@ lmcache:never_use_attvar_expander(attvar_serializer).
 
 :- use_module(library(gvar_lib)).
 %:- reexport(library(hook_database)).
-%:- reexport(library(listing_vars)).
+%:- reexport(library(hybrid_db/listing_vars)).
 
 :- if( \+ prolog_load_context(reload, true)).
 :- multifile(baseKB:mpred_is_impl_file/1).

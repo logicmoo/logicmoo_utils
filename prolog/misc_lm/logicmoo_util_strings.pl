@@ -272,7 +272,7 @@
 :- meta_predicate toCase(2,?,?).
 :- meta_predicate toCaseSplit(?,2,?,?).
 
-:- use_module(library(must_trace)).
+:- use_module(library(must_sanity)).
 :- use_module(library(check)).
 % :- use_module(library(check),[check:string_predicate/1]).
 :- multifile(check:string_predicate/1).
@@ -1986,7 +1986,7 @@ longest_string(Order,TStr1,TStr2):-
 % this is a backwards compatablity block for SWI-Prolog 6.6.6
 :- retract(double_quotes_was_strings(WAS)),set_prolog_flag(double_quotes,WAS).
 
-:- use_module(library(logicmoo_util_startup)).
+:- use_module(library(logicmoo_startup)).
 
 :- fixup_exports.
 

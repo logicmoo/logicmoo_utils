@@ -65,20 +65,20 @@ end_of_file.
   dtrace(*,0).
 
 
-:- use_module(library(logicmoo_util_common)).
+:- use_module(library(logicmoo_utils_all)).
 :- reexport(library(debug),[debug/3]).
 :- use_module(library(xlisting)).
 :- use_module(library(loop_check)).
 :- set_module(class(library)).
 :- user:use_module(library(memfile)).
 %:- use_module(logicmoo_util_rtrace).
-:- use_module(library(with_thread_local)).
+:- use_module(library(scope_locally/with_thread_local)).
 %:- use_module(logicmoo_util_loop_check).
 :- use_module(library(random),[random/1]).
 % TODO Make a speed,safety,debug Triangle instead of these flags
 :- create_prolog_flag(runtime_must,debug,[]).
 :- thread_local(tlbugger:ifHideTrace/0).
-:- reexport(library(listing_vars)).
+:- reexport(library(hybrid_db/listing_vars)).
 :- use_module(library(lists)).
 
 

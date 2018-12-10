@@ -15,7 +15,7 @@
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_structs.pl
 :- module(virtualize_source,
           [
-cnas/3,
+%cnas/3,
 nb_current_or_nil/2,
 safe_virtualize/3,
 same_terms/2,          
@@ -36,12 +36,12 @@ vwc/0
 ]).
 
 :- set_module(class(library)).
-:- reexport(library(must_trace)).
-:- reexport(library(loop_check)).
+:- reexport(library(must_sanity)).
+%:- reexport(library(loop_check)).
 
 
 :- module_transparent((
-cnas/3,
+%cnas/3,
 nb_current_or_nil/2,
 safe_virtualize/3,
 same_terms/2,          

@@ -70,7 +70,7 @@ Thread.
 :- set_module(class(library)).
 
 
-:- use_module(library(must_trace)).
+:- use_module(library(must_sanity)).
 :- use_module(library(logicmoo_util_terms)).
 
 contains_eq(USub,Term):- sub_term(Sub,Term),USub=@=Sub.

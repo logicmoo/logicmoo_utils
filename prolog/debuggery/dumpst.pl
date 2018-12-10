@@ -43,11 +43,12 @@
   dtrace(*,0).
 
 
-:- use_module(library(logicmoo_util_common)).
-:- use_module(library(ucatch)).
-:- use_module(library(loop_check)).
-:- use_module(library(rtrace)).
-:- use_module(library(must_trace)).
+:- reexport(library(misc_lm/logicmoo_util_strings)).
+:- use_module(library(logicmoo_utils_all)).
+:- use_module((ucatch)).
+:- use_module(library(loop_check/no_loops)).
+:- use_module((rtrace)).
+:- use_module(library(must_sanity)).
 
 
 :- set_prolog_flag(backtrace_depth,      200).
@@ -68,7 +69,7 @@
 
 
 :- ensure_loaded(library(debug)).
-:- use_module(library(dmsg)).
+:- use_module((dmsg)).
 %:- use_module(library(logicmoo_util_strings)).
 
 
@@ -669,9 +670,9 @@ dumptrace(_,C):-fmt(unused_keypress(C)),!,fail.
 %
 dumptrace_ret(G):- zotrace((leash(+all),visible(+all),visible(+unify),trace)),G.
 
-:- use_module(library(logicmoo_util_common)).
+:- use_module(library(logicmoo_utils_all)).
 
-:- use_module(library(logicmoo_util_startup)).
+:- use_module(library(logicmoo_startup)).
 :- fixup_exports.
 
 

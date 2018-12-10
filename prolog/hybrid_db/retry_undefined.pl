@@ -28,7 +28,7 @@
 :- thread_local(was_prolog_flag/1).
 :- current_prolog_flag(retry_undefined,Was)->asserta(was_prolog_flag(retry_undefined,Was));asserta(was_prolog_flag(retry_undefined,none)).
 %:- use_module(library(loop_check)).
-:- use_module(library(bugger)).
+%:- use_module(library(bugger)).
 :- use_module(library(hook_database)).
 
 :- create_prolog_flag(retry_undefined, none,[type(term),keep(false)]).

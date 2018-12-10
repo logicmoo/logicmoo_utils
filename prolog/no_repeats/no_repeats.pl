@@ -434,7 +434,7 @@ same_forms(F1,F2):- var(F1),!,F2==F1.
 same_forms(F1,F2):- var(F2),!,F2==F1.
 same_forms(F1,F2):- F1=@=F2.
 
-%:- use_module(library(logicmoo_util_startup)).
+%:- use_module(library(logicmoo_startup)).
 
 :- if(current_predicate(fixup_exports/0)).
 :- fixup_exports.

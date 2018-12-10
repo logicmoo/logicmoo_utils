@@ -10,14 +10,14 @@
     Maintainers:   TeamSPoon
     E-mail:        logicmoo@gmail.com
     WWW:           http://www.prologmoo.com
-    SCM:           https://github.com/TeamSPoon/logicmoo_utils/blob/master/prolog/logicmoo_util_startup.pl
+    SCM:           https://github.com/TeamSPoon/logicmoo_utils/blob/master/prolog/logicmoo_startup.pl
     Copyleft:      1999-2015, LogicMOO Prolog Extensions
     License:       Lesser GNU Public License
 % ===================================================================
 */
 
 % We save the name of the module loading this module
-:- module(logicmoo_util_startup,[
+:- module(logicmoo_startup,[
           maybe_notrace/1,
           absolute_startup_script/1,
           at_init/1,
@@ -32,7 +32,7 @@
           run_pending_inits/0]).
 
 
-%:- use_module(library(logicmoo_util_common)).
+%:- use_module(library(logicmoo_utils_all)).
 :- create_prolog_flag(dmsg_level,filter,[type(term),keep(true)]).
 
 %=======================================
@@ -277,7 +277,7 @@ init_why(Phase):-
 :- dynamic(system:'$init_goal'/3).
 :- module_transparent(system:'$init_goal'/3).
 :- forall(absolute_startup_script(F),
-    (assertz(system:'$init_goal'(F,logicmoo_util_startup:init_why(after(F)),F:9999)))).
+    (assertz(system:'$init_goal'(F,logicmoo_startup:init_why(after(F)),F:9999)))).
 
 :- if(false).
 :- user:multifile(expand_answer/2).
@@ -288,7 +288,7 @@ user:expand_answer(_Bindings, _ExpandedBindings):- run_pending_inits,fail.
 user:expand_query(_Goal, _Expanded, _Bindings, _ExpandedBindings):-  run_pending_inits,fail.
 :- endif.
 
-%:- use_module(logicmoo_util_common).
+%:- use_module(logicmoo_utils_all).
 %:- fixup_exports.
 
 :- if( app_argv1('--upgrade') ).
@@ -296,8 +296,8 @@ user:expand_query(_Goal, _Expanded, _Bindings, _ExpandedBindings):-  run_pending
 :- endif.
 
 
-%:- use_module(library(each_call_cleanup)).
-%:- use_module(library(logicmoo_util_startup)).
+%:- use_module(library(scope_locally/each_call_cleanup)).
+%:- use_module(library(logicmoo_startup)).
 
 :- meta_predicate if_debugging(*,0).
 
@@ -688,7 +688,7 @@ fixup_exports:-
 
 :- fixup_exports.
 
-%:- logicmoo_util_startup:use_module(library(option),[options/3]).
+%:- logicmoo_startup:use_module(library(option),[options/3]).
 
 logicmoo_base_port(Base):- app_argv1(One),\+ is_list(One),
    (atom(One)-> (atomic_list_concat([_,Atom],'port=',One),atom_number(Atom,Base))),!.
@@ -710,5 +710,7 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
   run_pending_inits, fail.
 :- endif.
 
-:- use_module(library(each_call_cleanup)).
-                                                                                            
+:- use_module(library(scope_locally/each_call_cleanup)).
+
+
+% ( GFE = Girl-Friend Experience )
