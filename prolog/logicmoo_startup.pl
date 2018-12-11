@@ -712,5 +712,7 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
 
 :- use_module(library(scope_locally/each_call_cleanup)).
 
+:- use_module(library(debuggery/dmsg)).
+:- use_module(library(must_sanity)).
 
 % ( GFE = Girl-Friend Experience )

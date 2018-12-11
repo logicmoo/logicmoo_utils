@@ -19,6 +19,7 @@
 :- module(logicmoo_utils_all,[]).
 
 :- reexport(library(logicmoo_common)).
+:- reexport(library(hybrid_db/portray_vars)).
 
 
 

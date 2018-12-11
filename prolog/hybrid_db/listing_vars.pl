@@ -107,6 +107,7 @@
 */
 
 :- use_module(library(must_sanity)).
+:- use_module(library(misc_lm/logicmoo_util_terms)).
 
 :- multifile
         prolog:make_hook/2.
@@ -153,7 +154,7 @@
             get_clause_vars_copy/2,
             get_clause_vars_hb_int/2,
             imploded_copyvars/2,
-            locate_clause_ref/5,
+            locate_clause_ref/5,  
             
             listing_vars_file/0,
             make_subterm_path/3,
@@ -442,9 +443,11 @@ all_disjoint_in_sets(_,[],_):-!.
 all_disjoint_in_sets(_,[_],_):-!.
 all_disjoint_in_sets(P,[V|Vs],SET):-delete_eq(SET,V,REST),!,call(P,V,REST),all_disjoint_in_sets(P,Vs,SET).
 
+/*
 delete_eq([],Item,[]):-!,dmsg(warn(delete_eq([],Item,[]))).
 delete_eq([L|List],Item,List):-Item==L,!.
 delete_eq([L|List],Item,[L|ListO]):-delete_eq(List,Item,ListO),!.
+*/
 
 %% v_dif_rest( ?V, ?REST) is semidet.
 %
@@ -835,7 +838,7 @@ write_functor(N=V):-write_functor(N,V).
 write_functor(N,V):-var(V),!,put_attr(V,vn,N).
 write_functor(N,V):-ignore('$VAR'(N)=V),!.
 
-:-export(save_clause_vars/2).
+:- export(save_clause_vars/2).
 :-module_transparent(save_clause_vars/2).
 
 %=
@@ -851,7 +854,7 @@ save_clause_vars(MHB,Vs):- ignore(maybe_record_scanned_file),ignore(current_why(
 % ?- clause(pui_help:prolog_help_topic(A),B,ClauseRef), prolog_clause:clause_info(ClauseRef, File, TermPos, NameOffset, Options).
 
 
-:-export(save_clause_vars/3).
+:- export(save_clause_vars/3).
 
 %=
 
@@ -896,7 +899,7 @@ clause_ref_vars(ClauseRef,Was):-prolog_clause:clause_info(ClauseRef, _File, _Ter
 %
 clause_ref_file(ClauseRef,File):-prolog_clause:clause_info(ClauseRef, File, _TermPos, _NameOffset, []).
 
-:-export(save_to_clause_ref/3).
+:- export(save_to_clause_ref/3).
 
 %=
 
@@ -906,7 +909,7 @@ clause_ref_file(ClauseRef,File):-prolog_clause:clause_info(ClauseRef, File, _Ter
 %
 save_to_clause_ref(ClauseRef,Vs,Why):- ain00(names(ClauseRef,Vs)),ain00(names_why(ClauseRef,Why)),!.
 
-:-export(save_clause_vars/6).
+:- export(save_clause_vars/6).
 
 %=
 
@@ -957,7 +960,7 @@ ensure_vars_labled_r(I,O):-
 
 ensure_vars_labled_r(I,O):- copy_term_and_varnames(I,O),I\=@=O.
 
-:-export(copy_term_and_varnames/2).
+:- export(copy_term_and_varnames/2).
 
 %=
 
@@ -1189,7 +1192,7 @@ snumbervars4(Term,Start,End,List):- snumbervars5(Term,Start,End,List).
 %
 snumbervars5(Term,Start,End,List):-must_det_l((integer(Start),is_list(List), numbervars(Term,Start,End,List),check_varnames(Term))).
 
-:-export(try_save_vars/1).
+:- export(try_save_vars/1).
 
 %=
 
@@ -1200,7 +1203,7 @@ snumbervars5(Term,Start,End,List):-must_det_l((integer(Start),is_list(List), num
 try_save_vars(_):- t_l:dont_varname,!.
 try_save_vars(HB):-ignore((get_varname_list(Vs),Vs\==[],save_clause_vars(HB,Vs))),!.
 
-:-export(maybe_scan_for_varnames/0).
+:- export(maybe_scan_for_varnames/0).
 
 %=
 
@@ -1210,7 +1213,7 @@ try_save_vars(HB):-ignore((get_varname_list(Vs),Vs\==[],save_clause_vars(HB,Vs))
 %
 maybe_scan_for_varnames:- current_prolog_flag(source_variables, true)->scan_for_varnames;true.
 
-:-export(scan_for_varnames/0).
+:- export(scan_for_varnames/0).
 
 :- dynamic(thglobal:scanning_for_varnames_already/0).
 
@@ -1328,7 +1331,7 @@ read_source_file_vars_1(File):-
 
 
 
-:-export(ensure_vars_labled/2).
+:- export(ensure_vars_labled/2).
 
 
 mfree:attr_unify_hook(This,That):-get_attr(That,eq,Thats),Thats==This,!.
@@ -1430,6 +1433,7 @@ term_expansion_save_vars(HB):- \+ ground(HB),  \+ t_l:dont_varname_te,\+ t_l:don
 without_varname_scan(Goal):-
   locally(current_prolog_flag(source_variables,false),
    locally([ - t_l:dont_varname_te,- t_l:dont_varname],Goal)).
+
 
 %=
 

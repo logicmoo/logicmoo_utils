@@ -1,11 +1,10 @@
 
-:- use_module(library(must_trace)).
-:- use_module(library(bugger)).
+:- use_module(library(sanity_must)).
 :- ensure_loaded(library(ansimesg)).
 
 :- set_prolog_flag(must_saftey,3).
-:- set_prolog_flag(must_debug,0).
-:- set_prolog_flag(must_speed,0).
+:- set_prolog_flag(must_debug,3).
+:- set_prolog_flag(must_speed,3).
 
 :- set_prolog_flag(must_type,keep_going).
 

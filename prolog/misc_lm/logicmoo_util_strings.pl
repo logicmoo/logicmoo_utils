@@ -792,6 +792,8 @@ toCamelcase(I,O):-toCaseSplit('',first_char_to_upper,I,O).
 %
 % Un Camelcase.
 %
+unCamelcase(I,O):- \+ atom(I),I=O.
+unCamelcase(I,O):- upcase_atom(I,O),downcase_atom(I,O),!.
 unCamelcase(I,O):-toCaseSplit('_',first_char_to_lower,I,O).
 
 
@@ -1133,7 +1135,7 @@ destringify('[]','[]'):-!.
 destringify(T,A):- on_x_fail(call((text_to_string(T,S),!,maybe_notrace(atom_string(A,S))))),!.
 destringify(X,S):-is_ftString2(X),stringToCodelist(X,CL),name(S,CL),!.
 destringify([H|T],[HH|TT]):-!,destringify(H,HH),destringify(T,TT),!.
-destringify(X,P):-compound(X),X=..LIST,maplist(destringify,LIST,DL),P=..DL,!.
+destringify(X,P):- compound(X),X=..LIST,maplist(destringify,LIST,DL),P=..DL,!.
 destringify(B,A):- (atom(A),atom_concat('#$',A,B))->true;A=B.
 
 %stringToList(X,Y):-writeq(string_to_list(X,Y)),nl,fail.

@@ -27,7 +27,7 @@
             concat_paths/3,
             current_dirs/1,
             current_dirs0/1,
-            maybe_add_import_module/3,
+            %maybe_add_import_module/3,
             current_filedir/1,
             current_filesource/1,
             enumerate_files/2,
@@ -58,7 +58,7 @@
             local_directory_search_combined2/1,
             locally_to_dir/2,
             my_absolute_file_name/2,
-            maybe_delete_import_module/2,
+            %maybe_delete_import_module/2,
             normalize_path/2,
             os_to_prolog_filename/2,
             prolog_file_dir/1,
@@ -135,7 +135,7 @@
         time_file_safe/2,
         to_filename/2,
         upcase_atom_safe/2,
-        maybe_add_import_module/3,
+        %maybe_add_import_module/3,
         with_filematches/1.
 :- dynamic
         local_directory_search/1.
@@ -144,7 +144,7 @@
 :- use_module(library(dialect)).
 
 
-:- ensure_loaded(library(no_repeats)).
+:- ensure_loaded(library(no_repeats/no_repeats)).
 
 :- if(exists_source(library(filesex))).
 %:- set_prolog_flag(generate_debug_info, true).=

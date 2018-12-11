@@ -52,6 +52,7 @@
 
       
 :- set_module(class(library)).
+:- use_module(library(misc_lm/logicmoo_util_terms)).
 
 %% loop_check_nr( ?CL) is semidet.
 %

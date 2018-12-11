@@ -67,7 +67,7 @@ end_of_file.
 
 :- use_module(library(logicmoo_utils_all)).
 :- reexport(library(debug),[debug/3]).
-:- use_module(library(xlisting)).
+:- use_module(library(xlisting/xlisting)).
 :- use_module(library(loop_check)).
 :- set_module(class(library)).
 :- user:use_module(library(memfile)).
