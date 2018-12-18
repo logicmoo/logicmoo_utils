@@ -162,7 +162,15 @@ wtl(M,local_override(N,VALUE),Call,_How):- !,
     call_cleanup((b_setval(N,VALUE),Call,b_setval(N,WAS)),b_setval(N,WAS));
     call_cleanup((b_setval(N,VALUE),Call,nb_delete(N)),nb_delete(N))).
 
+wtl(M,nb_setval(N,VALUE),Call,_How):- !,  
+   M:(nb_current(N,WAS) -> 
+    call_cleanup((nb_setval(N,VALUE),Call,nb_setval(N,WAS)),nb_setval(N,WAS));
+    call_cleanup((nb_setval(N,VALUE),Call,nb_delete(N)),nb_delete(N))).
+
 wtl(M,$N=VALUE,Call,How):- !,
+    wtl(M,local_override(N,VALUE),Call,How).
+
+wtl(M,b_setval(N,VALUE),Call,How):- !,
     wtl(M,local_override(N,VALUE),Call,How).
 
 % undocumented

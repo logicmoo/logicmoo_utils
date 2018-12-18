@@ -1,4 +1,9 @@
-:- module(portray_vars, [debug_var/2,maybe_debug_var/2,print_clause_plain/1,pretty_numbervars/2,guess_pretty/1,simpler_textname/2,simpler_textname/3]).
+:- module(portray_vars, [debug_var/2,maybe_debug_var/2,pretty_numbervars/2,guess_pretty/1,
+  into_symbol_name/2,
+  prologcase_name/2,
+  may_debug_var/2,
+  maybe_debug_var/2,
+  simpler_textname/2,simpler_textname/3]).
 :- set_module(class(library)).
 /*  Logicmoo Debug Tools
 % ===================================================================
@@ -95,11 +100,11 @@ add_var_to_env_loco(UP,Var):- var(Var), get_var_name(Var,Prev),atomic(Prev),add_
 add_var_to_env_loco(UP,Var):-add_var_to_env(UP,Var).
 
 add_var_to_env_locovs_prev(UP,Prev,_Var):- UP==Prev,!.
-add_var_to_env_locovs_prev(UP,_Prev,_Var):- atom_concat_or_rtrace('_',_,UP),!.
-add_var_to_env_locovs_prev(UP,_Prev,_Var):- atom_concat_or_rtrace(_,'_',UP),!.
+add_var_to_env_locovs_prev(UP,_Prev,_Var):- atom_concat_or_rtrace_priv('_',_,UP),!.
+add_var_to_env_locovs_prev(UP,_Prev,_Var):- atom_concat_or_rtrace_priv(_,'_',UP),!.
 add_var_to_env_locovs_prev(UP,_Prev,Var):-add_var_to_env(UP,Var).
-add_var_to_env_locovs_prev(UP,Prev,Var):- atom_concat_or_rtrace('_',_,Prev),!,add_var_to_env(UP,Var).
-add_var_to_env_locovs_prev(UP,Prev,Var):- atom_concat_or_rtrace(UP,Prev,New),add_var_to_env(New,Var).
+add_var_to_env_locovs_prev(UP,Prev,Var):- atom_concat_or_rtrace_priv('_',_,Prev),!,add_var_to_env(UP,Var).
+add_var_to_env_locovs_prev(UP,Prev,Var):- atom_concat_or_rtrace_priv(UP,Prev,New),add_var_to_env(New,Var).
 add_var_to_env_locovs_prev(UP,_Prev,Var):- add_var_to_env(UP,Var).
 
 check_varname(UP):- name(UP,[C|_]),(char_type(C,digit)->throw(check_varname(UP));true).
@@ -127,20 +132,8 @@ prologcase_name0(String,ProposedName):-
   string_lower(String,In),string_codes(In,Was),!,filter_var_chars(Was,CS),!,name(ProposedName,CS),!.
 
 
-atom_concat_if_new(Prefix,Atom,NewAtom):-
-  (atom_concat_or_rtrace(Prefix,_,Atom)-> NewAtom=Atom ; atom_concat_or_rtrace(Prefix,Atom,NewAtom)).
-
-
 atom_trim_prefix(Root,Prefix,Result):- atom_concat(Prefix,Result,Root) -> true ; Result=Root.
 atom_trim_suffix(Root,Suffix,Result):- atom_concat(Result,Suffix,Root) -> true ; Result=Root.
-
-atom_concat_suffix('',Result,Result):-!.
-atom_concat_suffix(Result,'',Result):-!.
-atom_concat_suffix(Root,Suffix,Root):- atom_concat(_,Suffix,Root),!.
-atom_concat_suffix(Root,Suffix,Result):- 
-  atom_trim_prefix(Suffix,'_',Suffix2),
-  atom_trim_suffix(Root,'_',Root2),
-  atomic_list_concat([Root2,Suffix2],'_',Result),!.
 
 shrink_naut_vars(I,I).
 pretty_numbervars(Term, TermO):-
@@ -159,13 +152,15 @@ guess_pretty(O):- !,((pretty1(O),pretty2(O),pretty3(O))).
 %make_pretty(I,O):- is_user_output,!,shrink_naut_vars(I,O), pretty1(O),pretty2(O),pretty3(O).
 %make_pretty(I,O):- I=O, pretty1(O),pretty2(O),pretty3(O).
 
+/*
+:- export(print_clause_plain/1).
 print_clause_plain(I):-
   current_prolog_flag(color_term, Was),
   make_pretty(I,O),
     setup_call_cleanup(set_prolog_flag(color_term, false),
      (nl,lcolormsg1((O))),
      set_prolog_flag(color_term, Was)).
-
+*/
 
 %lcolormsg1(Msg):- mesg_color(Msg,Ctrl),!,ansicall_maybe(Ctrl,fmt9(Msg)).
 lcolormsg1(Msg):- fmt9(Msg).
@@ -241,7 +236,7 @@ pretty5(H):-
    nop(may_debug_var(F,'_Param',P1)),
    must_maplist_det(pretty5,[P1|ARGS]))),!. 
 
-atom_concat_or_rtrace(X,Y,Z):- tracing->atom_concat(X,Y,Z);catch(atom_concat(X,Y,Z),_,break).
+atom_concat_or_rtrace_priv(X,Y,Z):- tracing->atom_concat(X,Y,Z);catch(atom_concat(X,Y,Z),_,break).
 
 
 :- export(i_name_lc/2).
@@ -398,8 +393,11 @@ to_case_breaks_trimed(Name,ListN,Sep,Text):- is_list(ListN),!,
 to_descriptive_name(For,xti(Pefix,_),Desc):-!,to_descriptive_name(For,Pefix,Desc).
 to_descriptive_name(_For,X,X).
 
+:- multifile(user:portray/1).
+:- dynamic(user:portray/1).
+:- discontiguous(user:portray/1).
 
-portray(Term):- 
+user:portray(Term):- fail,
   \+ ground(Term),
   pretty_numbervars(Term,PrettyVarTerm),
   Term \=@= PrettyVarTerm,

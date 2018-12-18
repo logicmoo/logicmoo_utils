@@ -696,7 +696,33 @@ logicmoo_base_port(Base):- getenv_or('LOGICMOO_BASE_PORT',Base,3000),!.
 :- export(logicmoo_base_port/1).
 :- system:import(logicmoo_base_port/1).
 
-:- fixup_exports.
+% ==============================================
+% Easier to trace while access_level system
+% ==============================================
+:- '$hide'('$toplevel':restore_debug).
+:- '$hide'('$toplevel':save_debug).
+:- '$hide'('$toplevel':residue_vars/2).
+:- '$hide'('system':deterministic/1).
+:- '$hide'(toplevel_call/2).
+:- '$hide'('$toplevel':'$query_loop'/0).
+
+% ==============================================
+% System metapredicates
+% ==============================================
+:- meta_predicate '$syspreds':bit(2,?,?).
+:- meta_predicate '$bags':findnsols_loop(*,*,0,*,*).
+:- meta_predicate '$bags':findall_loop(*,0,*,*).
+:- meta_predicate '$attvar':unfreeze(0).
+:- meta_predicate '$attvar':run_crv(0,*,*,*).
+:- meta_predicate '$expand':expand_term_list(4,*,*,*,*).
+:- meta_predicate '$parms':cached_library_directory(*,0,*).
+:- meta_predicate '$toplevel':residue_vars(0,-).
+:- meta_predicate '$toplevel':toplevel_call(0).
+:- meta_predicate '$toplevel':run_initialize(0,*).
+% :- meta_predicate '$toplevel':run_init_goal(0,*).
+% :- meta_predicate '$attvar':uhook(*,0,*,*).
+% :- meta_predicate '$attvar':uhook(*,0,*).
+:- meta_predicate '$toplevel':'$execute_goal2'(0,*).
 
 :- if(false). 
 :- multifile(user:term_expansion/2).
@@ -716,3 +742,8 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
 :- use_module(library(must_sanity)).
 
 % ( GFE = Girl-Friend Experience )
+
+
+:- fixup_exports.
+
+

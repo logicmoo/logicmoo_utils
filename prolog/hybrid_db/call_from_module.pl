@@ -118,7 +118,7 @@
 
 :- reexport(virtualize_source).
 :- reexport(lockable_vars).
-:- reexport(hook_database).
+:- reexport(library(hook_database)).
 
 :- create_prolog_flag(subclause_expansion,true,[keep(true)]).
 

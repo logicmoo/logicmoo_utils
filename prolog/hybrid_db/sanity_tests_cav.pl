@@ -1,6 +1,6 @@
 
 :- use_module(library(must_sanity)).
-:- use_module(library(attvar_reader)).
+:- use_module((attvar_reader)).
 
 rtest:- rtrace,test.
 

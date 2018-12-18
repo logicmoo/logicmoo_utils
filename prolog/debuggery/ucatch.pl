@@ -760,7 +760,7 @@ source_ctx(B:L):- must((current_source_file(F:L),file_base_name(F,B))).
 current_source_location0(F,why):- t_l:current_why_source(F).
 current_source_location0(F,L):- source_location(F,L),!.
 current_source_location0(F,L):- prolog_load_context(file,F),current_input(S),line_position(S,L),!.
-current_source_location0(F,L):- prolog_load_context(stream,S),line_or_char_count(S,L),stream_property(S,file(F)),!.
+current_source_location0(F,L):- prolog_load_context(stream,S),line_or_char_count(S,L),stream_property(S,file_name(F)),!.
 current_source_location0(F,L):- loading_file(F),stream_property(S,file_name(F)),line_or_char_count(S,L),!.
 current_source_location0(F,L):- prolog_load_context(file,F),!,ignore((prolog_load_context(stream,S),!,line_or_char_count(S,L))),!.
 current_source_location0(F,L):- loading_file(F),L= (-1).

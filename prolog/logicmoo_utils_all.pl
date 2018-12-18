@@ -20,6 +20,12 @@
 
 :- reexport(library(logicmoo_common)).
 :- reexport(library(hybrid_db/portray_vars)).
+:- reexport(library(hybrid_db/predicate_inheritance)).
+:- reexport(library(hybrid_db/retry_undefined)).
+:- reexport(library(hybrid_db/call_from_module)).
+:- reexport(library(expand_finer/subclause_expansion)).
+:- reexport(library(hybrid_db/virtualize_source)).
+:- reexport(library(file_utils/filesystem)).
 
 
 

@@ -1,6 +1,5 @@
 
 :- use_module(library(must_sanity)).
-:- use_module(library(bugger)).
 :- ensure_loaded(library(ansimesg)).
 
 :- set_prolog_flag(must_saftey,3).
