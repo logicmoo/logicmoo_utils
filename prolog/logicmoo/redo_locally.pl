@@ -11,7 +11,7 @@
 % ===================================================================
 */
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_with_assertions.pl
-:- module(with_thread_local,
+:- module(locally_each,
           [ locally/2,
             locally_each/2,
             locally_tl/2,

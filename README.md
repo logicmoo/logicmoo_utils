@@ -269,6 +269,87 @@ true.
 
 
 
+# with_thread_local
+Call a Goal with local assertions
+
+   locally_each( :Effect, :Call) is nondet.
+ 
+   Temporally have :Effect (see locally/2)
+ 
+   But Ensure Non-determism is respected (effect is undone between _each_ Redo)
+ 
+   uses each_call_cleanup/3 instead of setup_call_cleanup/3 (slightly slower?)
+ 
+  for example,
+ 
+   locally_each/2 works (Does not throw)
+```prolog 
+  ?- current_prolog_flag(xref,Was), 
+      locally_each(set_prolog_flag(xref,true),
+      assertion(current_prolog_flag(xref,true));assertion(current_prolog_flag(xref,true))),
+      assertion(current_prolog_flag(xref,Was)),fail.
+```
+ 
+   locally/2 is little less carefull so it should _not_ work (it throws instead)
+```prolog
+?- current_prolog_flag(xref,Was), 
+    locally(set_prolog_flag(xref,true),
+    assertion(current_prolog_flag(xref,true));assertion(current_prolog_flag(xref,true))),
+    assertion(current_prolog_flag(xref,Was)),fail.
+```
+
+   locally( :Effect, :Call) is nondet.
+ 
+  Effect may be of type:
+ 
+   set_prolog_flag -
+      Temporarily change prolog flag
+ 
+   op/3 - 
+      change op
+ 
+   $gvar=Value -
+      set a global variable
+ 
+   Temporally (thread_local) Assert some :Effect 
+ 
+   use locally_each/3 if respecting Non-determism is important 
+  (slightly slower?)
+ 
+```prolog
+  ?- current_prolog_flag(xref,Was), 
+      locally(set_prolog_flag(xref,true),
+      assertion(current_prolog_flag(xref,true))),
+      assertion(current_prolog_flag(xref,Was)). 
+```
+
+
+:- set_prolog_flag_until_eof(access_level,system).
+
+:- assert_until_eof(( term_expansion(.,.) :- .. )).
+
+```
+
+
+# Utilities to open various objects for read/write
+
+```prolog
+:- use_module(library(lmu/filestreams)).
+
+```
+
+
+
+
+# mass wildcard expansions
+```prolog
+:- use_module(library(lmu/filesystem)).
+
+```
+
+
+
+
 ## Not _obligated_ to maintain a git fork just to contribute
 
 ( Please ask to be added to TeamSPoon and Contribute directly ! )
