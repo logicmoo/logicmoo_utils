@@ -193,6 +193,8 @@ compound_name_arity_safe/3
 
 
 % this is a backwards compatablity block for SWI-Prolog 6.6.6
+:- set_module(class(library)).
+:- use_module(library(apply)).
 :- dynamic(double_quotes_was_lib/1).
 :- multifile(double_quotes_was_lib/1).
 :- current_prolog_flag(double_quotes,WAS),asserta(double_quotes_was_lib(WAS)).

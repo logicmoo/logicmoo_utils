@@ -31,6 +31,8 @@ appear in the source-code.
 
 */
 
+:- set_module(class(library)).
+:- use_module(library(apply)).
 
 :- create_prolog_flag(subclause_expansion,true,[keep(true)]).
 

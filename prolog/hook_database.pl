@@ -625,7 +625,7 @@ clause_asserted(H,B):-clause_asserted(H,B,_).
 %
 % Clause Asserted.
 %
-clause_asserted(M:H,B,R):- copy_term(M:H:B,MHB),system:clause(M:H,B,R),variant(M:H:B,MHB).
+clause_asserted(M:H,B,R):- copy_term(v(M,H,B),MHB),system:clause(M:H,B,R),variant(v(M,H,B),MHB).
 
 :- meta_predicate(clause_asserted1(:,?,?)).
 clause_asserted1(M:H,B,R):-
@@ -680,7 +680,7 @@ clause_asserted_i(Head):-
   % find a unit system:clause identical to Head by finding one which unifies,
   clause_i(Head_copy),
   % and then checking to see if it is identical
-  term_attvars(Head:Head_copy:HC,Vars),maplist(del_attr_type(vn),Vars),
+  term_attvars(v(Head,Head_copy,HC),Vars),maplist(del_attr_type(vn),Vars),
   =@=(Head,HC),
   variant(Head,Head_copy))),!.
 

@@ -524,7 +524,7 @@ m_m_fa_to_m_p_fa(Decl_mpred_hybrid,CallerMt,PredMt,PI):-functor(PI,F,A),CallerMt
 %
 % Module Functor-arity Converted To Module F Functor-arity.
 %
-m_fa_to_m_p_fa(Decl_mpred_hybrid,PredMt:PredMt:FA):- !, m_m_fa_to_m_p_fa(Decl_mpred_hybrid,PredMt,PredMt,FA).
+m_fa_to_m_p_fa(Decl_mpred_hybrid,MM:FA):- MM= PredMt:PredMt, !, m_m_fa_to_m_p_fa(Decl_mpred_hybrid,PredMt,PredMt,FA).
 m_fa_to_m_p_fa(Decl_mpred_hybrid,PredMt:FA):- !, m_m_fa_to_m_p_fa(Decl_mpred_hybrid,PredMt,PredMt,FA).
 m_fa_to_m_p_fa(Decl_mpred_hybrid,FA):- call(ereq,defaultAssertMt(PredMt)), m_m_fa_to_m_p_fa(Decl_mpred_hybrid,PredMt,PredMt,FA).
 
@@ -873,7 +873,7 @@ with_pred_head(Pred,Var):- var(Var),!,trace_or_throw(var_with_pred_head(Pred,Var
 with_pred_head(Pred,(H:-_)):-!,with_pred_head(Pred,H).
 with_pred_head(Pred,M:Var):- var(Var),!,trace_or_throw(var_with_pred_head(Pred,M:Var)).
 with_pred_head(Pred,M:(H:-_)):-!,with_pred_head(Pred,M:H).
-with_pred_head(Pred,_:M:H):-!,with_pred_head(Pred,M:H).
+with_pred_head(Pred,MM:H):-  MM = (_:M), !,with_pred_head(Pred,M:H).
 with_pred_head(Pred,~(H)):-nonvar(H),!,with_pred_head(Pred,H).
 with_pred_head(Pred,M:'~'(H)):-nonvar(H),!,with_pred_head(Pred,M:H).
 with_pred_head(Pred,M:F/A):-!,atom(F),current_predicate(M:F/A),!,functor(H,F,A),call(Pred,M:H).

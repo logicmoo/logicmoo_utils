@@ -261,10 +261,10 @@
         vars_to_ucase_0/2.
 
 :- dynamic % (dynamic) :-
-        
-        
+                
         double_quotes_was_strings/1,
         to_string_hook/3.
+
 
 %:- user:use_module(library('file_scope')).
 
@@ -272,8 +272,10 @@
 :- meta_predicate toCase(2,?,?).
 :- meta_predicate toCaseSplit(?,2,?,?).
 
-:- use_module(library(must_sanity)).
+:- set_module(class(library)).
+:- use_module(library(apply)).
 :- use_module(library(check)).
+:- use_module(library(must_sanity)).
 % :- use_module(library(check),[check:string_predicate/1]).
 :- multifile(check:string_predicate/1).
 :- dynamic(check:string_predicate/1).
@@ -287,8 +289,6 @@
 :- set_prolog_flag(double_quotes,string).
 
 % :-import(must/1).
-
-
 
 
 %= 	 	 

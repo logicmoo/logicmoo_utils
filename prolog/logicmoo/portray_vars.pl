@@ -148,7 +148,7 @@ pretty_numbervars(Term, TermO):-
 our_implode_var_names(Vars):- \+ compound(Vars),!.
 our_implode_var_names([N=V|Vars]):- ignore(V='$VAR'(N)), our_implode_var_names(Vars).
 
-guess_pretty(O):- !,((pretty1(O),pretty2(O),pretty3(O))).
+guess_pretty(O):- !,((pretty1(O),pretty1a(O),pretty2(O),pretty3(O))).
 %make_pretty(I,O):- is_user_output,!,shrink_naut_vars(I,O), pretty1(O),pretty2(O),pretty3(O).
 %make_pretty(I,O):- I=O, pretty1(O),pretty2(O),pretty3(O).
 
@@ -196,6 +196,24 @@ pretty1(debug_var(R,V)):- may_debug_var(R,V).
 pretty1(bv(R,V)):- may_debug_var(R,V).
 pretty1(H):-compound_name_arguments(H,_,ARGS),must_maplist_det(pretty1,ARGS).
 
+pretty1a(H):- \+ compound(H),!.
+pretty1a(H):- is_list(H), !, maplist(pretty1a,H).
+pretty1a(H):- compound_name_arguments(H,F,ARGS),
+   pretty1a(1,F,ARGS), !.
+
+pretty1a(_,_,[]).
+pretty1a(N,F,[E|ARGS]):-
+  Np1 is N + 1,
+  maybe_nameable_arg(F,N,E),
+  pretty1a(Np1,F,ARGS).
+
+maybe_nameable_arg(F,N,E):- compound(E)-> pretty1a(E) ; 
+ ((var(E),arg_type_decl_name(F,N,T))-> may_debug_var(T,E) ; true).
+
+arg_type_decl_name(holds_at,2,time).
+arg_type_decl_name(releasedAt,2,time).
+arg_type_decl_name(happens,2,maptime).
+arg_type_decl_name(at,2,location).
 
 :- meta_predicate(maplist_not_tail(1,*)).
 maplist_not_tail(_,ArgS):- var(ArgS),!.
@@ -401,5 +419,5 @@ user:portray(Term):- fail,
   \+ ground(Term),
   pretty_numbervars(Term,PrettyVarTerm),
   Term \=@= PrettyVarTerm,
-  prolog_pretty_print:print_term(PrettyVarTerm, [ output(current_output)]).
+  prolog_pretty_print:print_term(PrettyVarTerm, [output(current_output)]).
 

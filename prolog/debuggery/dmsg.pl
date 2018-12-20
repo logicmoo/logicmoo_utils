@@ -285,7 +285,7 @@ with_output_to_each(Output,Goal):-
 % ==========================================================
 % Sending Notes
 % ==========================================================
-:- thread_local( tlbugger:tlbugger:dmsg_match/2).
+:- thread_local( tlbugger:dmsg_match/2).
 % = :- meta_predicate(with_all_dmsg(0)).
 % = :- meta_predicate(with_show_dmsg(*,0)).
 

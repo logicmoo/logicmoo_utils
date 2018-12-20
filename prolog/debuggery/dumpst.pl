@@ -42,7 +42,8 @@
   dumptrace(0),
   dtrace(*,0).
 
-
+:- set_module(class(library)).
+:- system:use_module(library(apply)).
 :- reexport(library(logicmoo/util_strings)).
 :- use_module(library(logicmoo_utils_all)).
 :- use_module((ucatch)).

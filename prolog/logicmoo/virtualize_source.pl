@@ -35,11 +35,6 @@ could_safe_virtualize/0,
 vwc/0
 ]).
 
-:- set_module(class(library)).
-:- reexport(library(must_sanity)).
-%:- reexport(library(loop_check)).
-
-
 :- module_transparent((
 %cnas/3,
 nb_current_or_nil/2,
@@ -60,6 +55,9 @@ virtualize_source_file/2,
 vwc/0
           )).
 
+:- set_module(class(library)).
+:- reexport(library(must_sanity)).
+%:- reexport(library(loop_check)).
 :- module_transparent((virtualize_ereq_source/0)).
 :- use_module(predicate_inheritance).
 :- use_module(retry_undefined).

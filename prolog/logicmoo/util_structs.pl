@@ -165,6 +165,7 @@
 :- else.
 
 :- endif.
+:- set_module(class(library)).
 
 
 

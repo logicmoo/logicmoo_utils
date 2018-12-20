@@ -230,7 +230,7 @@ do_import(TM,M,F,A):-
 decl_as(Types,Var):-var(Var),!,trace_or_throw(var_decl_shared(Types,Var)).
 decl_as(Types,M:FA):- if_defined(defaultAssertMt(M),fail),!,decl_as(Types,FA),!.
 decl_as(Types,abox:FA):-!,decl_as(Types,FA),!.
-decl_as(Types,_:M:G1):-!,decl_as(Types,M:G1),!.
+decl_as(Types,MM:G1):- (MM= (_:M)), !,decl_as(Types,M:G1),!.
 
 decl_as(Types,(G1,G2)):-!,decl_as(Types,G1),!,decl_as(Types,G2),!.
 decl_as(Types,[G1]):-!,decl_as(Types,G1),!.

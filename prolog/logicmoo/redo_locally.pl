@@ -254,7 +254,7 @@ module_effect_striped(Call,Module,UnQCall):- strip_module(Call,Module,UnQCall).
 %
 % Converted To Thread Local Head 
 %
-to_thread_local_1m(M:M:HEAD,I,O):-!,to_thread_local_1m(M:HEAD,I,O).
+to_thread_local_1m(MM:HEAD,I,O):- MM = (M:M), !,to_thread_local_1m(M:HEAD,I,O).
 to_thread_local_1m((TL:Head :- BODY),_,(TL:Head :- BODY)):- nonvar(TL),check_thread_local_1m(TL:Head).
 to_thread_local_1m((H:-B),TL,(HH:-B)):-!,to_thread_local_1m(H,TL,HH).
 to_thread_local_1m(Head,baseKB,t_l:Head).
