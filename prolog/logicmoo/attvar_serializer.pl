@@ -185,23 +185,23 @@ serialize_attvar_term_now(A,C,E):- attvar(E),!,get_put_attr_serial(E,New),setarg
 serialize_attvar_term_now(_,C,E):- compound(E)->serialize_attvar_term_now(C);true.
 
 get_put_attr_serial(E,New):- get_attr(E,'$$sv$$',New),!.
-get_put_attr_serial(E,Next):- serialize_3(E,Name,Atts),MyCopy =_, replace_subst4(Atts,E,MyCopy,NewAtts),Next=avar(Name,att('$linkval',MyCopy,NewAtts)),del_attrs(E),put_attr(E,'$$sv$$',Next),!.
+get_put_attr_serial(E,Next):- serialize_3(E,Name,Atts),MyCopy =_, replace_subst4as(Atts,E,MyCopy,NewAtts),Next=avar(Name,att('$linkval',MyCopy,NewAtts)),del_attrs(E),put_attr(E,'$$sv$$',Next),!.
 
-replace_subst4( T1, S1, S2, T2 ) :-
-    segment_subst4( T1, Pre, S1, Post ),
-    append_subst4( S2, Post, S2_plus_Post ),
-    append_subst4( Pre, S2_plus_Post, T2 ).
-segment_subst4( T, Pre, S, Post ) :-
-    segment_1_subst4( S, T, Pre, Post ).
-segment_1_subst4( [], L, [], L ) :- !.
-segment_1_subst4( [H|T_], [H|T], [], Post ) :-
-    segment_1_subst4( T_, T, [], Post ),
+replace_subst4as( T1, S1, S2, T2 ) :-
+    segment_subst4as( T1, Pre, S1, Post ),
+    append_subst4as( S2, Post, S2_plus_Post ),
+    append_subst4as( Pre, S2_plus_Post, T2 ).
+segment_subst4as( T, Pre, S, Post ) :-
+    segment_1_subst4as( S, T, Pre, Post ).
+segment_1_subst4as( [], L, [], L ) :- !.
+segment_1_subst4as( [H|T_], [H|T], [], Post ) :-
+    segment_1_subst4as( T_, T, [], Post ),
     !.
-segment_1_subst4( S, [H|T], [H|U], Post ) :-
-    segment_1_subst4( S, T, U, Post ).
-append_subst4( [], L, L ).
-append_subst4( [H|T], L, [H|T1] ) :-
-    append_subst4( T, L, T1 ).
+segment_1_subst4as( S, [H|T], [H|U], Post ) :-
+    segment_1_subst4as( S, T, U, Post ).
+append_subst4as( [], L, L ).
+append_subst4as( [H|T], L, [H|T1] ) :-
+    append_subst4as( T, L, T1 ).
 
 
 serialize_1v(V,'$VAR'(Name)):- get_attrs(V, att(vn, Name, [])),!.
