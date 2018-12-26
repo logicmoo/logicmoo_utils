@@ -5470,7 +5470,7 @@ show_new_src_location(K,FL):- retractall(t_l:last_src_loc(K,_)),format_to_error(
 sl_to_filename(W,W):-atom(W),exists_file(W),!.
 sl_to_filename(W,W):-atom(W),!.
 sl_to_filename(_:W,W):-atom(W),!.
-sl_to_filename(mfl(_,F,_),F):-atom(F),!.
+sl_to_filename(mfl4(VarNameZ,_,F,_),F):-atom(F),!.
 sl_to_filename(W,W).
 sl_to_filename(W,To):-nonvar(To),To=(W:_),atom(W),!.
 
@@ -5519,9 +5519,9 @@ current_source_location0(M,typein):- '$current_typein_module'(M).
 % Current Generation Of Proof.
 %
 current_why(Why):- t_l:current_local_why(Why,_),!.
-current_why(mfl(M,F,L)):- current_source_file(F:L),var(L),F= module(M),!.
-current_why(mfl(M,F,L)):- source_module(M),call(ereq,mtHybrid(M)),current_source_file(F:L),!.
-current_why(mfl(M,F,L)):- call(ereq,defaultAssertMt(M)),current_source_file(F:L),!.
+current_why(mfl4(VarNameZ,M,F,L)):- current_source_file(F:L),var(L),F= module(M),!.
+current_why(mfl4(VarNameZ,M,F,L)):- source_module(M),call(ereq,mtHybrid(M)),current_source_file(F:L),!.
+current_why(mfl4(VarNameZ,M,F,L)):- call(ereq,defaultAssertMt(M)),current_source_file(F:L),!.
 
 
 %% with_current_why( +Why, +:Prolog) is semidet.

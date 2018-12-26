@@ -728,7 +728,7 @@ show_new_src_location(K,FL):- retractall(t_l:last_src_loc(K,_)),format_to_error(
 %
 sl_to_filename(W,W):-atom(W),exists_file(W),!.
 sl_to_filename(W,W):-atom(W),!.
-sl_to_filename(mfl(_,F,_),F):-atom(F),!.
+sl_to_filename(mfl4(_VarNameZ,_,F,_),F):-atom(F),!.
 sl_to_filename(_:W,W):-atom(W),!.
 sl_to_filename(W,W).
 sl_to_filename(W,To):-nonvar(To),To=(W:_),atom(W),!.
@@ -785,7 +785,17 @@ line_or_char_count(S,L):- character_count(S,C),L is -C.
 % Current Generation Of Proof.
 %
 current_why(Why):- nb_current('$current_why',wp(Why,_)),!.
-current_why(mfl(M,F,L)):- current_mfl(M,F,L).
+current_why(mfl4(VarNameZ,M,F,L)):- current_mfl(M,F,L),varnames_load_context(VarNameZ).
+
+varnames_load_context(VarNameZ):- 
+  prolog_load_context(variable_names,Vars),
+  varnames_to_lazy_unifiable(Vars,VarNameZ).
+
+varnames_to_lazy_unifiable(Vars,VarNameZ):- Vars==[],!,VarNameZ=_.
+varnames_to_lazy_unifiable(Vars,VarNameZ):- nonvar(Vars) -> true;
+   freeze(Vars,can_maybe_varname(Vars,VarNameZ)).
+
+can_maybe_varname(Vars1,Vars2):- ignore(Vars1=Vars2).
 
 current_mfl(M,F,L):- current_source_file(F:L),var(L),F= module(M),!.
 current_mfl(M,F,L):- source_module(M),clause_b(mtHybrid(M)),current_source_file(F:L),!.

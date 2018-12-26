@@ -18,9 +18,12 @@
 
 :- module(logicmoo_common,[]).
 
+:- system:op(700,xfx,prolog:('univ_safe')).
+
 :- reexport(library(logicmoo_startup)).
 :- reexport(library(must_sanity)).
 :- reexport(library(hook_database)).
+:- reexport(library(logicmoo/misc_terms)).
 :- reexport(library(logicmoo/each_call)).
 :- reexport(library(logicmoo/redo_locally)).
 :- reexport(library(logicmoo/no_loops)).

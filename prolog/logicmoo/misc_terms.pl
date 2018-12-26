@@ -111,6 +111,7 @@ append_termlist/3,
 append_term/3,            
 apply_term/3,
 atom_concat_safe/3,
+op(700,xfx,('univ_safe')),
 compound_name_args_safe/3,
 compound_name_arity_safe/3
           ]).
@@ -685,8 +686,15 @@ pred_subst(_Pred ,P,       _, _,       P     ).
 %
 % Univ Safely Paying Attention To Corner Cases.
 %
-univ_safe(P,[L|L1]):- nonvar(P), must((var(L);atom(L))),!,on_x_debug(( P=..[L|L1] )).
-univ_safe(P,L):- must_det(is_list(L)),on_x_debug((P=..L)).
+
+'univ_safe'(P,[L|IST]):- compound(P) -> compound_name_arguments(P,L,IST) ; P=..[L|IST].
+%univ_safe(P,[L|L1]):- nonvar(P), must((var(L);atom(L))),!,on_x_debug(( P=..[L|L1] )).
+%univ_safe(P,L):- must_det(is_list(L)),on_x_debug((P=..L)).
+
+:- op(700,xfx,prolog:('univ_safe')).
+
+safe_functor(P,F,A):- compound(P) -> compound_name_arity(P,F,A) ; functor(P,F,A).
+
 
 % ===================================================================
 % Substitution based on ==

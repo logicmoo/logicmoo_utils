@@ -1298,14 +1298,14 @@ read_source_vars(File,In):-
           (Term = module(MM,_) -> (nb_setarg(1,Module,MM),fail);
           ((stream_position_data(line_count, TermPos, LineNo),
 
-	  ignore(save_file_source_vars(mfl(M,File,LineNo),Term,Vs)),
+	  ignore(save_file_source_vars(mfl4(Vs,M,File,LineNo),Term,Vs)),
 	  (   is_list(Expanded)
 	  ->  member(T, Expanded)
 	  ;   T = Expanded
 	  ),
 	(   T == end_of_file
 	->  ! ;
-           ( T\==Term, save_file_source_vars(mfl(M,File,LineNo),T,Vs),
+           ( T\==Term, save_file_source_vars(mfl4(Vs,M,File,LineNo),T,Vs),
 	    fail))))).
 
 
