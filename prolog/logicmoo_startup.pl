@@ -316,7 +316,7 @@ fav_debug9:-
    set_prolog_flag(access_level,system),
    set_prolog_flag(write_attributes,ignore),
    set_prolog_flag(fileerrors,true),
-   set_prolog_flag(gc,false),
+   %set_prolog_flag(gc,false),
    %set_prolog_flag(occurs_check,true),
  % set_prolog_flag(retry_undefined, none),
    !.
