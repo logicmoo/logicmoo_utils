@@ -167,7 +167,7 @@ wtl(M,nb_setval(N,VALUE),Call,_How):- !,
     call_cleanup((nb_setval(N,VALUE),Call,nb_setval(N,WAS)),nb_setval(N,WAS));
     call_cleanup((nb_setval(N,VALUE),Call,nb_delete(N)),nb_delete(N))).
 
-wtl(M,$N=VALUE,Call,How):- !,
+wtl(M,$(N)=VALUE,Call,How):- !,
     wtl(M,local_override(N,VALUE),Call,How).
 
 wtl(M,b_setval(N,VALUE),Call,How):- !,
@@ -233,7 +233,7 @@ module_effect(_:op(N,XFY,M:OP),M,op(N,XFY,OP)).
 module_effect(M:set_prolog_flag(FM:Flag,Value),M,set_prolog_flag(FM:Flag,Value)).
 module_effect(M:set_prolog_flag(Flag,Value),M,set_prolog_flag(M:Flag,Value)).
 %module_effect(FM:set_prolog_flag(Flag,Value),FM,set_prolog_flag(FM:Flag,Value)).
-module_effect($M:N=V,M,$N=V).
+module_effect($(M):N=V,M,$(N)=V).
 module_effect(M:[H|T],M,[HH|TT]):-
   maplist(module_effect_e(M),[H|T],[HH|TT]).
   
