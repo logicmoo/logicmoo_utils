@@ -465,7 +465,7 @@ each_subterm(A,Pred,O):-
 
 :- dynamic(argNumsTracked/3).
 %:- dynamic(argNFound/3).
-% :-index(argNFound(1,1,1)).
+% :-was_indexed(argNFound(1,1,1)).
 
 
 /*

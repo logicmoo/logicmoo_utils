@@ -1304,12 +1304,14 @@ ansicall(Ctrl,Goal):- zotrace((current_output(Out), ansicall(Out,Ctrl,Goal))).
 % Ansi Control Conv.
 %
 ansi_control_conv(Ctrl,CtrlO):-tlbugger:no_slow_io,!,flatten([Ctrl],CtrlO),!.
-ansi_control_conv([],[]):-!.
-ansi_control_conv([H|T],HT):-!,ansi_control_conv(H,HH),!,ansi_control_conv(T,TT),!,flatten([HH,TT],HT),!.
-ansi_control_conv(warn,Ctrl):- !, ansi_control_conv(warning,Ctrl),!.
-ansi_control_conv(Level,Ctrl):- ansi_term:level_attrs(Level,Ansi),Level\=Ansi,!,ansi_control_conv(Ansi,Ctrl).
-ansi_control_conv(Color,Ctrl):- ansi_term:ansi_color(Color,_),!,ansi_control_conv(fg(Color),Ctrl).
-ansi_control_conv(Ctrl,CtrlO):-flatten([Ctrl],CtrlO),!.
+ansi_control_conv(Ctrl,CtrlO):- ansi_control_conv0(Ctrl,CtrlOO),!,CtrlO=CtrlOO.
+ansi_control_conv0([],[]):-!.
+ansi_control_conv0(warn,Ctrl):- !, ansi_control_conv(warning,Ctrl),!.
+ansi_control_conv0(Level,Ctrl):- \+ ground(Level), !, flatten([Level],Ctrl),!.
+%ansi_control_conv0(Level,Ctrl):- ansi_term:level_attrs(Level,Ansi),Level\=Ansi,!,ansi_control_conv(Ansi,Ctrl).
+ansi_control_conv0(Color,Ctrl):- ansi_term:ansi_color(Color,_),!,ansi_control_conv(fg(Color),Ctrl).
+ansi_control_conv0([H|T],HT):- ansi_control_conv(H,HH),!,ansi_control_conv(T,TT),!,flatten([HH,TT],HT),!.
+ansi_control_conv0(Ctrl,CtrlO):-flatten([Ctrl],CtrlO),!.
 
 
 

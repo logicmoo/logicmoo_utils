@@ -430,6 +430,7 @@ add_var_to_list(Name,Var,Vs,NewName,NewVar,NewVs):-
 %
 unnumbervars(X,Y):- must(zotrace(unnumbervars_and_save(X,Y))).
 
+%zotrace(G):- call(G).
 zotrace(G):- notrace(tracing)->notrace(G);call(G).
 :- '$hide'(zotrace/1).
 :- '$set_predicate_attribute'(zotrace/1, hide_childs, true).
