@@ -8,4 +8,5 @@ maintainer( 'TeamSPoon', 'https://github.com/TeamSPoon/' ).
 home( 'https://github.com/TeamSPoon/logicmoo_utils' ).
 download( 'https://github.com/TeamSPoon/logicmoo_utils/release/*.zip' ).
 requires(predicate_streams).
+requires(gvar_syntax).
 autoload(true).
