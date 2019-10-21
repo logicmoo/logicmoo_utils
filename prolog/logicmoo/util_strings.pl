@@ -532,7 +532,8 @@ concat_atom_safe(I,O):-concat_atom_safe(I,'',O).
 %
 % Concat Atom Safely Paying Attention To Corner Cases.
 %
-concat_atom_safe(A,B,C):-!,atomic_list_concat_safe(A,B,C).
+concat_atom_safe(A,B,C):- atom(C),!,atomic_list_concat_safe(A,B,C).
+concat_atom_safe(A,B,C):- atomic_list_concat_safe(A,B,C).
 
 concat_atom_safe([],_,O):-nonvar(O),!,O==''.
 concat_atom_safe(L,_,''):-nonvar(L),!,L==[].
@@ -620,14 +621,19 @@ any_to_string_or_var(StringO,String):- any_to_string(StringO,StringOS1),any_to_s
 %
 % Atomic List Concat Safely Paying Attention To Corner Cases.
 %
-atomic_list_concat_safe(List,StringO):- ground(List),!,atomics_to_string(List,String),any_to_string_or_var(StringO,String).
 atomic_list_concat_safe(List,V):- (V=='';V==""),!,List=[].
-
-atomic_list_concat_safe([Atom,A2|Bonus],V):-atomic(Atom),atomic(A2),string_concat(Atom,A2,A3),!,atomic_list_concat_safe([A3|Bonus],V).
-atomic_list_concat_safe([Atom|Bonus],V):-atomic(Atom),atomic(V),string_concat(Atom,NV,V),!,atomic_list_concat_safe(Bonus,NV).
-atomic_list_concat_safe([D1,Atom|Bonus],V):-var(D1),atomic(Atom),sub_string(V, NBefore, _Len, _NumAfter, Atom),
-      sub_string(V, 0, NBefore, _, D1), atomic_list_concat_safe([D1,Atom|Bonus],V).
+atomic_list_concat_safe(List,StringO):- ground(List),!,atomics_to_string(List,String),any_to_string_or_var(StringO,String),!.
+atomic_list_concat_safe([Atom,A2|Bonus],V):-atomic(Atom),atomic(A2),string_or_atom_concat(Atom,A2,A3),!,atomic_list_concat_safe([A3|Bonus],V),!.
+atomic_list_concat_safe([Atom|Bonus],V):-atomic(Atom),atomic(V),string_or_atom_concat(Atom,NV,V),!,atomic_list_concat_safe(Bonus,NV),!.
+atomic_list_concat_safe([D1,Atom|Bonus],V):-var(D1),atomic(Atom),sub_string_or_atom(V, NBefore, _Len, _NumAfter, Atom),
+      sub_string_or_atom(V, 0, NBefore, _, D1), atomic_list_concat_safe([D1,Atom|Bonus],V),!.
 atomic_list_concat_safe([V],V):-!.
+
+string_or_atom_concat(A,B,C):- \+ string(A),\+ string(B),\+ string(C),!, atom_concat(A,B,C).
+string_or_atom_concat(A,B,C):-string_concat(A,B,C).
+
+sub_string_or_atom(V, NBefore, Len, NumAfter, Atom):- (atom(V);atom(V)),!,sub_atom(V, NBefore, Len, NumAfter, Atom).
+sub_string_or_atom(V, NBefore, Len, NumAfter, Atom):- sub_string(V, NBefore, Len, NumAfter, Atom).
 
 
 %= 	 	 
