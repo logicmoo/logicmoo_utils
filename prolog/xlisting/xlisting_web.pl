@@ -167,7 +167,7 @@
 :- use_module(library(hook_database)).
 :- use_module(library(logicmoo/no_repeats)).
 :- use_module(library(logicmoo/each_call)).
-:- use_module(library(logicmoo/with_thread_local)).
+:- use_module(library(logicmoo/locally_redo)).
 :- use_module(library(logicmoo/virtualize_source)).
 %:- use_module(library(no_repeats)).
 */

@@ -560,6 +560,7 @@ ainz_clause(H,B):- clause_asserted(H,B)->true;call_provider(system:assertz((H:-B
 expand_to_hb( H,  H,  true) :- var(H),!.
 % expand_to_hb( Var, H, B):- var(Var),!,dmsg(warn(expand_to_hb( Var, H, B))), when(nonvar(Var),expand_to_hb( Var, H, B)).
 expand_to_hb(M:(M2:H :- B),HH,BB):-M==M2,!,expand_to_hb((M:H :- B),HH,BB).
+%expand_to_hb((M:H :- B),M:H,B):-!.
 expand_to_hb((H :- B),H,B):-!.
 expand_to_hb( M:HB,  M:H,B):- !,expand_to_hb(HB,H,B).
 expand_to_hb(  ~(HB),   ~(H),B):- !,expand_to_hb(HB,H,B).

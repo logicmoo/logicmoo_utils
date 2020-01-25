@@ -266,7 +266,7 @@ atom_concat_or_rtrace_priv(X,Y,Z):- tracing->atom_concat(X,Y,Z);catch(atom_conca
 %
 % Instance Name Not Loop Checked.
 %
-i_name_lc(OType,IType):-typename_to_iname0('',OType,IOType),!,string_equal_ci(IOType,IType).
+i_name_lc(OType,IType):-i_name(OType,IOType),!,string_equal_ci(IOType,IType).
 
 
 
@@ -289,7 +289,6 @@ to_iname(T,TT):- not(current_predicate(i_name/3)),!,T=TT.
 % Converted To Upper Camelcase.
 %
 toUpperCamelcase(Type,TypeUC):-toCamelcase(Type,TypeUC). % ,toPropercase(TypeC,TypeUC),!.
-:- export(i_name/2).
 
 
 icn_tcn(I,IC):-atom(I),i_name('t',I,IC)->I\==IC.
@@ -300,8 +299,8 @@ icn_tcn(I,IC):-atom(I),i_name('t',I,IC)->I\==IC.
 %
 % Instance Name.
 %
-i_name(OType,IType):-typename_to_iname0('',OType,IOType),!,IOType=IType.
-:- export(i_name/3).
+:- export(i_name/2).
+i_name(OType,IType):-i_name('',OType,IOType),!,IOType=IType.
 
 %= 	 	 
 
@@ -309,10 +308,20 @@ i_name(OType,IType):-typename_to_iname0('',OType,IOType),!,IOType=IType.
 %
 % Instance Name.
 %
-i_name(I,OType,IType):-typename_to_iname0(I,OType,IOType),!,IOType=IType.
+:- export(i_name/3).
+i_name(I,OType,IType):- sanity((nonvar(I),nonvar(OType))),!,to_case_break_atoms(OType,[L|List]),!,i_name_4(I,OType,[L|List],IType).
+%i_name(I,OType,IType):- typename_to_iname0(I,OType,IOType),!,IOType=IType.
 
-:- export(typename_to_iname0/3).
+switchable_itypes(L,_I):- downcase_atom(L,L),atom_length(L,LL),LL < 4,!.
+i_name_4(I,  OType,[L|_List],IType):- I==L,!,OType=IType.
+i_name_4(I, _OType,[L| List],IType):- switchable_itypes(L,I),atomic_list_concat([I|List],IType),!.
+i_name_4(I, _OType,[L| List],IType):- toPropercase(L,U),atomic_list_concat([I,U|List],IType),!.
 
+
+
+
+ti_name(I,OType,IType):- i_name(I,OType,IType).
+:- export(ti_name/3).
 
 %= 	 	 
 
@@ -320,12 +329,11 @@ i_name(I,OType,IType):-typename_to_iname0(I,OType,IOType),!,IOType=IType.
 %
 % Typename Converted To Iname Primary Helper.
 %
-typename_to_iname0(I, [], O):- trace_or_throw(bad_typename_to_iname0(I, [], O)).
+%:- export(typename_to_iname0/3).
+%typename_to_iname0(I, [], O):- trace_or_throw(bad_typename_to_iname0(I, [], O)).
 %typename_to_iname0(I,OType,IType):- fail, (type_prefix(Prefix,_)),atom_concat(Prefix,Type,OType),capitalized(Type),!,typename_to_iname0(I,Type,IType).
-typename_to_iname0(I,Type,IType):-nonvar(Type),toUpperCamelcase(Type,UType),atom_concat(I,UType,IType).
-
-:- export(split_name_type/3).
-:- '$hide'(split_name_type/3).
+%typename_to_iname0(I,Type,IType):-nonvar(Type),atom_concat(I,_UType,Type),Type=IType.
+%typename_to_iname0(I,Type,IType):-nonvar(Type),toUpperCamelcase(Type,UType),atom_concat(I,UType,IType).
 
 %= 	 	 
 
@@ -333,22 +341,19 @@ typename_to_iname0(I,Type,IType):-nonvar(Type),toUpperCamelcase(Type,UType),atom
 %
 % Split Name Type.
 %
-split_name_type(Suggest,InstName,Type):- maybe_notrace(split_name_type_0(Suggest,NewInstName,NewType)),!,must((NewInstName=InstName,NewType=Type)),!.
+split_name_type(Suggest,InstName,Type):- 
+  maybe_notrace(split_name_type_0(Suggest,NewInstName,NewType)),!,
+  must((NewInstName=InstName,NewType=Type)),!.
+:- export(split_name_type/3).
+:- '$hide'(split_name_type/3).
 
-
-%= 	 	 
-
-%% split_name_type_0( ?S, ?P, ?C) is semidet.
-%
-% split name type  Primary Helper.
-%
 split_name_type_0(S,P,C):- string(S),!,atom_string(A,S),split_name_type_0(A,P,C),!.
 %split_name_type_0(FT,FT,ttExpressionType):-a(ttExpressionType,FT),!,dmsg(trace_or_throw(ttExpressionType(FT))),fail.
 split_name_type_0(T,T,C):- compound(T),compound_name_arity(T,C,_),!.
 split_name_type_0(T,T,C):- quietly((once(atomic_list_concat_safe([CO,'-'|_],T)),atom_string(C,CO))).
 split_name_type_0(T,T,C):- quietly((atom(T),atom_codes(T,AC),last(AC,LC),is_digit(LC),append(Type,Digits,AC),
   catch(number_codes(_,Digits),_,fail),atom_codes(CC,Type),!,i_name(t,CC,C))).
-split_name_type_0(C,P,C):- var(P),atom(C),i_name(i,C,I),gensym(I,P),!.
+split_name_type_0(C,P,C):- atom(C),var(P),i_name(i,C,I),gensym(I,P),!.
 
 
 

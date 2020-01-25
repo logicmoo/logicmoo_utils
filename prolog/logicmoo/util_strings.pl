@@ -120,6 +120,7 @@
             toPropercase/2,
             toUppercase/2,
             to_case_breaks/2,
+            to_case_break_atoms/2,
             to_case_breaks/5,
             to_first_break/2,
             to_first_break/5,
@@ -320,6 +321,7 @@ any_to_string1(Empty,""):- empty_str(Empty),!.
 any_to_string1(string(Atom),String):- !, any_to_string1(Atom,String). 
 any_to_string1(fmt(Fmt,Args),String):-!,must(sformat(String,Fmt,Args)).
 any_to_string1(txtFormatFn(Fmt,Args),String):-!,must(sformat(String,Fmt,Args)).
+% any_to_string1([Atom],String):-  !, any_to_string1(Atom,String).
 any_to_string1(List,String):- text_to_string_safe(List,String),!.
 any_to_string1(List,String):- is_list(List),!,must_maplist(any_to_string1,List,StringList), 
     must(atomics_to_string(StringList, ' ', String)),!.
@@ -339,7 +341,7 @@ list_to_atomics_list0([E|EnglishF],[A|EnglishA]):-
 list_to_atomics_list0([],[]):-!.
 */
 
-maplist_atom_string(M,O):- catch(maplist(atom_string,M,O),_,fail).
+maplist_atom_string(M,O):- catch(notrace(maplist(any_to_string,M,O)),_,fail).
 
 text_to_uq_atom(A,InOut):- (atom_concat('"',R,A),atom_concat(Sub,'"',R))->Sub=InOut;A=InOut.
 
@@ -643,10 +645,10 @@ sub_string_or_atom(V, NBefore, Len, NumAfter, Atom):- sub_string(V, NBefore, Len
 % Atomic List Concat Safely Paying Attention To Corner Cases.
 %
 atomic_list_concat_safe(List,Sep,StringO):- (Sep==[];Sep=='';Sep==""),!,atomic_list_concat_safe(List,StringO).
-atomic_list_concat_safe(List,Sep,Str):-ground(Sep:Str),not(atom_contains(Str,Sep)),!,List=[Str0],any_to_string_or_var(Str,Str0).
+atomic_list_concat_safe(List,Sep,Str):-ground(Sep:Str), \+ (atom_contains(Str,Sep)),!,List=[Str0],any_to_string_or_var(Str,Str0).
 atomic_list_concat_safe(List,Sep,StringO):- ground(List:Sep),!,atomics_to_string(List,Sep,String),any_to_string_or_var(StringO,String).
 atomic_list_concat_safe(List,_,V):- (V=='';V==""),!,List=[].
-atomic_list_concat_safe(List,Sep,StringO):-ground(StringO),ground(Sep),not(atom_contains(StringO,Sep)),!,List=[D1O],any_to_string_or_var(StringO,D1O).
+atomic_list_concat_safe(List,Sep,StringO):-ground(StringO),ground(Sep), \+ (atom_contains(StringO,Sep)),!,List=[D1O],any_to_string_or_var(StringO,D1O).
 atomic_list_concat_safe([Atom,A2|Bonus],Sep,V):-atomic(Atom),atomic(A2),atomic_list_concat_safe([Atom,Sep,A2],A3),atomic_list_concat_safe([A3|Bonus],Sep,V),!.
 atomic_list_concat_safe([Atom|Bonus],Sep,V):-atomic(Atom),atomic(V),atomic_list_concat_safe([Atom,Sep,NV],V),!,atomic_list_concat_safe(Bonus,NV).
 atomic_list_concat_safe([D1,PostAtom|Bonus],Sep,V):-var(D1),atomic(V),atomic(Sep),string_concat(Sep,PostAtom,Atom),
@@ -759,7 +761,7 @@ to_titlecase(CX,Y):- sub_string(CX,1,_,0,Z),string_lower(Z,L), name(CX,[S|_]),ch
 %
 % Text Converted To String Safely Paying Attention To Corner Cases.
 %
-text_to_string_safe(Expr,Forms):-on_x_fail(text_to_string(Expr,Forms)).
+text_to_string_safe(Expr,Forms):-notrace(on_x_fail(text_to_string(Expr,Forms))).
 
 
 
@@ -823,9 +825,9 @@ toCase(_Pred,MiXed,MiXed):-noCaseChange(MiXed),!.
 toCase(_Pred,95,45):-!.
 toCase( Pred,MiXed,CASED):-atom(MiXed),!,call(Pred,MiXed,CASED),!.
 toCase( Pred,D3,DD3):- text_to_string_safe(D3,S),!,string_to_atom(S,A3),toCase(Pred,A3,DD3).
-toCase( Pred,D3,DD3):- is_list(D3),atomic_list_concat(D3,' ',Str),maplist(toCase( Pred),Str,DD3).
-toCase( Pred,D3,DD3):- is_list(D3),!,maplist(toCase( Pred),D3,DD3).
-toCase( Pred,MiXed,CASED):-compound(MiXed),MiXed=..MList,maplist(toCase(Pred),MList,UList),!,CASED=..UList.
+toCase( Pred,D3,DD3):- is_list(D3),atomic_list_concat(D3,' ',Str),maplist(toCase( Pred),Str,DD3),!.
+toCase( Pred,D3,DD3):- is_list(D3),!,must_maplist(toCase( Pred),D3,DD3).
+toCase( Pred,MiXed,CASED):-compound(MiXed),MiXed=..MList,must_maplist(toCase(Pred),MList,UList),!,CASED=..UList.
 
 
 
@@ -897,6 +899,7 @@ capitalized(Type):- string_codes(Type,[S|_]),char_type(S,upper),must(char_type(S
 to_case_breaks(Text,New):- string_codes(Text,[C|Codes]), char_type_this(C,WillBe),!,
   to_case_breaks(Codes,WillBe,[C],WillBe,New).
 
+to_case_break_atoms(I,O):- any_to_atom(I,A),to_case_breaks(A,M),maplist(arg(1),M,L),maplist(any_to_atom,L,O).
 
 %= 	 	 
 
@@ -1052,8 +1055,8 @@ unquoteAtom(Atom,New):-concat_atom_safe(LIST,'"',Atom),concat_atom_safe(LIST,'',
 %
 % If Is A Charlist.
 %
-is_charlist([X]):-atom(X),not(number(X)),atom_length(X,1).
-is_charlist([X|T]):-atom(X),not(number(X)),atom_length(X,1),is_charlist(T),!.
+is_charlist([X]):-atom(X), \+ (number(X)),atom_length(X,1).
+is_charlist([X|T]):-atom(X), \+ (number(X)),atom_length(X,1),is_charlist(T),!.
 
 
 %= 	 	 
@@ -1246,7 +1249,7 @@ ltrim([32,32,32,32,32,32,32|String],Out) :-trim(String,Out),!.
 ltrim([32,32,32,32,32|String],Out) :-trim(String,Out),!.
 ltrim([32,32,32|String],Out) :- trim(String,Out),!.
 ltrim([32,32|String],Out) :- trim(String,Out),!.
-ltrim([P|X],Y):- (isWhitespace(P);not(number(P));P<33;P>128),trim(X,Y),!.
+ltrim([P|X],Y):- (isWhitespace(P); \+ (number(P));P<33;P>128),trim(X,Y),!.
 ltrim(X,X).
 
 
@@ -1469,7 +1472,7 @@ map_tree_to_list(_,IN,IN):- dtrace,must_assign([IN],IN).
 %
 % Not Empty.
 %
-non_empty(A):-must_det(not(empty_string(A))).
+non_empty(A):-must_det( \+ (empty_string(A))).
 
 %= 	 	 
 
@@ -1636,8 +1639,8 @@ divide_list(L,L0,LT):-append(L0,LT,L).
 % String Equal Ci.
 % 
 string_equal_ci(L0,L1):- 
- to_word_list(L0,WL0),WL0\==[],to_word_list(L1,WL1)->WL1\==[],!,
-   string_equal_ci0(WL0,WL1),!.
+ notrace((to_word_list(L0,WL0),WL0\==[],to_word_list(L1,WL1)->WL1\==[],!,
+   string_equal_ci0(WL0,WL1))),!.
     % (string_equal_ci0(WL0,WL1);(var(L1),freeze(L1,string_equal_ci0(WL0,WL1)))).
 
 
@@ -1872,7 +1875,7 @@ unused_to_word_list_0(V,V):-var(V),!.
 unused_to_word_list_0([A],[A]):-number(A),!.
 unused_to_word_list_0(E,[]):-empty_str(E),!.
 unused_to_word_list_0([A|C],[A|C]):- string(A),!.
-%unused_to_word_list_0(A,WList):- string(A),Final=` (period) `,replace_periods(A,Final,S),not(A=S),!,unused_to_word_list_0(S,WList),!.
+%unused_to_word_list_0(A,WList):- string(A),Final=` (period) `,replace_periods(A,Final,S), \+ (A=S),!,unused_to_word_list_0(S,WList),!.
 %unused_to_word_list_0([A|C],[A|C]):- (atomic(A);catch((text_to_string([A|C],_),fail),_,true)),!.
 unused_to_word_list_0(A,WList):- must(any_to_string(A,String)),!,must(text_to_string(String,Atom)),unused_to_word_list_2(Atom,WList),!.
 
@@ -2023,4 +2026,98 @@ baseKB:  ?- any_to_string([a,b,cc],O).
 
 
 any_to_string('sadda sd',O).
+
+
+
+baseKB: [debug]  ?- rtrace(convert_to_cycString('hi',O)).
+^  Call: (162) [baseKB] logicmoo_util_strings:convert_to_cycString(hi, _4443442)
+^  Unify: (162) [baseKB] logicmoo_util_strings:convert_to_cycString(hi, _4443442)
+   Call: (163) [t_l] t_l:no_cycstrings
+   Fail: (163) [t_l] t_l:no_cycstrings
+^  Redo: (162) [baseKB] logicmoo_util_strings:convert_to_cycString(hi, _4443442)
+^  Unify: (162) [baseKB] logicmoo_util_strings:convert_to_cycString(hi, _4443442)
+^  Call: (163) [baseKB] logicmoo_util_strings:convert_to_string_list(hi, _4444358)
+^  Unify: (163) [baseKB] logicmoo_util_strings:convert_to_string_list(hi, _4444358)
+^  Unify: (163) [baseKB] logicmoo_util_strings:convert_to_string_list(hi, _4444358)
+^  Call: (164) [baseKB] logicmoo_util_strings:convert_to_atoms_list(hi, _4444358)
+^  Unify: (164) [baseKB] logicmoo_util_strings:convert_to_atoms_list(hi, _4444358)
+^  Call: (165) [baseKB] ucatch:is_ftVar(hi)
+^  Unify: (165) [baseKB] ucatch:is_ftVar(hi)
+^  Fail: (165) [baseKB] ucatch:is_ftVar(hi)
+^  Redo: (164) [baseKB] logicmoo_util_strings:convert_to_atoms_list(hi, _4444358)
+^  Unify: (164) [baseKB] logicmoo_util_strings:convert_to_atoms_list(hi, _4444358)
+^  Call: (165) [baseKB] logicmoo_util_strings:is_s_string(hi)
+^  Unify: (165) [baseKB] logicmoo_util_strings:is_s_string(hi)
+^  Fail: (165) [baseKB] logicmoo_util_strings:is_s_string(hi)
+^  Redo: (164) [baseKB] logicmoo_util_strings:convert_to_atoms_list(hi, _4444358)
+^  Unify: (164) [baseKB] logicmoo_util_strings:convert_to_atoms_list(hi, _4444358)
+^  Call: (165) [baseKB] logicmoo_util_strings:convert_to_string_m(hi, _4444358)
+^  Unify: (165) [baseKB] logicmoo_util_strings:convert_to_string_m(hi, _4444358)
+^  Call: (166) [baseKB] catch(text_to_string(hi, _4444344), _4444364, fail)
+^  Unify: (166) [system] catch(baseKB:text_to_string(hi, _4444344), _4444376, baseKB:fail)
+   Call: (167) [system] text_to_string(hi, _4444344)
+   Exit: (167) [system] text_to_string(hi, "hi")
+^  Exit: (166) [system] catch(baseKB:text_to_string(hi, "hi"), _4444382, baseKB:fail)
+^  Call: (166) [baseKB] logicmoo_util_strings:break_string("hi", _4444382)
+^  Unify: (166) [baseKB] logicmoo_util_strings:break_string("hi", _4444382)
+^  Call: (167) [baseKB] ucatch:is_ftVar("hi")
+^  Unify: (167) [baseKB] ucatch:is_ftVar("hi")
+^  Fail: (167) [baseKB] ucatch:is_ftVar("hi")
+^  Redo: (166) [baseKB] logicmoo_util_strings:break_string("hi", _4444382)
+^  Unify: (166) [baseKB] logicmoo_util_strings:break_string("hi", _4444382)
+   Call: (167) [system] is_list("hi")
+   Fail: (167) [system] is_list("hi")
+^  Redo: (166) [baseKB] logicmoo_util_strings:break_string("hi", _4444382)
+^  Unify: (166) [baseKB] logicmoo_util_strings:break_string("hi", _4444382)
+^  Call: (167) [baseKB] catch(atomics_to_string(_4444366, " ", "hi"), _4444396, fail)
+^  Unify: (167) [system] catch(baseKB:atomics_to_string(_4444366, " ", "hi"), _4444408, baseKB:fail)
+   Call: (168) [system] atomics_to_string(_4444366, " ", "hi")
+   Exit: (168) [system] atomics_to_string([hi], " ", "hi")
+^  Exit: (167) [system] catch(baseKB:atomics_to_string([hi], " ", "hi"), _4444414, baseKB:fail)
+^  Exit: (166) [baseKB] logicmoo_util_strings:break_string("hi", [hi])
+^  Exit: (165) [baseKB] logicmoo_util_strings:convert_to_string_m(hi, [hi])
+^  Call: (165) [baseKB] bugger:listify([hi], _4444414)
+^  Unify: (165) [baseKB] bugger:listify([hi], [hi])
+^  Call: (166) [baseKB] not(not(is_list([hi])))
+^  Unify: (166) [system] not(baseKB:not(is_list([hi])))
+^  Call: (167) [baseKB] not(is_list([hi]))
+^  Unify: (167) [system] not(baseKB:is_list([hi]))
+   Call: (168) [system] is_list([hi])
+   Exit: (168) [system] is_list([hi])
+^  Redo: (166) [system] not(baseKB:not(is_list([hi])))
+^  Exit: (166) [system] not(baseKB:not(is_list([hi])))
+^  Exit: (165) [baseKB] bugger:listify([hi], [hi])
+^  Exit: (164) [baseKB] logicmoo_util_strings:convert_to_atoms_list(hi, [hi])
+^  Call: (164) [baseKB] logicmoo_util_strings:maplist_atom_string([hi], _4444428)
+^  Unify: (164) [baseKB] logicmoo_util_strings:maplist_atom_string([hi], _4444428)
+^  Call: (165) [baseKB] catch(maplist(atom_string, [hi], _4444416), _4444436, fail)
+^  Unify: (165) [system] catch(baseKB:maplist(atom_string, [hi], _4444416), _4444448, baseKB:fail)
+^  Call: (166) [baseKB] apply:maplist(atom_string, [hi], _4444416)
+^  Unify: (166) [apply] apply:maplist(baseKB:atom_string, [hi], _4444416)
+   Call: (167) [apply] apply:maplist_([hi], _4444416, baseKB:atom_string)
+   Unify: (167) [apply] apply:maplist_([hi], [_4444438|_4444440], baseKB:atom_string)
+   Call: (168) [system] atom_string(hi, _4444438)
+   Exit: (168) [system] atom_string(hi, "hi")
+   Call: (168) [apply] apply:maplist_([], _4444440, baseKB:atom_string)
+   Unify: (168) [apply] apply:maplist_([], [], baseKB:atom_string)
+   Exit: (168) [apply] apply:maplist_([], [], baseKB:atom_string)
+   Exit: (167) [apply] apply:maplist_([hi], ["hi"], baseKB:atom_string)
+^  Exit: (166) [apply] apply:maplist(baseKB:atom_string, [hi], ["hi"])
+^  Exit: (165) [system] catch(baseKB:maplist(atom_string, [hi], ["hi"]), _4444466, baseKB:fail)
+^  Exit: (164) [baseKB] logicmoo_util_strings:maplist_atom_string([hi], ["hi"])
+^  Exit: (163) [baseKB] logicmoo_util_strings:convert_to_string_list(hi, ["hi"])
+^  Call: (163) [baseKB] logicmoo_util_strings:delistify_single_element(["hi"], _4443442)
+^  Unify: (163) [baseKB] logicmoo_util_strings:delistify_single_element(["hi"], "hi")
+^  Call: (164) [baseKB] must_trace:sanity(nonvar("hi"))
+^  Unify: (164) [must_trace] must_trace:sanity(baseKB:nonvar("hi"))
+^  Redo: (164) [must_trace] must_trace:sanity(baseKB:nonvar("hi"))
+^  Unify: (164) [must_trace] must_trace:sanity(baseKB:nonvar("hi"))
+^  Unify: (164) [must_trace] must_trace:sanity(baseKB:nonvar("hi"))
+^  Exit: (169) [system] call(rtrace:trace)
+^  Exit: (167) [system] setup_call_catcher_cleanup(system:true, baseKB:nonvar("hi"), exit, rtrace:trace)
+^  Exit: (166) [system] call_cleanup(baseKB:nonvar("hi"), rtrace:trace)
+^  Exit: (164) [must_trace] must_trace:sanity(baseKB:nonvar("hi"))
+^  Exit: (163) [baseKB] logicmoo_util_strings:delistify_single_element(["hi"], "hi")
+^  Exit: (162) [baseKB] logicmoo_util_strings:convert_to_cycString(hi, "hi")
+O = "hi".
 

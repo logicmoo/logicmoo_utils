@@ -922,7 +922,7 @@ buggery_ok :- \+ compiling, current_predicate(_:logicmoo_bugger_loaded/0), \+ ba
 % Bookeeping Predicate X Ref.
 %
 bookeepingPredicateXRef(user:file_search_path(_,_)).
-bookeepingPredicateXRef(wordnet:s(_,_,_,_,_,_)).
+%bookeepingPredicateXRef_never(wordnet:wn_s(_,_,_ ,_,_,_)).
 %bookeepingPredicateXRef(_:G):-member(F/A,[xref_defined/3,xref_called/3,xref_exported/2]),functor(G,F,A).
 
 %= 	 	 
@@ -984,11 +984,13 @@ synth_clause_for(G,true,0,222, SYNTH):- G=M:H, xlisting_config:xlisting_always(G
    SYNTH = m_clause(M,H,_B,_Ref).
    %SYNTH = on_x_fail(G).
 
-synth_clause_for(G,true,0,244,SYNTH):-  bookeepingPredicateXRef(G), quietly(( \+ is_listing_hidden(hideMeta))), SYNTH=on_x_fail(G).
+synth_clause_for(G,true,0,244,SYNTH):-  bookeepingPredicateXRef(G), 
+  quietly(( \+ is_listing_hidden(hideMeta))), SYNTH=on_x_fail(G).
+
 synth_clause_for(G,B,Ref,Size,SYNTH):- cur_predicate(_,G), (((quietly(( \+ bookeepingPredicateXRef(G), \+ sourceTextPredicate(G), 
                                                                 \+ is_listing_hidden(G))))), 
                                                                 SYNTH = (synth_clause_ref(G,B,Ref,Size,SYNTH2),SYNTH2)).
-synth_clause_for(G,true,0,222, SYNTH):-  sourceTextPredicate(G), \+ is_listing_hidden(G), SYNTH = on_x_fail(G).
+synth_clause_for(G,true,0,223, SYNTH):-  sourceTextPredicate(G), \+ is_listing_hidden(G), SYNTH = on_x_fail(G).
 synth_clause_for(G,  B, Ref,Size, SYNTH):- !, 
   gripe_time(10,synth_clause_for_l2(G,B,Ref,Size,SYNTH)).
  
