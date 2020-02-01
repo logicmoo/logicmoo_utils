@@ -1730,7 +1730,7 @@ empty_string0("").
 %
 % Convert Members.
 %
-convert_members([], InOut,InOut).
+convert_members(Pred, InOut,InOut):- Pred==[],!.
 convert_members([A,!|B], In,Out):- !, convert_members(A,In,M),!,convert_members(B,M,Out).
 convert_members([A|B], In,Out):- !, convert_members(A,In,M),convert_members(B,M,Out).
 convert_members(once(Call), In,Out):- !, convert_members(Call, In,Out),!.
@@ -1842,7 +1842,7 @@ append_subst4( [H|T], L, [H|T1] ) :-
 to_word_list(A,SL):-var(A),!,A=SL.
 to_word_list([],[]):-!.
 to_word_list([I|L],List):-L==[],!,to_word_list(I,List).
-to_word_list(I,List):-convert_to_cycString(I,M),listify(M,List).
+to_word_list(I,List):- must((convert_to_cycString(I,M),listify(M,List))).
 /*
 to_word_list(A,SL):-once(quietly((unused_to_word_list_0(A,S0),(is_list(S0)->delete(S0,'',S);S=S0)))),
    maplist(as_atom,S,SSL),!,
