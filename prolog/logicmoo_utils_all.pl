@@ -59,6 +59,8 @@
 :- reexport(library(logicmoo/subclause_expansion)).
 :- reexport(library(logicmoo/virtualize_source)).
 :- reexport(library(logicmoo/xlisting)).
+:- reexport(library(logicmoo/script_files)).
+
 
 %:- setenv('DISPLAY', '').
 :- use_module(library(plunit)).

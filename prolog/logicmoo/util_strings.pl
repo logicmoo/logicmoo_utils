@@ -292,6 +292,10 @@
 % :-import(must/1).
 
 
+atom_concat_or_rtrace(X,Y,Z):- tracing->atom_concat(X,Y,Z);catch(atom_concat(X,Y,Z),_,break).
+:- export(atom_concat_or_rtrace/3).
+
+
 %= 	 	 
 
 %% any_to_string( ?Atom, ?String) is semidet.
