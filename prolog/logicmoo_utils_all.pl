@@ -117,10 +117,11 @@ add_pack_path(Rel):-
 :- add_pack_path(packs_xtra).
 :- endif.
 
-:- add_pack_path(packs_usr).
-:- add_pack_path(packs_web).
-:- add_pack_path(packs_xtra).
-:- add_pack_path(packs_lib).
+%:- ignore(add_pack_path(packs_usr)).
+%:- add_pack_path(packs_web).
+%:- add_pack_path(packs_xtra).
+%:- add_pack_path(packs_lib).
+
 :- initialization(attach_packs,now).
 
 update_packs:- !.
