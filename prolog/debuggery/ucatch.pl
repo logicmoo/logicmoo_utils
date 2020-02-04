@@ -67,8 +67,8 @@
             is_ftCompound/1,ftCompound/1, 
             not_ftCompound/1,
             is_ftNameArity/2,
-            is_ftNonvar/1,ftNonvar/1,
-            is_ftVar/1,ftVar/1,
+            is_ftNonvar/1, % ftNonvar/1,ftVar/1,
+            is_ftVar/1,
 
             is_main_thread/0,
             is_pdt_like/0,
@@ -966,11 +966,21 @@ is_ftVar0('$VAR'(_)).
 is_ftVar0('avar'(_,_)).
 %:- mpred_trace_nochilds(is_ftVar/1).
 
-ftVar(X):- is_ftVar(X).
-ftCompound(X):- is_ftCompound(X).
-ftNonvar(X):- is_ftNonvar(X).
+baseKB:ftVar(X):- ucatch:is_ftVar(X).
+:- export(baseKB:ftVar/1).
+%:- baseKB:import(ucatch:ftVar/1).
+%:- baseKB:export(ftVar/1).
+% quotedDefnIff
+:- dynamic(baseKB:ftCompound/1).
+baseKB:ftCompound(X):- ucatch:is_ftCompound(X).
+:- export(baseKB:ftCompound/1).
+:- system:import(baseKB:ftCompound/1).
+:- baseKB:export(baseKB:ftCompound/1).
 
-:- export(is_ftNonvar/1).
+:- dynamic(baseKB:ftNonvar/1).
+baseKB:ftNonvar(X):- ucatch:is_ftNonvar(X).
+:- export(baseKB:ftNonvar/1).
+:- system:import(baseKB:ftNonvar/1).
 
 %=
 

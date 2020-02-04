@@ -20,18 +20,14 @@ nb_current_or_nil/2,
 safe_virtualize/3,
 same_terms/2,          
 decl_wrapped/4,
-sd_goal_expansion/3,
-skipped_dirs/1,
+sd_goal_expansion/4,
+%skipped_dirs/1,
 swc/0,
 virtualize_code/3,
 virtualize_code_each/4,
 virtualize_code_fa/5,
 virtualize_ereq/2,
 virtualize_source/3,
-virtualize_source_file/0,
-virtualize_source_file/1,
-virtualize_source_file/2,
-could_safe_virtualize/0,
 vwc/0
 ]).
 
@@ -41,17 +37,14 @@ nb_current_or_nil/2,
 safe_virtualize/3,
 same_terms/2,          
 decl_wrapped/4,
-sd_goal_expansion/3,
-skipped_dirs/1,
+sd_goal_expansion/4,
+%skipped_dirs/1,
 swc/0,
 virtualize_code/3,
 virtualize_code_each/4,
 virtualize_code_fa/5,
 virtualize_ereq/2,
 virtualize_source/3,
-virtualize_source_file/0,
-virtualize_source_file/1,
-virtualize_source_file/2,
 vwc/0
           )).
 
@@ -85,28 +78,154 @@ nb_current_or_nil(N,V):- quietly((nb_current(N,V)->true;V=[])).
 :- dynamic(baseKB:col_as_static/1).
 */
 
-:- multifile(baseKB:ignore_file_mpreds/1).
-:- dynamic(baseKB:ignore_file_mpreds/1).
 
-:- asserta((baseKB:ignore_file_mpreds(M):- skipped_dirs(M))).
 
-skipped_dirs(Dir):-skipped_dirs0(M),exists_directory(M),absolute_file_name(M,Dir).
-skipped_dirs0(M):-expand_file_search_path(swi(''),M).
-skipped_dirs0(M):-expand_file_search_path(pack(logicmoo_util),M).
-skipped_dirs0(M):-expand_file_search_path(pack('swish/..'),M).
-skipped_dirs0(M):-expand_file_search_path(pack('wam_common_lisp/..'),M).
-% skipped_dirs(M):-expand_file_search_path(pack(pfc),M),nonvar(M).
+:- export(( set_how_virtualize_file/1, could_safe_virtualize/0,
 
-:- dynamic(lmconf:should_virtualize_source_file/2).
+     set_how_virtualize_file/2,
+     check_how_virtualize_file/2,
+     get_how_virtualize_file/2)).
+
+is_pfcname(F) :- atom(F), \+ \+ (((atom_concat(_,'.pfc.pl',F);atom_concat(_,'.plmoo',F);atom_concat(_,'.clif',F);atom_concat(_,'.pfc',F)))).
+
+set_how_virtualize_file(How):- 
+ prolog_load_context(source,F),set_how_virtualize_file(How,F),
+ prolog_load_context(file,F1),set_how_virtualize_file(How,F1).
+
+set_how_virtualize_file(How,F1):- 
+  resolve_file_pathname(F1,F),
+  set_how_virtualize_file0(How,F).
+
+set_how_virtualize_file0(How,F):- How\==heads, is_pfcname(F), !,
+  set_how_virtualize_file0(heads,F).
+set_how_virtualize_file0(How,F):-
+  retractall(baseKB:how_virtualize_file(_,F)),
+  asserta_new(baseKB:how_virtualize_file(How,F)).
+
+resolve_file_pathname(F1,F):- absolute_file_name(F1,F,[access(read),file_errors(fail)]),!.
+resolve_file_pathname(F1,F):- absolute_file_name(F1,F,[file_type(prolog),access(read),file_errors(fail)]),!.
+resolve_file_pathname(F1,F):- absolute_file_name(F1,F,[file_type(directory),access(read),file_errors(fail)]),!.
+resolve_file_pathname(F,F):-!.
+
+get_how_virtualize_file(How,F):- baseKB:how_virtualize_file(Was,F),!,How=Was.
+get_how_virtualize_file(How,F):- var(How),
+  (( baseKB:how_virtualize_file(How,Stem), (atom_concat(Stem,_,F);atom_concat(_,Stem,F)))),!,
+   set_how_virtualize_file(How,F).
+get_how_virtualize_file(How,F):- nonvar(How), get_how_virtualize_file(VarHow,F),!, How=VarHow.
+
+
+
+:- dynamic(baseKB:how_virtualize_file/2).
+baseKB:how_virtualize_file(false,'/opt/logicmoo_workspace/packs_xtra/logicmoo_nlu/ext/').
+:- expand_file_search_path(swi(''),M),(set_how_virtualize_file(false,M)).
+:- expand_file_search_path(pack(logicmoo_util),M),(set_how_virtualize_file(false,M)).
+
+srcfilew(File):- prolog_load_context(file,File)-> true; source_location(File,_W).
+
+
+could_safe_virtualize:- srcfilew(File),could_safe_virtualize(File).
+could_safe_virtualize(File):- is_file_virtualize_allowed(File),!.                           
+could_safe_virtualize(File):- prolog_load_context(module,M), \+ clause_b(mtHybrid(M)),   
+     \+ ((current_prolog_flag(dialect_pfc,fwc); is_pfcname(File))).
+
+
+% check_how_virtualize_file(heads,File):- prolog_load_context(file,File),t_l:current_lang(pfc).
+% check_how_virtualize_file(heads,File):- prolog_load_context(source,File),t_l:current_lang(pfc),source_location(SFile,_W), \+ check_how_virtualize_file(false,SFile),!.
+
+% file late late joiners
+:- if( \+ prolog_load_context(reload,true)).
+:- source_location(File, _)-> during_boot(((set_how_virtualize_file(false,File)))).
+:- doall((module_property(M,file(File)),
+          \+ baseKB:how_virtualize_file(_,File),
+          module_property(M,class(CT)),
+          memberchk(CT,[library,system]),
+          set_how_virtualize_file(false,File))).
+%:- doall((source_file(File),(set_how_virtualize_file(false,File)))).
+%base_kb_dynamic(F,A):- ain(mpred_prop(M,F,A,prologHybrid)),kb_shared(F/A).
+%:- doall((virtualize_ereq(F,A),base_kb_dynamic(F,A))).
+:- endif.
+
+
 
 % if_defined(G,Else) = if G is defined then call G.. else call Else
 ignore_mpreds_in_file:-if_defined(t_l:disable_px,fail),!.
-ignore_mpreds_in_file:-prolog_load_context(file,F),ignore_mpreds_in_file(F),!.
-ignore_mpreds_in_file:-prolog_load_context(source,F),\+prolog_load_context(file,F),ignore_mpreds_in_file(F),!.
+ignore_mpreds_in_file:- prolog_load_context(file,F),check_how_virtualize_file(false,F),!.
+ignore_mpreds_in_file:- prolog_load_context(source,F),\+ prolog_load_context(file,F),
+                        check_how_virtualize_file(false,F),!.
 
-ignore_mpreds_in_file(F):-nonvar(F),if_defined(baseKB:registered_mpred_file(F),fail),!,fail.
-ignore_mpreds_in_file(S):- lmconf:should_virtualize_source_file(S,true),!,fail.
-ignore_mpreds_in_file(F):-use_file_filter_cached(baseKB:ignore_file_mpreds(F)).
+is_file_virtualize_allowed(F):- check_how_virtualize_file(bodies,F).
+
+is_file_virtualize_allowed:- fail, prolog_load_context(source,S), (is_file_virtualize_allowed(S)-> true ; 
+   (prolog_load_context(file,F),F\==S, is_file_virtualize_allowed(F))).
+
+
+
+
+
+check_how_virtualize_file(How,F):- get_how_virtualize_file(How2,F), How2 == How,!.
+check_how_virtualize_file(bodies,F):- atom_concat(_,'.plv',F).
+check_how_virtualize_file(bodies,F):- is_pfcname(F),!,fail.
+check_how_virtualize_file(bodies,F):- \+ get_how_virtualize_file(_,F),!, is_file_virtualize_allowed.
+check_how_virtualize_file(bodies,F):- get_how_virtualize_file(TF,F), !, TF \== false.
+check_how_virtualize_file(heads,F):- get_how_virtualize_file(How,F),!, How==heads.
+check_how_virtualize_file(heads,F):- \+ get_how_virtualize_file(_,F),!, is_pfcname(F), !, set_how_virtualize_file(heads,F),!.
+check_how_virtualize_file(false,F):- is_pfcname(F),set_how_virtualize_file(heads,F),!, fail.
+check_how_virtualize_file(false,F):- get_how_virtualize_file(heads,F),!,fail.
+check_how_virtualize_file(How,F):- get_how_virtualize_file(How2,F),!, How2 == How.
+
+ 
+
+%check_how_virtualize_file(false,File):- module_property(M,file(File)),module_property(M,class(library)),(set_how_virtualize_file(false,File)),!.
+% check_how_virtualize_file(false,File):- check_how_virtualize_file(false,File),!.
+% check_how_virtualize_file(false,File):- (set_how_virtualize_file(heads,File)),!,fail.
+
+
+%:- asserta((check_how_virtualize_file(false,M):- skipped_dirs(M))).
+
+%skipped_dirs(Dir):-skipped_dirs0(M),exists_directory(M),absolute_file_name(M,Dir).
+%skipped_dirs0(M):-expand_file_search_path(pack(logicmoo_util),M).
+%skipped_dirs0(M):-expand_file_search_path(pack('swish/..'),M).
+%skipped_dirs0(M):-expand_file_search_path(pack('wam_common_lisp/..'),M).
+% skipped_dirs(M):-expand_file_search_path(pack(pfc),M),nonvar(M).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 use_file_filter_cached(Module:Check):- 
  Check =..[Include,F],
@@ -117,7 +236,7 @@ use_file_filter_cached(Module:Check):-
       (atom_concat(Base,_,F);atom_concat(_,Base,F)),
        asserta(Module:Check)))))).
 
-:- asserta(baseKB:ignore_file_mpreds('.data')).
+:- (set_how_virtualize_file(false,'.data')).
 %% declared_to_wrap(M, ?Functor, ?Arity, ?Wrapper) is semidet.
 %
 % Virtualizer Shared Code.
@@ -546,12 +665,6 @@ map_compound_args(Pred,In,Out):- must(( compound(In), In=..[F|InL],maplist(Pred,
 
 map_compound_args(Pred,Args,In,Out):- must(( compound(Args), compound(In), Args=..[_|ArgsL],In=..[F|InL],maplist(Pred,ArgsL,InL,OutL),Out=..[F|OutL])).
 
-could_safe_virtualize:- 
-     is_file_virtualize_allowed,
-     prolog_load_context(module,M),
-     \+ clause_b(mtHybrid(M)),
-     \+ ((current_prolog_flag(dialect_pfc,fwc); 
-       (source_location(F,_W),( atom_concat(_,'.pfc.pl',F);atom_concat(_,'.plmoo',F);atom_concat(_,'.clif',F);atom_concat(_,'.pfc',F))))).
 
 %virtualize_source(X,In,Out):- (ground(In);true;current_prolog_flag(unsafe_speedups,true)),!,virtualize_code(X,In,Out).
 %virtualize_source(X,In,Out):- ground(In),!,virtualize_code(X,In,Out).
@@ -576,43 +689,17 @@ safe_virtualize_0(Goal,How,call(How,Goal)).
 
 
 
-virtualize_source_file:- 
- prolog_load_context(source,F),virtualize_source_file(F),
- prolog_load_context(file,F1),virtualize_source_file(F1).
 
-virtualize_source_file(F1):- virtualize_source_file(F1,true).
+is_this_file_virtualize_allowed:- prolog_load_context(file,F), is_this_file_virtualize_allowed(F).
+is_this_file_virtualize_allowed(F):- baseKB:how_virtualize_file(bodies, F),!.
+is_this_file_virtualize_allowed(F):- baseKB:how_virtualize_file(false, F),!,fail.
+is_this_file_virtualize_allowed(F):- prolog_load_context(source,S),  S\==F, !, is_this_source_virtualize_allowed(S).
 
-virtualize_source_file(F1,Value):- 
-  absolute_file_name(F1,F,[file_type(prolog),access(read),file_errors(error)]),
-  retractall(lmconf:should_virtualize_source_file(F,_)),
-  asserta(lmconf:should_virtualize_source_file(F,Value)).
+is_this_source_virtualize_allowed(S):- 
+             \+ baseKB:how_virtualize_file(heads, S), 
+             \+ baseKB:how_virtualize_file(false, S),
+                nop(baseKB:how_virtualize_file(bodies, S)).
 
-
-virtualized_goal_expansion(Head, In,Out):-
-  strip_module(In,_,In0),compound(In0), 
-  (sd_goal_expansion(In,In0,Out)-> 
-    nop((( \+ same_terms(In,Out), \+ same_terms(In0,Out)) -> 
-      ((
-        dmsg( virtualized_goal_expansion(Head,In,_)),
-        dmsg( be4 :- In),
-        dmsg( out :- Out)))))).
-
-is_file_virtualize_allowed:- prolog_load_context(file,F),lmconf:should_virtualize_source_file(F,false),!,fail.
-is_file_virtualize_allowed:- prolog_load_context(source,F),lmconf:should_virtualize_source_file(F,false),!,fail.
-is_file_virtualize_allowed:-  
-  prolog_load_context(source,S),
-  (is_file_virtualize_allowed(S)-> true ;
-   (prolog_load_context(file,F),F\==S,is_file_virtualize_allowed(F))).
-
-
-is_file_virtualize_allowed(S):- lmconf:should_virtualize_source_file(S,TF),!,TF==true.
-is_file_virtualize_allowed(S):- atom_concat(_,'.plv',S).
-%is_file_virtualize_allowed(S):- ignore_mpreds_in_file(S),!,fail.
-
-decl_wrapped(M,F,A,How):-
- assert_if_new(rdf_rewrite:arity(F,A)), % TODO puts this in Local Mt
- assert_if_new(baseKB:safe_wrap(M,F,A,How)).
- % once((M==baseKB->true;assert_if_new(baseKB:predicateConventionMt(F,M)))).
 
 % Skip Virtualizing
 swc.
@@ -621,8 +708,28 @@ swc.
 vwc :- throw('Code was missed by virtualizer!').
 
 % always goal expand (and remove it so it wont throw)
-sd_goal_expansion(_,(VWC,In),Out):- vwc==VWC,!,must((callable(In),virtualize_source(ge,In,Out))).
-sd_goal_expansion(In,_,Out):- compound(In),virtualize_source(ge,In,Out).
+:- module_transparent(sd_goal_expansion/4).
+sd_goal_expansion(_Head, _, (VWC,In),Out):- vwc==VWC, !, must((callable(In),virtualize_source(ge,In,Out))).
+sd_goal_expansion(_Head, In,  _In0  ,Out):- compound(In),
+  notrace(is_this_file_virtualize_allowed),
+  virtualize_source(ge,In,Out).
+
+:- module_transparent(virtualized_goal_expansion/3).
+virtualized_goal_expansion(Head, In, Out):-
+  strip_module(In,_,In0),compound(In0),
+  (sd_goal_expansion(Head,In,In0,Out)-> 
+    nop((( \+ same_terms(In,Out), \+ same_terms(In0,Out)) -> 
+      ((
+        dmsg( virtualized_goal_expansion(Head,In,_)),
+        dmsg( be4 :- In),
+        dmsg( out :- Out)))))).
+
+
+decl_wrapped(M,F,A,How):-
+ assert_if_new(rdf_rewrite:arity(F,A)), % TODO puts this in Local Mt
+ assert_if_new(baseKB:safe_wrap(M,F,A,How)).
+ % once((M==baseKB->true;assert_if_new(baseKB:predicateConventionMt(F,M)))).
+
 
 %= 	 	 
 
@@ -649,7 +756,6 @@ same_terms(AAA,BBB):-  AAA=..[F|AA],BBB=..[F|BB],!,same_terms(AA,BB).
 
 
 
-
 :- fixup_exports.
 
 :- if(false).
@@ -659,20 +765,18 @@ same_terms(AAA,BBB):-  AAA=..[F|AA],BBB=..[F|BB],!,same_terms(AA,BB).
 :- use_module(system:library(subclause_expansion)).
 system:file_body_expansion(Head,In,Out):- compound(In), 
   is_file_virtualize_allowed,   
-  virtualized_goal_expansion(Head, In,Out).
+  virtualized_goal_expansion(Head,In,Out).
   
-
-
 :- else.
 
 :- multifile(system:goal_expansion/4).
 :- dynamic(system:goal_expansion/4).
 :- module_transparent(system:goal_expansion/4).
-system:goal_expansion(In,P,Out,PO):- 
-   notrace((compound(In), nonvar(P))),   
-   notrace((nb_current('$term', Head :- FileTerm),In == FileTerm)),   
-   notrace(is_file_virtualize_allowed)->
-   virtualized_goal_expansion(Head,In,Out)-> PO=P.
+
+system:goal_expansion(In,P,Out,PO):-
+     notrace((compound(In), nonvar(P))),
+     notrace((nb_current('$term', Head :- FileTerm),In == FileTerm)),
+     virtualized_goal_expansion(Head,In,Out) -> PO=P.
 
 :- endif.
 
