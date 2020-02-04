@@ -81,12 +81,14 @@ nb_current_or_nil(N,V):- quietly((nb_current(N,V)->true;V=[])).
 
 
 :- export(( set_how_virtualize_file/1, could_safe_virtualize/0,
-
+            virtualize_source_file/0,
      set_how_virtualize_file/2,
      check_how_virtualize_file/2,
      get_how_virtualize_file/2)).
 
 is_pfcname(F) :- atom(F), \+ \+ (((atom_concat(_,'.pfc.pl',F);atom_concat(_,'.plmoo',F);atom_concat(_,'.clif',F);atom_concat(_,'.pfc',F)))).
+
+virtualize_source_file :- set_how_virtualize_file(bodies).
 
 set_how_virtualize_file(How):- 
  prolog_load_context(source,F),set_how_virtualize_file(How,F),

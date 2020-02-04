@@ -966,11 +966,14 @@ is_ftVar0('$VAR'(_)).
 is_ftVar0('avar'(_,_)).
 %:- mpred_trace_nochilds(is_ftVar/1).
 
+
+% quotedDefnIff
+
+:- dynamic(baseKB:ftVar/1).
 baseKB:ftVar(X):- ucatch:is_ftVar(X).
 :- export(baseKB:ftVar/1).
-%:- baseKB:import(ucatch:ftVar/1).
-%:- baseKB:export(ftVar/1).
-% quotedDefnIff
+:- system:import(baseKB:ftVar/1).
+
 :- dynamic(baseKB:ftCompound/1).
 baseKB:ftCompound(X):- ucatch:is_ftCompound(X).
 :- export(baseKB:ftCompound/1).
