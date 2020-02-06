@@ -98,11 +98,11 @@ set_how_virtualize_file(How,F1):-
   resolve_file_pathname(F1,F),
   set_how_virtualize_file0(How,F).
 
-set_how_virtualize_file0(How,F):- How\==heads, is_pfcname(F), !,
-  set_how_virtualize_file0(heads,F).
+set_how_virtualize_file0(How,F):- How\==heads, is_pfcname(F), !, set_how_virtualize_file0(heads,F).
 set_how_virtualize_file0(How,F):-
   retractall(baseKB:how_virtualize_file(_,F)),
   asserta_new(baseKB:how_virtualize_file(How,F)).
+
 
 resolve_file_pathname(F1,F):- absolute_file_name(F1,F,[access(read),file_errors(fail)]),!.
 resolve_file_pathname(F1,F):- absolute_file_name(F1,F,[file_type(prolog),access(read),file_errors(fail)]),!.
@@ -110,17 +110,23 @@ resolve_file_pathname(F1,F):- absolute_file_name(F1,F,[file_type(directory),acce
 resolve_file_pathname(F,F):-!.
 
 get_how_virtualize_file(How,F):- baseKB:how_virtualize_file(Was,F),!,How=Was.
-get_how_virtualize_file(How,F):- var(How),
-  (( baseKB:how_virtualize_file(How,Stem), (atom_concat(Stem,_,F);atom_concat(_,Stem,F)))),!,
-   set_how_virtualize_file(How,F).
-get_how_virtualize_file(How,F):- nonvar(How), get_how_virtualize_file(VarHow,F),!, How=VarHow.
+get_how_virtualize_file(How,F):- baseKB:how_virtualize_dir(Was,Stem), atom_concat(Stem,_,F),!, 
+  set_how_virtualize_file(Was,F),!,How=Was.
 
 
 
 :- dynamic(baseKB:how_virtualize_file/2).
-baseKB:how_virtualize_file(false,'/opt/logicmoo_workspace/packs_xtra/logicmoo_nlu/ext/').
-:- expand_file_search_path(swi(''),M),(set_how_virtualize_file(false,M)).
-:- expand_file_search_path(pack(logicmoo_util),M),(set_how_virtualize_file(false,M)).
+
+
+set_how_virtualize_dir(How,F1):- 
+  resolve_file_pathname(F1,F),
+   retractall(baseKB:how_virtualize_dir(_,F)),
+   asserta_new(baseKB:how_virtualize_dir(How,F)).
+:- dynamic(baseKB:how_virtualize_dir/2).
+baseKB:how_virtualize_dir(false,'/opt/logicmoo_workspace/packs_xtra/logicmoo_nlu/ext/').
+:- expand_file_search_path(swi(''),M),(set_how_virtualize_dir(false,M)).
+:- expand_file_search_path(pack(logicmoo_util),M),(set_how_virtualize_dir(false,M)).
+
 
 srcfilew(File):- prolog_load_context(file,File)-> true; source_location(File,_W).
 
@@ -150,9 +156,9 @@ could_safe_virtualize(File):- prolog_load_context(module,M), \+ clause_b(mtHybri
 
 
 % if_defined(G,Else) = if G is defined then call G.. else call Else
-ignore_mpreds_in_file:-if_defined(t_l:disable_px,fail),!.
+ignore_mpreds_in_file:- if_defined(t_l:disable_px,fail),!.
 ignore_mpreds_in_file:- prolog_load_context(file,F),check_how_virtualize_file(false,F),!.
-ignore_mpreds_in_file:- prolog_load_context(source,F),\+ prolog_load_context(file,F),
+ignore_mpreds_in_file:- prolog_load_context(source,F), \+ prolog_load_context(file,F),
                         check_how_virtualize_file(false,F),!.
 
 is_file_virtualize_allowed(F):- check_how_virtualize_file(bodies,F).

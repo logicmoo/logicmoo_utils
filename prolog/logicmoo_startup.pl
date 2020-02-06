@@ -722,7 +722,7 @@ logicmoo_base_port(Base):- getenv_or('LOGICMOO_BASE_PORT',Base,3000),!.
 % :- meta_predicate '$toplevel':run_init_goal(0,*).
 % :- meta_predicate '$attvar':uhook(*,0,*,*).
 % :- meta_predicate '$attvar':uhook(*,0,*).
-:- meta_predicate '$toplevel':'$execute_goal2'(0,*).
+%:- meta_predicate '$toplevel':'$execute_goal2'(0,*).
 
 :- if(false). 
 :- multifile(user:term_expansion/2).

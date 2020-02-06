@@ -3,6 +3,7 @@
   prologcase_name/2,
   may_debug_var/2,
   maybe_debug_var/2,
+  toCamelAtom0/2,
   simpler_textname/2,simpler_textname/3]).
 :- set_module(class(library)).
 /*  Logicmoo Debug Tools
