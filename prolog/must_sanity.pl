@@ -32,9 +32,10 @@
         scce_orig(0,0,0).
 
 :- set_module(class(library)).
-:- use_module(library(logicmoo_utils_all)).
+% % % OFF :- system:use_module(library(logicmoo_utils_all)).
 
-:- reexport(library(debug),[debug/3]).
+:- system:reexport(library(debug),[debug/3]).
+:- system:reexport(library(logicmoo_common)).
  
 % TODO Make a speed,safety,debug Triangle instead of these flags
 :- create_prolog_flag(runtime_must,debug,[type(term)]).
@@ -206,13 +207,13 @@ scce_orig(Setup,Goal,Cleanup):-
       ('$sig_atomic'(Cleanup),throw(E))). 
 */
 
-:- reexport(library('debuggery/first')).
-:- reexport(library('debuggery/ucatch')).
-:- reexport(library('debuggery/dmsg')).
-:- reexport(library('debuggery/rtrace')).
-:- reexport(library('debuggery/bugger')).
-:- reexport(library('debuggery/dumpst')).
-:- reexport(library('debuggery/frames')).
+% % % OFF :- system:reexport(library('debuggery/first')).
+% % % OFF :- system:reexport(library('debuggery/ucatch')).
+% % % OFF :- system:reexport(library('debuggery/dmsg')).
+% % % OFF :- system:reexport(library('debuggery/rtrace')).
+% % % OFF :- system:reexport(library('debuggery/bugger')).
+% % % OFF :- system:reexport(library('debuggery/dumpst')).
+% % % OFF :- system:reexport(library('debuggery/frames')).
 
 
 

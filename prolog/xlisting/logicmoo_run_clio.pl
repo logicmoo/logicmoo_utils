@@ -48,7 +48,7 @@ do_semweb_startup_late_once:-did_do_semweb_startup_late_once,!.
 do_semweb_startup_late_once:-asserta(did_semweb_startup_late_once),forall(clause(semweb_startup_late,G),must(show_failure(why,G))).
 
 
-:- use_module(user(user_db)).
+% % % OFF :- system:use_module(user(user_db)).
 
 :- was_dynamic http:location/3.
 :- kb_shared http:location/3.
@@ -61,9 +61,9 @@ do_semweb_startup_late_once:-asserta(did_semweb_startup_late_once),forall(clause
    %%setting(cliopatria_binding:path, atom, SP, 'Path to root of cliopatria install'),!.
 
 % Load ClioPatria itself.  Better keep this line.
-:- use_module(cliopatria(cliopatria)).
-:- use_module(cliopatria('applications/help/load')).
-% :- use_module(cliopatria(components/menu)).
+% % % OFF :- system:use_module(cliopatria(cliopatria)).
+% % % OFF :- system:use_module(cliopatria('applications/help/load')).
+% % % % OFF :- system:use_module(cliopatria(components/menu)).
 
 
 :- if(not(current_predicate(user_db:grant_openid_server/2))).
@@ -72,12 +72,12 @@ user_db:grant_openid_server(_,_).
 
 % Load package manager
 
-:- use_module(library(cpack/cpack)).
+% % % OFF :- system:use_module(library(cpack/cpack)).
 
 % Load the remainder of the  configuration. The directory config-enabled
 % can also be used to  load   additional  (plugin)  functionality.
 
-:- use_module(library(conf_d)).
+% % % OFF :- system:use_module(library(conf_d)).
 
 :- load_conf_d([ 'config-enabled' ], []).
 
@@ -178,7 +178,7 @@ mpred_online:semweb_startup:- do_semweb_startup_late_once.
 :- on_x_debug(shell('wget http://localhost:3020/help/source/doc/devel/PrologMUD/pack/ClioPatria/hooks.pl')).
 */
 
-:- use_module(library(semweb/rdf_http_plugin)).
+% % % OFF :- system:use_module(library(semweb/rdf_http_plugin)).
 % :- on_x_debug(rdf_load('http://prologmoo.com/downloads/mud.ttl',[format(trig),graph(foobar)])),!.
 % :- on_x_debug(rdf_load('./mud.ttl',[format(trig),graph(foobar)])),!.
 %:- on_x_log_throw(eggdrop:deregister_unsafe_preds).
@@ -189,7 +189,7 @@ end_of_file.
 
 
 % :- pack_install(blog_core,[interactive(false)]).
-load_blog_core:- use_module(library(arouter)),use_module(library(docstore)),use_module(library(bc/bc_main)),use_module(library(bc/bc_view)),
+load_blog_core% % % OFF :- system:use_module(library(arouter)),use_module(library(docstore)),use_module(library(bc/bc_main)),use_module(library(bc/bc_view)),
    thread_create(bc_main('site.docstore',[port(3080)]),_,[]).
 
 %:- load_blog_core.
@@ -203,14 +203,14 @@ load_blog_core:- use_module(library(arouter)),use_module(library(docstore)),use_
 :- set_prolog_flag(message_ide,   false). % cause xpce to trap messages
 
 % [Optionaly] Solve the Halting problem
-:- use_module(library(process)).
-% :-use_module(library(pce)).
+% % % OFF :- system:use_module(library(process)).
+% % % % OFF :- system:use_module(library(pce)).
 %:- has_gui_debug -> true ; remove_pred(pce_principal,send,2).
 %:- has_gui_debug -> true ; remove_pred(pce_principal,new,2).
 
 
-:- use_module(library(http/thread_httpd)).
-:- use_module(library(http/http_dispatch)).
+% % % OFF :- system:use_module(library(http/thread_httpd)).
+% % % OFF :- system:use_module(library(http/http_dispatch)).
 
 pre_file_search_path(pldoc, library(pldoc)).
 pre_file_search_path(package_documentation, swi('doc/packages')).

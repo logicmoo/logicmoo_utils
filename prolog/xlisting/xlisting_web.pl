@@ -164,14 +164,13 @@
 
 :- set_module(class(library)).
 /*
-:- use_module(library(hook_database)).
-:- use_module(library(logicmoo/no_repeats)).
-:- use_module(library(logicmoo/each_call)).
-:- use_module(library(logicmoo/locally_redo)).
-:- use_module(library(logicmoo/virtualize_source)).
-%:- use_module(library(no_repeats)).
+% % % OFF :- system:use_module(library(hook_database)).
+% % % OFF :- system:use_module(library(logicmoo/no_repeats)).
+% % % OFF :- system:use_module(library(logicmoo/each_call)).
+% % % OFF :- system:use_module(library(logicmoo/locally_redo)).
+% % % OFF :- system:use_module(library(logicmoo/virtualize_source)).% WAS OFF  :- system:use_module(library(no_repeats)).
 */
-:- use_module(library(logicmoo/attvar_serializer)).
+% % % OFF :- system:use_module(library(logicmoo/attvar_serializer)).
 
 :- dynamic user:library_directory/1.
 :- multifile user:library_directory/1.
@@ -187,22 +186,22 @@ hide_xpce_library_directory.
 :- set_prolog_flag(hide_xpce_library_directory,true).
 
 %:- ensure_loaded(library(logicmoo_swilib)).
-:- use_module(library(http/thread_httpd)).
-:- use_module(thread_httpd:library(http/http_dispatch)).
-:- use_module(swi(library/http/html_write)).
-:- use_module(swi(library/http/html_head)).
-:- use_module(library(http/http_dispatch)).
-:- use_module(library(http/http_path)).
-:- use_module(library(http/http_log)).
-:- use_module(library(http/http_client)).
-:- use_module(library(http/http_server_files)).
-:- use_module(library(http/http_parameters)).
+% % % OFF :- system:use_module(library(http/thread_httpd)).
+% % % OFF :- system:use_module(thread_httpd:library(http/http_dispatch)).
+% % % OFF :- system:use_module(swi(library/http/html_write)).
+% % % OFF :- system:use_module(swi(library/http/html_head)).
+% % % OFF :- system:use_module(library(http/http_dispatch)).
+% % % OFF :- system:use_module(library(http/http_path)).
+% % % OFF :- system:use_module(library(http/http_log)).
+% % % OFF :- system:use_module(library(http/http_client)).
+% % % OFF :- system:use_module(library(http/http_server_files)).
+% % % OFF :- system:use_module(library(http/http_parameters)).
 
 
-:- use_module(library(predicate_streams)).
-:- use_module(library(logicmoo/with_no_x)).
-:- use_module(library(logicmoo/each_call)).
-:- use_module(library(logicmoo/butterfly)).
+% % % OFF :- system:use_module(library(predicate_streams)).
+% % % OFF :- system:use_module(library(logicmoo/with_no_x)).
+% % % OFF :- system:use_module(library(logicmoo/each_call)).
+% % % OFF :- system:use_module(library(logicmoo/butterfly)).
 
 
 :- thread_local(t_l:no_cycstrings/0).
@@ -246,9 +245,9 @@ hide_xpce_library_directory.
 :- thread_local(t_l:print_mode/1).
 
 :- if(exists_source(cliopatria('applications/help/load'))).
-:- use_module(cliopatria('applications/help/load')).
+% % % OFF :- system:use_module(cliopatria('applications/help/load')).
 % Load ClioPatria itself.  Better keep this line.
-:- use_module(cliopatria(cliopatria)).
+% % % OFF :- system:use_module(cliopatria(cliopatria)).
 :- else.
 cp_menu:cp_menu(X,X).
 cp_menu:cp_menu.

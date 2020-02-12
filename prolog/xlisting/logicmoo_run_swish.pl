@@ -55,7 +55,7 @@ logicmoo_set_swish_path :-
 
 :- logicmoo_set_swish_path.
 
-:- use_module(swish(swish)).
+% % % OFF :- system:use_module(swish(swish)).
 
 % load rendering modules
 :- swish:ensure_loaded(logicmoo(swish_lib/render/html),	[]).
@@ -141,15 +141,15 @@ assert_sv(P):-!,functor(P,_,A),duplicate_term(P,R),setarg(A,R,_),ignore(retract(
 :- [library(charsio)].
 :- [charsio:library(memfile)].
 :- debug(pengine(delay)).
-:- use_module(library(plunit)).
-:- use_module(library(pengines)).
-:- use_module(pengine_sandbox:library(pengines)).
-:- use_module(library(process)).
-:- use_module(library(http/thread_httpd)).
-:- use_module(library(http/http_files)).
-:- use_module(library(http/http_dispatch)).
+% % % OFF :- system:use_module(library(plunit)).
+% % % OFF :- system:use_module(library(pengines)).
+% % % OFF :- system:use_module(pengine_sandbox:library(pengines)).
+% % % OFF :- system:use_module(library(process)).
+% % % OFF :- system:use_module(library(http/thread_httpd)).
+% % % OFF :- system:use_module(library(http/http_files)).
+% % % OFF :- system:use_module(library(http/http_dispatch)).
 :- pengine_application(swish).
-:- use_module(swish:library(pengines_io)).
+% % % OFF :- system:use_module(swish:library(pengines_io)).
 pengines:prepare_module(Module, swish, _Options) :- pengines_io:pengine_bind_io_to_html(Module).
 :- debug(http(request)).
 */
@@ -157,7 +157,7 @@ pengines:prepare_module(Module, swish, _Options) :- pengines_io:pengine_bind_io_
 :- if(if_defined(must_install_bower)).
 
 
-:- use_module(library(process)).
+% % % OFF :- system:use_module(library(process)).
 install_bower:- prolog_file_dir(('.'),LPWD),
    process_create(sudo,[bower,install,'--allow-root'],[cwd(LPWD),process(PID)]),
    process_wait(PID,_Status).

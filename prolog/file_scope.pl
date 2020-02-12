@@ -70,11 +70,11 @@ Thread.
 :- set_module(class(library)).
 
 
-:- use_module(library(must_sanity)).
-:- use_module(library(logicmoo/misc_terms)).
+% % % OFF :- system:use_module(library(must_sanity)).
+% % % OFF :- system:use_module(library(logicmoo/misc_terms)).
 
 contains_eq(USub,Term):- sub_term(Sub,Term),USub=@=Sub.
-contains_f(F,Term):- sub_term(Sub,Term),callable(Sub),cfunctor(Sub,F,_).
+contains_f(F,Term):- sub_term(Sub,Term),(compound(Sub)->compound_name_arity(Sub,F,_);(callable(Sub)-> functor(Sub,F,_))).
 
 :- thread_local('$file_scope':opened_file/2).
 
@@ -312,7 +312,7 @@ set_skip_file_expansion(File,TF):-
 
 :- ignore((source_location(S,_),prolog_load_context(module,M),
  forall(source_file(M:H,S),
- ignore((cfunctor(H,F,A),
+ ignore((functor(H,F,A),
   ignore(((\+ atom_concat('$',_,F),(export(F/A) , current_predicate(system:F/A)->true; system:import(M:F/A))))),
   ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A]))))))))).
 

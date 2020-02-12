@@ -35,12 +35,10 @@
             lc_tcall/1)).
 
 :- set_module(class(library)).  
-:- use_module(library(apply)).
+% % % OFF :- system:use_module(library(apply)).
 
-
-%:- use_module(library(tabling)).
-:- use_module(library(logicmoo/each_call)).
-%:- use_module(library(logicmoo_startup)).
+% WAS OFF  :- system:use_module(library(tabling)).
+% % % OFF :- system:use_module(library(logicmoo/each_call)).% WAS OFF  :- system:use_module(library(logicmoo_startup)).
 
 
 :- meta_predicate  

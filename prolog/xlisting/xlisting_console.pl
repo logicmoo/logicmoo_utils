@@ -205,12 +205,12 @@
 :- set_module(class(library)).
 
 
-:- use_module(library(hook_database)).
-:- use_module(library(logicmoo/no_repeats)).
-:- use_module(library(logicmoo/each_call)).
-:- use_module(library(logicmoo/redo_locally)).
-:- use_module(library(logicmoo/virtualize_source)).
-:- use_module(library(logicmoo/attvar_serializer)).
+% % % OFF :- system:use_module(library(hook_database)).
+% % % OFF :- system:use_module(library(logicmoo/no_repeats)).
+% % % OFF :- system:use_module(library(logicmoo/each_call)).
+% % % OFF :- system:use_module(library(logicmoo/redo_locally)).
+% % % OFF :- system:use_module(library(logicmoo/virtualize_source)).
+% % % OFF :- system:use_module(library(logicmoo/attvar_serializer)).
 
 
 :- thread_local(t_l:print_mode/1).

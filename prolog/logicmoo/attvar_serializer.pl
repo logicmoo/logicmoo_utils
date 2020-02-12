@@ -39,9 +39,7 @@
 
 lmcache:never_use_attvar_expander(attvar_serializer).
 
-:- use_module(library(gvar_lib)).
-%:- reexport(library(hook_database)).
-%:- reexport(library(logicmoo/util_varnames)).
+% % % OFF :- system:use_module(library(gvar_lib)).% WAS OFF  :- system:reexport(library(hook_database)).% WAS OFF  :- system:reexport(library(logicmoo/util_varnames)).
 
 :- if( \+ prolog_load_context(reload, true)).
 :- multifile(baseKB:mpred_is_impl_file/1).
@@ -50,8 +48,7 @@ lmcache:never_use_attvar_expander(attvar_serializer).
 :- endif.
 
 % use this module to avoid some later conflicts
-%:- if(exists_source(library(base32))).
-%:- use_module(library(base32)).
+%:- if(exists_source(library(base32))).% WAS OFF  :- system:use_module(library(base32)).
 %:- endif.
 
 find_or_create_var(_Vs,N,V):-var(N),variable_name(N,_Name),N=V.

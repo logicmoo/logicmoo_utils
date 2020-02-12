@@ -72,9 +72,8 @@
 
 
 :- set_module(class(library)).
-:- thread_local(tlbugger:ifHideTrace/0).
-%:- reexport(library(logicmoo/util_varnames)).
-:- use_module(library(lists)).
+:- thread_local(tlbugger:ifHideTrace/0).% WAS OFF  :- system:reexport(library(logicmoo/util_varnames)).
+% % % OFF :- system:use_module(library(lists)).
 
 
 :- export(cnas/3).

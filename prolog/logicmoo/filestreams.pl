@@ -33,8 +33,8 @@
           ]).
 
 :- meta_predicate(ensure_loaded_with(:,3)).
-:- use_module(library(logicmoo_startup)).
-:- use_module((filesystem)).
+% % % OFF :- system:use_module(library(logicmoo_startup)).
+% % % OFF :- system:use_module((filesystem)).
 
 :- multifile
         thread_httpd:accept_hook/2,
@@ -279,21 +279,21 @@ file_open_read(File,In):-catch(see(File),_,fail),current_input(In).
 file_open_read(File,In):-catch(open(File,read,In,[]),_,fail),!,see(In),current_input(In).
 file_open_read(File,In):-open(File,read,In,[]),!,see(In),current_input(In).
 
-:- use_module(library(url)).
+% % % OFF :- system:use_module(library(url)).
 
 /*
-:- use_module(library(http/http_ssl_plugin)).
+% % % OFF :- system:use_module(library(http/http_ssl_plugin)).
 */
 
 % :- module(http_ssl_plugin, []).
-:- use_module(library(ssl),[]).
+% % % OFF :- system:use_module(library(ssl),[]).
 
 
-:- use_module(library(socket),[]).
-:- use_module(library(debug),[]).
-:- use_module(library(option),[]).
-:- use_module(library(http/thread_httpd),[]).
-:- use_module(library(http/http_header)).
+% % % OFF :- system:use_module(library(socket),[]).
+% % % OFF :- system:use_module(library(debug),[]).
+% % % OFF :- system:use_module(library(option),[]).
+% % % OFF :- system:use_module(library(http/thread_httpd),[]).
+% % % OFF :- system:use_module(library(http/http_header)).
 
 /* Part of LogicMOO Base SSL plugin for HTTP libraries
 
@@ -476,7 +476,7 @@ http:http_connection_over_proxy(proxy(ProxyHost, ProxyPort), Parts,
                 throw(Error)
               )).
 
-:- use_module(library(http/http_open),[]).
+% % % OFF :- system:use_module(library(http/http_open),[]).
 
 
 %= 	 	 

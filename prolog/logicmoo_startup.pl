@@ -688,6 +688,7 @@ fixup_exports:-
 
 :- fixup_exports.
 
+
 %:- logicmoo_startup:use_module(library(option),[options/3]).
 
 logicmoo_base_port(Base):- app_argv1(One),\+ is_list(One),
@@ -724,6 +725,24 @@ logicmoo_base_port(Base):- getenv_or('LOGICMOO_BASE_PORT',Base,3000),!.
 % :- meta_predicate '$attvar':uhook(*,0,*).
 %:- meta_predicate '$toplevel':'$execute_goal2'(0,*).
 
+
+
+
+
+
+
+
+%:- use_module(library(logicmoo/each_call)).
+
+%:- use_module(library(debuggery/dmsg)).
+%:- use_module(library(must_sanity)).
+
+% ( GFE = Girl-Friend Experience )
+
+
+:- fixup_exports.
+
+
 :- if(false). 
 :- multifile(user:term_expansion/2).
 :- dynamic(user:term_expansion/2).
@@ -735,15 +754,5 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
   SourceModule == TypeIn,
   run_pending_inits, fail.
 :- endif.
-
-:- use_module(library(logicmoo/each_call)).
-
-:- use_module(library(debuggery/dmsg)).
-:- use_module(library(must_sanity)).
-
-% ( GFE = Girl-Friend Experience )
-
-
-:- fixup_exports.
 
 

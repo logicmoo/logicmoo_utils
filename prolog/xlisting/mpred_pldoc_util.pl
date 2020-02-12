@@ -10,7 +10,7 @@ end_of_file.
 
 :- include('../mpred/mpred_header.pi').
 
-% :-use_module(mpred_pldoc_html).
+% % % % OFF :- system:use_module(mpred_pldoc_html).
 
 :- kb_shared
 	prolog:doc_object_summary/4,	% Object, ?Category, ?Section, ?Summary
@@ -115,36 +115,36 @@ showCounts([H|L],OTHER):- occurrences_of_term(H,OTHER,N),write_count(H,N),showCo
 write_count(H,N):- writeq(H:N),write(', ').
 
 
-:- use_module(library(apply)).
-:- use_module(library(option)).
-:- use_module(library(debug)).
-:- use_module(library(lists)).
-:- use_module(library(codesio)).
-:- use_module(library(prolog_colour)).
+% % % OFF :- system:use_module(library(apply)).
+% % % OFF :- system:use_module(library(option)).
+% % % OFF :- system:use_module(library(debug)).
+% % % OFF :- system:use_module(library(lists)).
+% % % OFF :- system:use_module(library(codesio)).
+% % % OFF :- system:use_module(library(prolog_colour)).
 :- if(exists_source(library(pldoc))).
 :- user:use_module(library(pldoc), []).
 	% Must be loaded before doc_process
 :- user:use_module(library(pldoc/doc_process)).
 :- endif.
-:- use_module(library('pldoc/doc_colour')).
-:- use_module(library('pldoc/doc_html')).
-:- use_module(library('pldoc/doc_index')).
-:- use_module(library('pldoc/doc_search')).
-:- use_module(library('pldoc/doc_modes')).
-:- use_module(library('pldoc/doc_man')).
-:- use_module(library('pldoc/doc_wiki')).
-:- use_module(library('pldoc/doc_util')).
-:- use_module(library('pldoc/doc_modes')).
-:- use_module(library('pldoc/doc_htmlsrc')).
-:- use_module(library('pldoc/doc_access')).
-:- use_module(library('pldoc/doc_pack')).
-:- use_module(library('pldoc/doc_register')).
-:- use_module(library('pldoc/doc_library')).
-:- use_module(swi(library/http/html_write)).
-:- use_module(library(http/http_path)).
-:- use_module(library(prolog_xref)).
-:- use_module(library(http/http_dispatch)).
-:- use_module(library(http/html_head)).
+% % % OFF :- system:use_module(library('pldoc/doc_colour')).
+% % % OFF :- system:use_module(library('pldoc/doc_html')).
+% % % OFF :- system:use_module(library('pldoc/doc_index')).
+% % % OFF :- system:use_module(library('pldoc/doc_search')).
+% % % OFF :- system:use_module(library('pldoc/doc_modes')).
+% % % OFF :- system:use_module(library('pldoc/doc_man')).
+% % % OFF :- system:use_module(library('pldoc/doc_wiki')).
+% % % OFF :- system:use_module(library('pldoc/doc_util')).
+% % % OFF :- system:use_module(library('pldoc/doc_modes')).
+% % % OFF :- system:use_module(library('pldoc/doc_htmlsrc')).
+% % % OFF :- system:use_module(library('pldoc/doc_access')).
+% % % OFF :- system:use_module(library('pldoc/doc_pack')).
+% % % OFF :- system:use_module(library('pldoc/doc_register')).
+% % % OFF :- system:use_module(library('pldoc/doc_library')).
+% % % OFF :- system:use_module(swi(library/http/html_write)).
+% % % OFF :- system:use_module(library(http/http_path)).
+% % % OFF :- system:use_module(library(prolog_xref)).
+% % % OFF :- system:use_module(library(http/http_dispatch)).
+% % % OFF :- system:use_module(library(http/html_head)).
 
 /*
 
@@ -220,18 +220,18 @@ transform_term0(Term,Term):-!.
     the GNU General Public License.
 */
 
-:- use_module(library(apply)).
-:- use_module(library(option)).
-:- use_module(library(debug)).
-:- use_module(library(lists)).
-:- use_module(library(prolog_colour)).
-:- use_module(library('pldoc/doc_colour')).
-:- use_module(library('pldoc/doc_html')).
-:- use_module(library('pldoc/doc_wiki')).
-:- use_module(library('pldoc/doc_modes')).
-:- use_module(swi(library/http/html_write)).
-:- use_module(library(http/http_path)).
-:- use_module(library(prolog_xref)).
+% % % OFF :- system:use_module(library(apply)).
+% % % OFF :- system:use_module(library(option)).
+% % % OFF :- system:use_module(library(debug)).
+% % % OFF :- system:use_module(library(lists)).
+% % % OFF :- system:use_module(library(prolog_colour)).
+% % % OFF :- system:use_module(library('pldoc/doc_colour')).
+% % % OFF :- system:use_module(library('pldoc/doc_html')).
+% % % OFF :- system:use_module(library('pldoc/doc_wiki')).
+% % % OFF :- system:use_module(library('pldoc/doc_modes')).
+% % % OFF :- system:use_module(swi(library/http/html_write)).
+% % % OFF :- system:use_module(library(http/http_path)).
+% % % OFF :- system:use_module(library(prolog_xref)).
 
 :- meta_predicate
 	s_to_html(+, +, +).

@@ -48,20 +48,6 @@
 */
 
 
-:- reexport(library(must_sanity)).
-:- reexport(library(logicmoo_common)).
-
-:- reexport(library(logicmoo/call_from_module)).
-:- reexport(library(logicmoo/filesystem)).
-:- reexport(library(logicmoo/portray_vars)).
-:- reexport(library(logicmoo/predicate_inheritance)).
-:- reexport(library(logicmoo/retry_undefined)).
-:- reexport(library(logicmoo/subclause_expansion)).
-:- reexport(library(logicmoo/virtualize_source)).
-:- reexport(library(logicmoo/xlisting)).
-:- reexport(library(logicmoo/script_files)).
-
-
 %:- setenv('DISPLAY', '').
 :- use_module(library(plunit)).
 
@@ -150,7 +136,11 @@ update_packs:-
 
 :- update_packs.
 
+:- discontiguous logicmoo_utils_all:'$exported_op'/3.
+:- system:reexport(library(logicmoo_common)).
+
 :- pack_list_installed.
+
 
 % :- predicate_inheritance:kb_global(plunit:loading_unit/4).
 

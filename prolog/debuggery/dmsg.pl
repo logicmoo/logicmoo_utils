@@ -513,7 +513,7 @@ fmt90(Msg):- on_x_fail(format('~p',[Msg])),!.
 fmt90(Msg):- writeq(fmt9(Msg)).
 
 % :-reexport(library(ansi_term)).
-:- use_module(library(ansi_term)).
+% % % OFF :- system:use_module(library(ansi_term)).
 
 
 %= 	 	 
@@ -701,7 +701,7 @@ with_dmsg(Functor,Goal):-
    locally(tlbugger:is_with_dmsg(Functor),Goal).
 
 
-:- use_module(library(listing)).
+% % % OFF :- system:use_module(library(listing)).
 
 %= 	 	 
 
@@ -718,7 +718,7 @@ free_of_attrs_dmsg(Term):- var(Term),!,(get_attrs(Term,Attrs)-> Attrs==[] ; true
 free_of_attrs_dmsg(Term):- term_attvars(Term,Vs),!,(Vs==[]->true;maplist(free_of_attrs_dmsg,Vs)).
 
 
-:- use_module(library(listing)).
+% % % OFF :- system:use_module(library(listing)).
 
 %= 	 	 
 
@@ -1233,7 +1233,7 @@ ansifmt(Stream, _Attr, Format, Args) :- 'format'(Stream, Format, Args).
 
 */
 
-:- use_module(library(ansi_term)).
+% % % OFF :- system:use_module(library(ansi_term)).
 
 % = :- export(ansifmt/2).
 
@@ -1736,7 +1736,7 @@ writeFailureLog(E,X):-
 %
 cls:- ignore(catch(system:shell(cls,0),_,fail)).
 
-:- use_module(library(random)).
+% % % OFF :- system:use_module(library(random)).
 %:- ensure_loaded(logicmoo_util_varnames).
 %:- ensure_loaded(logicmoo_util_catch).
 % :- autoload([verbose(false)]).

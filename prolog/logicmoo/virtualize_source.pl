@@ -48,12 +48,8 @@ virtualize_source/3,
 vwc/0
           )).
 
-:- set_module(class(library)).
-:- reexport(library(must_sanity)).
-%:- reexport(library(loop_check)).
-:- module_transparent((virtualize_ereq_source/0)).
-:- use_module(predicate_inheritance).
-:- use_module(retry_undefined).
+:- set_module(class(library)).% WAS OFF  :- system:reexport(library(must_sanity)).% WAS OFF  :- system:reexport(library(loop_check)).
+:- module_transparent((virtualize_ereq_source/0)).% WAS OFF  :- system:use_module(predicate_inheritance).% WAS OFF  :- system:use_module(retry_undefined).
 
 
 
@@ -65,7 +61,7 @@ vwc/0
 
 :- thread_local(t_l:disable_px/0).
 
-:- reexport(library(hook_database)).
+% % % OFF :- system:reexport(library(hook_database)).
 
 nb_current_or_nil(N,V):- quietly((nb_current(N,V)->true;V=[])).
 
@@ -770,7 +766,7 @@ same_terms(AAA,BBB):-  AAA=..[F|AA],BBB=..[F|BB],!,same_terms(AA,BB).
 
 :- multifile(system:file_body_expansion/2).
 :-   dynamic(system:file_body_expansion/2).
-:- use_module(system:library(subclause_expansion)).
+% % % OFF :- system:use_module(system:library(subclause_expansion)).
 system:file_body_expansion(Head,In,Out):- compound(In), 
   is_file_virtualize_allowed,   
   virtualized_goal_expansion(Head,In,Out).

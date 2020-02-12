@@ -435,11 +435,11 @@
         writeSavedPrompt/0.
 
 
-% :- use_module(library(gui_tracer)).
-:- use_module(library(check)).
+% % % % OFF :- system:use_module(library(gui_tracer)).
+% % % OFF :- system:use_module(library(check)).
 
 
-% :- use_module('logicmoo_util_rtrace').
+% % % % OFF :- system:use_module('logicmoo_util_rtrace').
 :- set_module(class(library)).
 
 
@@ -1106,7 +1106,7 @@ debugging_logicmoo(Mask):- logicmoo_topic(Mask,Topic),prolog_debug:debugging(Top
 debugging_logicmoo_setting(_,true,[user_error]):- tracing.
 :- multifile(prolog_debug:debugging/3).
 :- dynamic(prolog_debug:debugging/3).
-:- use_module(library(debug)).
+% % % OFF :- system:use_module(library(debug)).
 :- asserta((prolog_debug:debugging(X,Y,Z):-debugging_logicmoo_setting(X,Y,Z))).
 
 

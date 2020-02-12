@@ -106,8 +106,8 @@
 /** <module> Name Prolog variables (debugging)
 */
 
-:- use_module(library(must_sanity)).
-:- use_module(library(logicmoo/misc_terms)).
+% % % OFF :- system:use_module(library(must_sanity)).
+% % % OFF :- system:use_module(library(logicmoo/misc_terms)).
 
 :- multifile
         prolog:make_hook/2.
@@ -194,9 +194,9 @@
  )).
 :- meta_predicate dcall_if_verbose(0).
 
-:- reexport((lockable_vars)).
-:- system:use_module(library(logicmoo/each_call)).
-% :- use_module(library(dictoo_lib)).
+% % % OFF :- system:reexport((lockable_vars)).
+% % % OFF :- system:use_module(library(logicmoo/each_call)).
+% % % % OFF :- system:use_module(library(dictoo_lib)).
 
 
 %%	name_variable(+Var, +Name) is det.
@@ -358,7 +358,7 @@ portray_attvar(Var) :-
 
 :- set_module(class(library)).
 
-:- use_module(library(when)).
+% % % OFF :- system:use_module(library(when)).
 
 :- prolog_clause:multifile((
 	unify_goal/5,			% +Read, +Decomp, +M, +Pos, -Pos
@@ -370,8 +370,8 @@ portray_attvar(Var) :-
 		     [ variable_names(-list)
 		     ]).
 
-:- use_module(library(prolog_source)).
-:- use_module(library(prolog_clause)). % read_term_at_line/6
+% % % OFF :- system:use_module(library(prolog_source)).
+% % % OFF :- system:use_module(library(prolog_clause)). % read_term_at_line/6
 
 
 :- meta_predicate vmust(0).
@@ -1477,7 +1477,7 @@ listing_vars_file.
 % Hook To [prolog:make_hook/2] For Module Logicmoo_varnames.
 % Make Hook.
 %
-prolog:make_hook(before, Files):-forall(member(File,Files),retractall(varname_cache:varname_info_file(File))).
+%prolog:make_hook(before, Files):-forall(member(File,Files),retractall(varname_cache:varname_info_file(File))).
 % prolog:make_hook(after, Files):- forall(member(File,Files),show_call(why,ain00(varname_cache:varname_info_file(File)))).
 
 %=
@@ -1487,8 +1487,8 @@ prolog:make_hook(before, Files):-forall(member(File,Files),retractall(varname_ca
 % Hook To [user:term_expansion/2] For Module Logicmoo_varnames.
 % Term Expansion.
 %
-user:term_expansion(HB,_):- current_prolog_flag(source_variables,true),term_expansion_save_vars(HB),fail.
+%user:term_expansion(HB,_):- current_prolog_flag(source_variables,true),term_expansion_save_vars(HB),fail.
 
-% :- use_module(library(logicmoo_utils_all)).
+% % % % OFF :- system:use_module(library(logicmoo_utils_all)).
 :- fixup_exports.
 

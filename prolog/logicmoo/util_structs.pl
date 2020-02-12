@@ -169,7 +169,7 @@
 
 
 
-:- use_module(library(record)).
+% % % OFF :- system:use_module(library(record)).
 
 :- record point(x:integer=0, y:integer=0).
      /*

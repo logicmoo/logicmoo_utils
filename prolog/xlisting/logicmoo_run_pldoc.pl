@@ -16,14 +16,13 @@ end_of_file.
 :- endif.
 :- module(logicmoo_run_pldoc,[]).
 
-:- use_module(library(settings)).
+% % % OFF :- system:use_module(library(settings)).
 
 :- kb_shared http:location/3.
 :- was_dynamic http:location/3.
 
-:- use_module(library(memfile)).
-%:- ensure_loaded(logicmoo_base).
-%:- use_module(server).
+% % % OFF :- system:use_module(library(memfile)).
+%:- ensure_loaded(logicmoo_base).% WAS OFF  :- system:use_module(server).
 
 /*
 swish_highlight:insert_memory_file(X,Y,Z):-dmsg(error(swish_highlight:insert_memory_file(X,Y,Z))).
@@ -33,37 +32,37 @@ swish_highlight:memory_file_substring(X,Y,Z,A,B):-dmsg(error(swish_highlight:mem
 swish_highlight:memory_file_to_string(X,Y):- memory_file_to_codes(X,C),string_codes(Y,C). %  dmsg(error(swish_highlight:memory_file_to_string(X,Y))).
 */
 
-:- use_module(library(pldoc)).
-:- use_module(library(http/thread_httpd)).
-:- use_module(library(http/http_parameters)).
-:- use_module(swi(library/http/html_write)).
-:- use_module(library(http/mimetype)).
-:- use_module(library(dcg/basics)).
-:- use_module(library(http/http_dispatch)).
-:- use_module(library(http/http_hook)).
-:- use_module(library(http/http_path)).
-:- use_module(library(http/http_wrapper)).
-:- use_module(library(uri)).
-:- use_module(library(debug)).
-:- use_module(library(lists)).
-:- use_module(library(url)).
-:- use_module(library(socket)).
-:- use_module(library(option)).
-:- use_module(library(error)).
-:- use_module(library(www_browser)).
+% % % OFF :- system:use_module(library(pldoc)).
+% % % OFF :- system:use_module(library(http/thread_httpd)).
+% % % OFF :- system:use_module(library(http/http_parameters)).
+% % % OFF :- system:use_module(swi(library/http/html_write)).
+% % % OFF :- system:use_module(library(http/mimetype)).
+% % % OFF :- system:use_module(library(dcg/basics)).
+% % % OFF :- system:use_module(library(http/http_dispatch)).
+% % % OFF :- system:use_module(library(http/http_hook)).
+% % % OFF :- system:use_module(library(http/http_path)).
+% % % OFF :- system:use_module(library(http/http_wrapper)).
+% % % OFF :- system:use_module(library(uri)).
+% % % OFF :- system:use_module(library(debug)).
+% % % OFF :- system:use_module(library(lists)).
+% % % OFF :- system:use_module(library(url)).
+% % % OFF :- system:use_module(library(socket)).
+% % % OFF :- system:use_module(library(option)).
+% % % OFF :- system:use_module(library(error)).
+% % % OFF :- system:use_module(library(www_browser)).
 
-:- use_module(pldoc(doc_process)).
-:- use_module(pldoc(doc_htmlsrc)).
-:- use_module(pldoc(doc_html)).
-:- use_module(pldoc(doc_index)).
-:- use_module(pldoc(doc_search)).
-:- use_module(pldoc(doc_man)).
-:- use_module(pldoc(doc_wiki)).
-:- use_module(pldoc(doc_util)).
-:- use_module(pldoc(doc_access)).
-:- use_module(pldoc(doc_pack)).
+% % % OFF :- system:use_module(pldoc(doc_process)).
+% % % OFF :- system:use_module(pldoc(doc_htmlsrc)).
+% % % OFF :- system:use_module(pldoc(doc_html)).
+% % % OFF :- system:use_module(pldoc(doc_index)).
+% % % OFF :- system:use_module(pldoc(doc_search)).
+% % % OFF :- system:use_module(pldoc(doc_man)).
+% % % OFF :- system:use_module(pldoc(doc_wiki)).
+% % % OFF :- system:use_module(pldoc(doc_util)).
+% % % OFF :- system:use_module(pldoc(doc_access)).
+% % % OFF :- system:use_module(pldoc(doc_pack)).
 
-:- use_module(library(doc_http)).
+% % % OFF :- system:use_module(library(doc_http)).
 :- abolish(pldoc_http:src_skin,5).
 
 
@@ -161,8 +160,8 @@ hup(_Signal) :-
 
 :- catch(on_signal(hup, _, hup),error(domain_error(signal, hup), context(system:'$on_signal'/4, _)),dmsg(warn(not_installing_HUP_handler))).
 
-:- use_module(library(http/thread_httpd)).
-:- use_module(library(http/http_dispatch)).
+% % % OFF :- system:use_module(library(http/thread_httpd)).
+% % % OFF :- system:use_module(library(http/http_dispatch)).
 % :- if_startup_script((http_server(http_dispatch, [ port(3050), workers(16) ]), debug(http_request(_)),debug(cm(_)),debug(swish(_)),debug(storage))).
 
 
@@ -371,7 +370,7 @@ when_debugging(_,_).
 % ================================================
 :- gripe_time(40,ensure_loaded(logicmoo(xlisting/xlisting_web))).
 % user:term_expansion((:-module(Name,List)), :-maplist(export,List)):- atom(Name),atom_concat(mpred_,_,Name).
-% user:term_expansion((:-use_module(Name)), :-true):- atom(Name),atom_concat(mpred_,_,Name).
+% user:term_expansion((% % % OFF :- system:use_module(Name)), :-true):- atom(Name),atom_concat(mpred_,_,Name).
 
 
 

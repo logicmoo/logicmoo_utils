@@ -30,6 +30,7 @@
 :- meta_predicate(visit_if(0)).
 :- meta_predicate(in_space_cmt(0)).
 
+% % % OFF :- system:use_module('../file_scope').
 :- module_transparent(process_this_script_now/0).
 :- module_transparent(process_this_script/0).
 :- module_transparent(process_stream/1).

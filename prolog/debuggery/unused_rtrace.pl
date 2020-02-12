@@ -65,21 +65,19 @@ end_of_file.
   dtrace(*,0).
 
 
-:- use_module(library(logicmoo_utils_all)).
-:- reexport(library(debug),[debug/3]).
-:- use_module(library(xlisting/xlisting)).
-:- use_module(library(loop_check)).
+% % % OFF :- system:use_module(library(logicmoo_utils_all)).
+% % % OFF :- system:reexport(library(debug),[debug/3]).
+% % % OFF :- system:use_module(library(xlisting/xlisting)).
+% % % OFF :- system:use_module(library(loop_check)).
 :- set_module(class(library)).
-:- user:use_module(library(memfile)).
-%:- use_module(logicmoo_util_rtrace).
-:- use_module(library(logicmoo/each_call)).
-%:- use_module(logicmoo_util_loop_check).
-:- use_module(library(random),[random/1]).
+:- user:use_module(library(memfile)).% WAS OFF  :- system:use_module(logicmoo_util_rtrace).
+% % % OFF :- system:use_module(library(logicmoo/each_call)).% WAS OFF  :- system:use_module(logicmoo_util_loop_check).
+% % % OFF :- system:use_module(library(random),[random/1]).
 % TODO Make a speed,safety,debug Triangle instead of these flags
 :- create_prolog_flag(runtime_must,debug,[]).
 :- thread_local(tlbugger:ifHideTrace/0).
-:- reexport(library(logicmoo/util_varnames)).
-:- use_module(library(lists)).
+% % % OFF :- system:reexport(library(logicmoo/util_varnames)).
+% % % OFF :- system:use_module(library(lists)).
 
 
 :- module_transparent
@@ -294,11 +292,11 @@ current_next_frames(_,_,_,[]).
 
 
 
-% :- use_module(library(gui_tracer)).
-:- use_module(library(check)).
+% % % % OFF :- system:use_module(library(gui_tracer)).
+% % % OFF :- system:use_module(library(check)).
 
 
-% :- use_module('logicmoo_util_rtrace').
+% % % % OFF :- system:use_module('logicmoo_util_rtrace').
 :- set_module(class(library)).
 
 
@@ -4488,9 +4486,7 @@ scce_orig(Setup,Goal,Cleanup):-
  
  
  
-%:-ensure_loaded('../logicmoo/logicmoo_util_library.pl').
-%:-use_module(library('logicmoo/logicmoo_util_library.pl')).
-%:-use_module(library('logicmoo/logicmoo_util_ctx_frame.pl')).
+%:-ensure_loaded('../logicmoo/logicmoo_util_library.pl').% WAS OFF  :- system:use_module(library('logicmoo/logicmoo_util_library.pl')).% WAS OFF  :- system:use_module(library('logicmoo/logicmoo_util_ctx_frame.pl')).
  
 :- multi_transparent(current_directory_search/1).
 :- multi_transparent(isDebugOption/1).
@@ -4944,7 +4940,7 @@ debugFmtS(Stuff):-!,dmsg('% ~q~n',[Stuff]).
 vsubst(In,B,A,Out):-var(In),!,(In==B->Out=A;Out=In).
 vsubst(In,B,A,Out):-subst(In,B,A,Out).
 
-% :- use_module(logicmoo_util_prolog_streams).
+% % % % OFF :- system:use_module(logicmoo_util_prolog_streams).
 :- thread_self(Goal),assert(lmcache:thread_main(user,Goal)).
 
 main_self(main).
@@ -4966,7 +4962,7 @@ hide_non_user_console:-current_input(In),stream_property(In, close_on_exec(true)
 
 /*
 :- if(\+ current_predicate(system:nop/1)).
-:- use_module(logicmoo_util_supp).
+% % % OFF :- system:use_module(logicmoo_util_supp).
 :- endif.
 */
 
@@ -6806,7 +6802,7 @@ fmt90(Msg):- on_x_fail(format('~p',[Msg])).
 fmt90(Msg):- writeq(fmt9(Msg)).
 
 % :-reexport(library(ansi_term)).
-:- use_module(library(ansi_term)).
+% % % OFF :- system:use_module(library(ansi_term)).
 
 
 %= 	 	 
@@ -6999,7 +6995,7 @@ with_dmsg(Functor,Goal):-
    locally(tlbugger:is_with_dmsg(Functor),Goal).
 
 
-:- use_module(library(listing)).
+% % % OFF :- system:use_module(library(listing)).
 
 %= 	 	 
 
@@ -7016,7 +7012,7 @@ free_of_attrs_dmsg(Term):- var(Term),!,(get_attrs(Term,Attrs)-> Attrs==[] ; true
 free_of_attrs_dmsg(Term):- term_attvars(Term,Vs),!,(Vs==[]->true;maplist(free_of_attrs_dmsg,Vs)).
 
 
-:- use_module(library(listing)).
+% % % OFF :- system:use_module(library(listing)).
 
 %= 	 	 
 
@@ -7539,7 +7535,7 @@ ansifmt(Stream, _Attr, Format, Args) :- 'format'(Stream, Format, Args).
 
 */
 
-:- use_module(library(ansi_term)).
+% % % OFF :- system:use_module(library(ansi_term)).
 
 % = :- export(ansifmt/2).
 

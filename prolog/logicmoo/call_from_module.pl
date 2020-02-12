@@ -116,9 +116,9 @@
       remove_pred/3,
       is_static_predicate/1.
 
-:- reexport(virtualize_source).
-:- reexport(lockable_vars).
-:- reexport(library(hook_database)).
+% % % OFF :- system:reexport(virtualize_source).
+% % % OFF :- system:reexport(lockable_vars).
+% % % OFF :- system:reexport(library(hook_database)).
 
 :- create_prolog_flag(subclause_expansion,true,[keep(true)]).
 
@@ -253,9 +253,7 @@ dump_break:- prolog_stack:backtrace(8000),dtrace. % system:dbreak.
 :- export(op_safe/3).
 op_safe(A,B,C):-!, (current_op(_,B,C)->true;op(A,B,C)).
 
-
-%:- reexport(logicmoo_util_with_assertions).
-%:- reexport(logicmoo_util_dmsg).
+% WAS OFF  :- system:reexport(logicmoo_util_with_assertions).% WAS OFF  :- system:reexport(logicmoo_util_dmsg).
 
 % ----------
 :- export(with_pi/2).

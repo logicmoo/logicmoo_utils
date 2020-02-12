@@ -54,7 +54,7 @@
 
       
 :- set_module(class(library)).
-:- use_module(library(logicmoo/misc_terms)).
+% % % OFF :- system:use_module(library(logicmoo/misc_terms)).
 
 %% loop_check_nr( ?CL) is semidet.
 %
@@ -161,7 +161,7 @@ no_repeats_dif(Vs,Call):- dif(Vs,_), get_attr(Vs,dif,vardif(CONS,_)),!,
 no_repeats_old(Call):- no_repeats_old(Call,Call).
 
 
-% :- use_module(rec_lambda).
+% % % % OFF :- system:use_module(rec_lambda).
 
 
 
@@ -436,8 +436,7 @@ same_forms(F1,F2):- get_attrs(F2,A1),!,get_attrs(F1,A2),A1=@=A2.
 same_forms(F1,F2):- var(F1),!,F2==F1.
 same_forms(F1,F2):- var(F2),!,F2==F1.
 same_forms(F1,F2):- F1=@=F2.
-
-%:- use_module(library(logicmoo_startup)).
+% WAS OFF  :- system:use_module(library(logicmoo_startup)).
 
 :- if(current_predicate(fixup_exports/0)).
 :- fixup_exports.

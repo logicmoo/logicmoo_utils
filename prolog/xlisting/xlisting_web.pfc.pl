@@ -1,11 +1,10 @@
 
 
 
-:- use_module(library(pfc_lib)).
+% % % OFF :- system:use_module(library(pfc_lib)).
 :- file_begin(pfc).
 %:- set_defaultAssertMt(xlisting_web).
-:- set_fileAssertMt(xlisting_web).
-%:- use_module(library(pfc)).
+:- set_fileAssertMt(xlisting_web).% WAS OFF  :- system:use_module(library(pfc)).
 
 /*
 :- baseKB:export(baseKB:never_assert_u/2).

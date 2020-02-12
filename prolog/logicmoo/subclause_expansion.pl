@@ -32,7 +32,7 @@ appear in the source-code.
 */
 
 :- set_module(class(library)).
-:- use_module(library(apply)).
+% % % OFF :- system:use_module(library(apply)).
 
 :- create_prolog_flag(subclause_expansion,true,[keep(true)]).
 
@@ -89,7 +89,7 @@ erase_preds(Where):-
 % :- listing(sce:buffer_clauses/5).
 
 :- if( \+ current_predicate(system:each_call_cleanup/3)).
-:- use_module(system:library(logicmoo/each_call)).
+% % % OFF :- system:use_module(system:library(logicmoo/each_call)).
 :- endif.
 
 :- set_module(class(library)).

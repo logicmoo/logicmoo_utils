@@ -138,7 +138,7 @@ variant_i(A,B):- term_variables(A,AV),AV\==[],
    term_variables(B,BV),
    (maplist(av_comp,AV,BV)->!;(dtrace,maplist(av_comp,AV,BV))).
 
-:- use_module(library(gvar_lib)).
+% % % OFF :- system:use_module(library(gvar_lib)).
 
 av_comp(A,B):-oo_get_attrs(A,AA),oo_get_attrs(B,BB),AA=@=BB,!.
 av_comp(A,B):-oo_get_attrs(A,attr(_,_,AB)),!,AB\==[],oo_get_attrs(B,attr(_,_,AB)).

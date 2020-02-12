@@ -111,10 +111,14 @@ append_termlist/3,
 append_term/3,            
 apply_term/3,
 atom_concat_safe/3,
-op(700,xfx,('univ_safe')),
 compound_name_args_safe/3,
 compound_name_arity_safe/3
           ]).
+
+:-op(700,xfx,('univ_safe')).
+:- system:use_module(library(logicmoo_startup)).
+
+
 :- meta_predicate
         at_start(0),
         call_n_times(+, 0),
@@ -195,7 +199,7 @@ compound_name_arity_safe/3
 
 % this is a backwards compatablity block for SWI-Prolog 6.6.6
 :- set_module(class(library)).
-:- use_module(library(apply)).
+% % % OFF :- system:use_module(library(apply)).
 :- dynamic(double_quotes_was_lib/1).
 :- multifile(double_quotes_was_lib/1).
 :- current_prolog_flag(double_quotes,WAS),asserta(double_quotes_was_lib(WAS)).
@@ -203,7 +207,6 @@ compound_name_arity_safe/3
 :- current_prolog_flag(double_quotes,WAS),asserta(double_quotes_was_lib(WAS)).
 :- set_prolog_flag(double_quotes,string).
 
-:- use_module(library(logicmoo_startup)).
 
 expire_tabled_list(_).
 

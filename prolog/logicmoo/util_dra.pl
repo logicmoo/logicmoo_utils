@@ -27,7 +27,7 @@ end_of_file.
 
 :- dynamic(ffooo/0).
 :- dynamic(ffooo/1).
-:- use_module(library(drac)).
+% % % OFF :- system:use_module(library(drac)).
 :- det(ffooo).
 :- htb_nb_setcopy(ffooo,oldt,1).
 

@@ -40,16 +40,16 @@ This entailment module does MUD-DB entailment.
 @tbd	Check the completeness
 */
 
-:- use_module(library(semweb/rdf_db),except([rdf/3])).
-:- use_module(library(semweb/rdf_persistency)).
-% :- use_module(rdfql(rdfql_runtime)).	% runtime tests
-:- use_module(library(nb_set)).
-:- use_module(library(semweb/rdfs)).
-:- use_module(library(semweb/turtle)).
-:- use_module(library(semweb/rdf_edit)).
-:- use_module(library(url)).
-:- use_module(library(http/http_open)).
-:- use_module(library(http/http_ssl_plugin)).
+% % % OFF :- system:use_module(library(semweb/rdf_db),except([rdf/3])).
+% % % OFF :- system:use_module(library(semweb/rdf_persistency)).
+% % % % OFF :- system:use_module(rdfql(rdfql_runtime)).	% runtime tests
+% % % OFF :- system:use_module(library(nb_set)).
+% % % OFF :- system:use_module(library(semweb/rdfs)).
+% % % OFF :- system:use_module(library(semweb/turtle)).
+% % % OFF :- system:use_module(library(semweb/rdf_edit)).
+% % % OFF :- system:use_module(library(url)).
+% % % OFF :- system:use_module(library(http/http_open)).
+% % % OFF :- system:use_module(library(http/http_ssl_plugin)).
 
 ssl_verify(_SSL, _ProblemCert, _AllCerts, _FirstCert, _Error) :- !.
 

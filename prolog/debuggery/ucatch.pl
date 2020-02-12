@@ -146,13 +146,13 @@
 
           ]).
 
-:- use_module((dmsg)).
-:- use_module(library(must_sanity)).
+% % % OFF :- system:use_module((dmsg)).
+% % % OFF :- system:use_module(library(must_sanity)).
 
 vsubst(In,B,A,Out):-var(In),!,(In==B->Out=A;Out=In).
 vsubst(In,B,A,Out):-subst(In,B,A,Out).
 
-% :- use_module(logicmoo_util_prolog_streams).
+% % % % OFF :- system:use_module(logicmoo_util_prolog_streams).
 :- thread_self(Goal),assert(lmcache:thread_main(user,Goal)).
 
 main_self(main).

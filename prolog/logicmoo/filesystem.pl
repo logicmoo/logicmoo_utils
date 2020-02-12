@@ -141,7 +141,7 @@
         local_directory_search/1.
 
 :- set_module(class(library)).
-:- use_module(library(dialect)).
+% % % OFF :- system:use_module(library(dialect)).
 
 
 :- ensure_loaded(library(logicmoo/no_repeats)).

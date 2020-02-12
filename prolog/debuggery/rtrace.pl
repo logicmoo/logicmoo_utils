@@ -31,7 +31,7 @@
 
 :- set_module(class(library)).
 :- module_transparent(nortrace/0).
-:- use_module(library(logicmoo_startup)).
+:- system:use_module(library(logicmoo_startup)).
 
 :-thread_local(t_l:rtracing/0).
 :-thread_local(t_l:tracer_reset/1).
@@ -410,7 +410,7 @@ ftrace(Goal):- restore_trace((
   ignore(((\+ atom_concat('$',_,F),(export(F/A) , current_predicate(system:F/A)->true; system:import(M:F/A))))),
   ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A]))))))))).
 
-:- use_module(library(logicmoo_utils_all)).
+% % % OFF :- system:use_module(library(logicmoo_utils_all)).
 :- fixup_exports.
 :- totally_hide('$toplevel':save_debug).
 :- totally_hide('$toplevel':toplevel_call/1).

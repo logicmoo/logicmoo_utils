@@ -62,5 +62,5 @@ hi_there2:- hi_there,writeln(ok),hi_there,hi_there,write(ok),hi_there.
 
 :- fixup_exports.
 
-% :- use_module(logicmoo_startup).
+% % % % OFF :- system:use_module(logicmoo_startup).
 
