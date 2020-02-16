@@ -120,7 +120,6 @@
 % % % OFF :- system:reexport(lockable_vars).
 % % % OFF :- system:reexport(library(hook_database)).
 
-:- create_prolog_flag(subclause_expansion,true,[keep(true)]).
 
 :- meta_predicate(with_no_mpred_expansions(:)).
 %% with_no_mpred_expansions( :Goal) is det.

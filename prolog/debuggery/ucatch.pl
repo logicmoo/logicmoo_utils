@@ -744,8 +744,7 @@ sl_to_filename(W,To):-nonvar(To),To=(W:_),atom(W),!.
 %
 % Current Source Location.
 %
-current_source_file(F:L):- clause(current_source_location0(W,L),Body),notrace(catch(Body,_,fail)),
- sl_to_filename(W,F),!.
+current_source_file(F:L):- current_source_location(W,L), sl_to_filename(W,F),!.
 current_source_file(F):- F = unknown.
 
 
@@ -757,15 +756,18 @@ source_ctx(B:L):- must((current_source_file(F:L),file_base_name(F,B))).
 %
 % Current Source Location Primary Helper.
 %
+current_source_location(F,L):- notrace((clause(current_source_location0(F,L),Body),notrace(catch(Body,_,fail)))),!.
+
+current_source_location0(F,L):- current_why_data(Data),sub_term(Sub,Data),compound(Sub),Sub=mfl4(_,_,F,L),!.
 current_source_location0(F,why):- t_l:current_why_source(F).
 current_source_location0(F,L):- source_location(F,L),!.
-current_source_location0(F,L):- prolog_load_context(file,F),current_input(S),line_position(S,L),!.
 current_source_location0(F,L):- prolog_load_context(stream,S),line_or_char_count(S,L),stream_property(S,file_name(F)),!.
 current_source_location0(F,L):- loading_file(F),stream_property(S,file_name(F)),line_or_char_count(S,L),!.
 current_source_location0(F,L):- prolog_load_context(file,F),!,ignore((prolog_load_context(stream,S),!,line_or_char_count(S,L))),!.
 current_source_location0(F,L):- loading_file(F),L= (-1).
 current_source_location0(F,L):- current_input(S),stream_property(S,alias(F)),line_or_char_count(S,L).
 current_source_location0(F,L):- current_filesource(F),ignore((prolog_load_context(stream,S),!,line_or_char_count(S,L))),!.
+% current_source_location0(F,L):- prolog_load_context(file,F),current_input(S),line_position(S,L),!.
 current_source_location0(M,module):- source_module(M),!.
 current_source_location0(M,typein):- '$current_typein_module'(M).
 
@@ -784,22 +786,30 @@ line_or_char_count(S,L):- character_count(S,C),L is -C.
 %
 % Current Generation Of Proof.
 %
-current_why(Why):- nb_current('$current_why',wp(Why,_)),!.
-current_why(mfl4(VarNameZ,M,F,L)):- current_mfl(M,F,L),varnames_load_context(VarNameZ).
+current_why(Why):- current_why_data(Why).
+current_why(mfl4(VarNameZ,M,F,L)):- notrace(current_mfl4(VarNameZ,M,F,L)).
+
+current_mfl4(VarNameZ,M,F,L):- current_mfl(M,F,L),ignore(varnames_load_context(VarNameZ)).
+
+current_mfl(M,F,L):- 
+  current_source_file(F:L),!,
+ (source_module(M),clause_b(mtHybrid(M))->true;clause(defaultAssertMt(M),B),call(B)),
+  ignore((var(L),L=module(M))).
+
+:- thread_local(t_l:current_why_source/1).
+
+current_why_data(Why):- nb_current('$current_why',wp(Why,_P)).
+current_why_data(Why):- t_l:current_why_source(Why).
 
 varnames_load_context(VarNameZ):- 
   prolog_load_context(variable_names,Vars),
   varnames_to_lazy_unifiable(Vars,VarNameZ).
 
 varnames_to_lazy_unifiable(Vars,VarNameZ):- Vars==[],!,VarNameZ=_.
-varnames_to_lazy_unifiable(Vars,VarNameZ):- nonvar(Vars) -> true;
+varnames_to_lazy_unifiable(Vars,VarNameZ):- nonvar(Vars) -> Vars=VarNameZ;
    freeze(Vars,can_maybe_varname(Vars,VarNameZ)).
 
 can_maybe_varname(Vars1,Vars2):- ignore(Vars1=Vars2).
-
-current_mfl(M,F,L):- current_source_file(F:L),var(L),F= module(M),!.
-current_mfl(M,F,L):- source_module(M),clause_b(mtHybrid(M)),current_source_file(F:L),!.
-current_mfl(M,F,L):- clause(defaultAssertMt(M),B),call(B),current_source_file(F:L),!.
 
 
 %% with_only_current_why( +Why, +:Prolog) is semidet.
@@ -897,12 +907,12 @@ source_variables_l(AllS):-
 show_source_location:- current_prolog_flag(dmsg_level,never),!.
 %show_source_location:- quietly((tlbugger:no_slow_io)),!.
 show_source_location:- get_source_location(FL),show_new_src_location(FL),!. 
-show_source_location:- dumpST,dtrace.
+show_source_location:- if_interactive((dumpST,dtrace)).
 
 show_current_source_location:- get_source_location(FL),format_to_error('~N% ~w ',[FL]). 
 
+get_source_location(FL):- current_source_file(FL),nonvar(FL),!.
 get_source_location(F:L):- source_location(F,L),!.
-get_source_location(FL):- current_source_file(FL),sanity(nonvar(FL)),!.
 get_source_location(get_source_location_unknown).
 
 

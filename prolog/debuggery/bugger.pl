@@ -731,12 +731,6 @@ test_for_release_problems(File):-
 %
 if_interactive(Goal):-ignore(if_interactive0(Goal)),!.
 
-
-
-%% if_interactive0( :Goal) is semidet.
-%
-% If Interactive Primary Helper.
-%
 if_interactive0(Goal):- 
    thread_self(main),
    current_input(In),
@@ -744,7 +738,7 @@ if_interactive0(Goal):-
    stream_property(In,tty(true)),
    read_pending_input(In,_,_),!,
    dmsg("~n(waiting ... ~n",[]),!,
-   wait_for_input([In],RL,5),!,
+   wait_for_input([In],RL,10),!,
    ( RL ==[] -> dmsg("...moving on)~n",[]) ; (dmsg("... starting goal)~n",[]),Goal)),
    !.
 
@@ -1566,7 +1560,6 @@ set_yes_debug_thread:-
 %
 isConsole :- current_output(X),!,stream_property(X,alias(user_output)).
 %isConsole :- telling(user).
-
 
 
 

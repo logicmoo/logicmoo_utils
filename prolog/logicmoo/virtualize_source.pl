@@ -75,6 +75,20 @@ nb_current_or_nil(N,V):- quietly((nb_current(N,V)->true;V=[])).
 */
 
 
+:- dynamic(baseKB:how_virtualize_file/3).
+% stream_position_data
+get_source_location(File,Pos):-  (current_source_location(File,Pos); (prolog_load_context(file,File),prolog_load_context(term_position,Pos))),!.
+get_source_location(_File,0).
+
+%guess_file_language(File, Lang):- file_content_type(File,Lang).
+
+get_current_clause(MI):- prolog_load_context(term,Was), Was \== [], !, Was = MI.
+get_current_clause(MI):- 
+  arg(_,v('$term','$term_user','$term_exp_skip','$orig_term''$source_term','$goal_term','$query_term'),Var),
+  nb_current(Var,Was),Was\==[], !, Was = MI.
+get_current_clause(_).
+
+
 
 :- export(( set_how_virtualize_file/1, could_safe_virtualize/0,
             virtualize_source_file/0,
@@ -82,22 +96,23 @@ nb_current_or_nil(N,V):- quietly((nb_current(N,V)->true;V=[])).
      check_how_virtualize_file/2,
      get_how_virtualize_file/2)).
 
-is_pfcname(F) :- atom(F), \+ \+ (((atom_concat(_,'.pfc.pl',F);atom_concat(_,'.plmoo',F);atom_concat(_,'.clif',F);atom_concat(_,'.pfc',F)))).
+virtualize_alias(pfc,heads).
+virtualize_alias(prolog,false).
+virtualize_alias(plmoo,bodies).
+
+is_pfcname(F) :- atom(F), \+ \+ (((atom_concat(_,'.pfc.pl',F);atom_concat(_,'_pfc.pl',F);atom_concat(_,'.clif',F);atom_concat(_,'.pfc',F)))).
 
 virtualize_source_file :- set_how_virtualize_file(bodies).
+virtualize_source_file(How) :- set_how_virtualize_file(How).
 
-set_how_virtualize_file(How):- 
- prolog_load_context(source,F),set_how_virtualize_file(How,F),
- prolog_load_context(file,F1),set_how_virtualize_file(How,F1).
-
-set_how_virtualize_file(How,F1):- 
+set_how_virtualize_file(How):-  get_source_location(File,Pos), set_how_virtualize_file(How,File,Pos).
+set_how_virtualize_file(How,F):- set_how_virtualize_file(How,F,0).
+set_how_virtualize_file(How,F1,Pos):- virtualize_alias(How,NewHow),How\==NewHow, !, set_how_virtualize_file(NewHow,F1,Pos).
+set_how_virtualize_file(How,F1,Pos):-
   resolve_file_pathname(F1,F),
-  set_how_virtualize_file0(How,F).
-
-set_how_virtualize_file0(How,F):- How\==heads, is_pfcname(F), !, set_how_virtualize_file0(heads,F).
-set_how_virtualize_file0(How,F):-
-  retractall(baseKB:how_virtualize_file(_,F)),
-  asserta_new(baseKB:how_virtualize_file(How,F)).
+  forall((clause(baseKB:how_virtualize_file(_PrevHow,F,PrevPos),true,Ref),
+    PrevPos>=Pos),erase(Ref)),
+  asserta_new(baseKB:how_virtualize_file(How,F,Pos)).
 
 
 resolve_file_pathname(F1,F):- absolute_file_name(F1,F,[access(read),file_errors(fail)]),!.
@@ -105,19 +120,35 @@ resolve_file_pathname(F1,F):- absolute_file_name(F1,F,[file_type(prolog),access(
 resolve_file_pathname(F1,F):- absolute_file_name(F1,F,[file_type(directory),access(read),file_errors(fail)]),!.
 resolve_file_pathname(F,F):-!.
 
-get_how_virtualize_file(How,F):- baseKB:how_virtualize_file(Was,F),!,How=Was.
-get_how_virtualize_file(How,F):- baseKB:how_virtualize_dir(Was,Stem), atom_concat(Stem,_,F),!, 
-  set_how_virtualize_file(Was,F),!,How=Was.
+get_how_virtualize_file(Lang):- must(get_source_location(File,Pos)),get_how_virtualize_file(Lang, File, Pos).
+get_how_virtualize_file(Lang, File):- get_source_location(File,Pos),!,get_how_virtualize_file(Lang, File, Pos).
+get_how_virtualize_file(Lang, File):- get_how_virtualize_file(Lang, File, 0).
+get_how_virtualize_file(Lang, File, Pos):- 
+  findall(sfl(Pos,Lang),baseKB:how_virtualize_file(Lang, File, Pos),List),
+  sort(List,Sort),member(sfl(Pos2,Lang),Sort),Pos>=Pos2,!.
+get_how_virtualize_file(Lang, File, _Pos):- baseKB:how_virtualize_file(Lang, File, 0),!.
+get_how_virtualize_file(Lang, File, _):- guess_file_language(File, Lang),set_how_virtualize_file(Lang, File, 0).
+
+
+  
+
+guess_file_language(File, heads):- is_pfcname(File), !.
+guess_file_language(File, How):- baseKB:how_virtualize_dir(Was,Stem), atom_concat(Stem,_,File),!, 
+    set_how_virtualize_file(Was, File, 0), !, How = Was.
+guess_file_language(File, false):- atom_concat(_,'.pl',File).
+guess_file_language(File, body):- atom_concat(_,'.plmoo',File).
+guess_file_language(_File, false).
 
 
 
-:- dynamic(baseKB:how_virtualize_file/2).
+:- dynamic(baseKB:how_virtualize_file/3).
 
 
 set_how_virtualize_dir(How,F1):- 
   resolve_file_pathname(F1,F),
    retractall(baseKB:how_virtualize_dir(_,F)),
    asserta_new(baseKB:how_virtualize_dir(How,F)).
+
 :- dynamic(baseKB:how_virtualize_dir/2).
 baseKB:how_virtualize_dir(false,'/opt/logicmoo_workspace/packs_xtra/logicmoo_nlu/ext/').
 :- expand_file_search_path(swi(''),M),(set_how_virtualize_dir(false,M)).
@@ -138,12 +169,14 @@ could_safe_virtualize(File):- prolog_load_context(module,M), \+ clause_b(mtHybri
 
 % file late late joiners
 :- if( \+ prolog_load_context(reload,true)).
-:- source_location(File, _)-> during_boot(((set_how_virtualize_file(false,File)))).
+
+:- source_location(File, Line)-> during_boot(((set_how_virtualize_file(false,File, Line)))).
+
 :- doall((module_property(M,file(File)),
-          \+ baseKB:how_virtualize_file(_,File),
+          \+ baseKB:how_virtualize_file(_,File, _),
           module_property(M,class(CT)),
           memberchk(CT,[library,system]),
-          set_how_virtualize_file(false,File))).
+          set_how_virtualize_file(false,File,0))).
 %:- doall((source_file(File),(set_how_virtualize_file(false,File)))).
 %base_kb_dynamic(F,A):- ain(mpred_prop(M,F,A,prologHybrid)),kb_shared(F/A).
 %:- doall((virtualize_ereq(F,A),base_kb_dynamic(F,A))).
@@ -152,10 +185,9 @@ could_safe_virtualize(File):- prolog_load_context(module,M), \+ clause_b(mtHybri
 
 
 % if_defined(G,Else) = if G is defined then call G.. else call Else
-ignore_mpreds_in_file:- if_defined(t_l:disable_px,fail),!.
+%ignore_mpreds_in_file:- if_defined(t_l:disable_px,fail),!.
 ignore_mpreds_in_file:- prolog_load_context(file,F),check_how_virtualize_file(false,F),!.
-ignore_mpreds_in_file:- prolog_load_context(source,F), \+ prolog_load_context(file,F),
-                        check_how_virtualize_file(false,F),!.
+ignore_mpreds_in_file:- prolog_load_context(source,F), \+ prolog_load_context(file,F), check_how_virtualize_file(false,F),!.
 
 is_file_virtualize_allowed(F):- check_how_virtualize_file(bodies,F).
 
@@ -695,13 +727,11 @@ safe_virtualize_0(Goal,How,call(How,Goal)).
 
 
 is_this_file_virtualize_allowed:- prolog_load_context(file,F), is_this_file_virtualize_allowed(F).
-is_this_file_virtualize_allowed(F):- baseKB:how_virtualize_file(bodies, F),!.
-is_this_file_virtualize_allowed(F):- baseKB:how_virtualize_file(false, F),!,fail.
+is_this_file_virtualize_allowed(F):- get_how_virtualize_file(How, F), !, How \== false.
 is_this_file_virtualize_allowed(F):- prolog_load_context(source,S),  S\==F, !, is_this_source_virtualize_allowed(S).
-
 is_this_source_virtualize_allowed(S):- 
-             \+ baseKB:how_virtualize_file(heads, S), 
-             \+ baseKB:how_virtualize_file(false, S),
+             \+ baseKB:how_virtualize_file(heads, S, _), 
+             \+ baseKB:how_virtualize_file(false, S, _),
                 nop(baseKB:how_virtualize_file(bodies, S)).
 
 
@@ -779,7 +809,7 @@ system:file_body_expansion(Head,In,Out):- compound(In),
 
 system:goal_expansion(In,P,Out,PO):-
      notrace((compound(In), nonvar(P))),
-     notrace((nb_current('$term', Head :- FileTerm),In == FileTerm)),
+     notrace((get_current_clause(Head :- FileTerm),In == FileTerm)),
      virtualized_goal_expansion(Head,In,Out) -> PO=P.
 
 :- endif.

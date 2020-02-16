@@ -3,7 +3,7 @@
 % =====================================================
 
 :- use_module(library(multivar)).
-:- use_module(library(pfc)).
+:- use_module(library(pfc_lib)).
 
 isa(i1,c1).
 predicate_function_canonical(isa,instanceOf).

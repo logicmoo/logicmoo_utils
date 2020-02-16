@@ -296,6 +296,13 @@ atom_concat_or_rtrace(X,Y,Z):- tracing->atom_concat(X,Y,Z);catch(atom_concat(X,Y
 :- export(atom_concat_or_rtrace/3).
 
 
+get_text_restore_pred(Text,any_to_string):- string(Text),!.
+get_text_restore_pred(Text, any_to_atom):- atom(Text),!.
+get_text_restore_pred(Text,any_to_charlist):- is_charlist(Text),!.
+get_text_restore_pred(Text,any_to_codelist):- is_codelist(Text),!.
+get_text_restore_pred(Text,any_to_codelist):- Text==[],!.
+get_text_restore_pred(_,any_to_string).
+
 %= 	 	 
 
 %% any_to_string( ?Atom, ?String) is semidet.
@@ -312,16 +319,18 @@ any_to_string(Atom,String):-   any_to_string1(Atom,StringS),!,StringS=String.
 %
 % Any Converted To String Secondary Helper.
 %
-any_to_string1(Atom,String):- string(Atom),!,Atom=String.
-any_to_string1(Atom,String):- is_s_string(Atom),!,convert_to_string(Atom,String).
-% any_to_string1(Atom,String):- is_string(Atom),!,text_to_string(String).
-
-any_to_string1(_,_):-stack_depth(X),X>2000,!,sanity(fail),fail.
 any_to_string1(Atom,String):- var(Atom),show_call((term_string(Atom,String))),!.
 any_to_string1(Atom,String):- var(Atom),!,=(Atom,String).
+any_to_string1(Atom,String):- string(Atom),!,Atom=String.
+any_to_string1(Atom,String):- is_s_string(Atom),!,convert_to_string(Atom,String).
+any_to_string1(_,_):- stack_depth(X),X>2000,!,sanity(fail),fail.
+any_to_string1(s(Atom),String):- !, any_to_string1(Atom,String). 
+% any_to_string1(Atom,String):- is_string(Atom),!,text_to_string(String).
+
 any_to_string1(Atom,String):- number(Atom),!,number_string(Atom,String).
 any_to_string1(Atom,String):- atomic(Atom),!,convert_to_string(Atom,String),!.
 any_to_string1(Empty,""):- empty_str(Empty),!.
+
 any_to_string1(string(Atom),String):- !, any_to_string1(Atom,String). 
 any_to_string1(fmt(Fmt,Args),String):-!,must(sformat(String,Fmt,Args)).
 any_to_string1(txtFormatFn(Fmt,Args),String):-!,must(sformat(String,Fmt,Args)).
@@ -601,14 +610,14 @@ atom_contains(F,X):- on_x_debug(sub_string(F,_,_,_,X)).
 % atom_contains(F0,C0):- must((any_to_atom(F0,F),!,any_to_atom(C0,C))),!,sub_string(F,_,_,_,C).
 
 
-%= 	 	 
+
 
 %% any_to_atom( ?A, ?A) is semidet.
 %
 % Any Converted To Atom.
 %
-any_to_atom(A,A):-atom(A),!.
-any_to_atom(T,A):-format(atom(A),'~w',[T]).
+any_to_atom(Any,A):- any_to_string(Any,T), format(atom(A),'~w',[T]).
+% any_to_atom(A,A):- any_to_string(A,T), format(atom(A),'~w',[T]).
 
 
 %= 	 	 
@@ -1059,8 +1068,13 @@ unquoteAtom(Atom,New):-concat_atom_safe(LIST,'"',Atom),concat_atom_safe(LIST,'',
 %
 % If Is A Charlist.
 %
-is_charlist([X]):-atom(X), \+ (number(X)),atom_length(X,1).
-is_charlist([X|T]):-atom(X), \+ (number(X)),atom_length(X,1),is_charlist(T),!.
+is_charlist([A]):-  !, is_charlist_char(A).
+is_charlist([A|L]):- is_charlist_char(A),is_charlist(L).
+
+is_charlist_char(C):- atom(C), atom_length(C,1).
+
+any_to_charlist(A,C):- is_charlist(A),!,A=C.
+any_to_charlist(A,C):- any_to_string(A,S),atom_chars(S,C).
 
 
 %= 	 	 
@@ -1069,9 +1083,13 @@ is_charlist([X|T]):-atom(X), \+ (number(X)),atom_length(X,1),is_charlist(T),!.
 %
 % If Is A Codelist.
 %
-is_codelist([A]):-integer(A),!,A>8,A<129,!.
-is_codelist([A|L]):-integer(A),!,A>8,A<129,is_codelist(L).
+is_codelist([A]):-  !, is_codelist_code(A).
+is_codelist([A|L]):- is_codelist_code(A),is_codelist(L).
 
+is_codelist_code(A):- integer(A),!,A>8,A<129.
+
+any_to_codelist(A,C):- is_codelist(A),!,A=C.
+any_to_codelist(A,C):- any_to_string(A,S),atom_codes(S,C).
 
 %= 	 	 
 

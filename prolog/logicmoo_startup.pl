@@ -681,9 +681,11 @@ user:expand_query(Goal, _Expanded, Bindings, _ExpandedBindings):-        fail,
 
 :- module_transparent(fixup_exports/0).
 
-fixup_exports:- 
+fixup_exports:-    
    all_source_file_predicates_are_exported,
    all_source_file_predicates_are_transparent.
+
+fixup_exports_system:-   (prolog_load_context(source,SF)-> system:reexport(SF) ; true).
 
 
 :- fixup_exports.

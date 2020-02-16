@@ -769,14 +769,10 @@ xlisting(Match):- retractall(lmcache:completely_expanded(_,_)),retractall(t_l:no
 xlisting_0(Match):- \+ \+ t_l:no_xlisting(Match),!.
 xlisting_0([]):- '$current_source_module'(M),!,listing(M:_),'$current_typein_module'(TM),(TM==M->true;listing(TM:_)),!.
 xlisting_0(Match):- is_list(Match),!,must_maplist(xlisting_0,Match),!.
-xlisting_0(M:F/A):-integer(A),!,functor(P,F,A),xlisting_0a(M:P),!.
 xlisting_0(M:P):- atom(M),'$current_source_module'(W), 
    locally(before_after('$set_source_module'(M),
                     '$set_source_module'(W)),
-          xlisting_0(P)),!.
-xlisting_0(F/A):- 
-   atom(F),integer(A),!,
-   functor(P,F,A),xlisting_0a(P),!.
+          xlisting_a(P)),!.
 xlisting_0(Match):- 
    xlisting_0a(Match).
 
@@ -856,7 +852,7 @@ mpred_match_listing_skip_pi(How,Match,SkipPI):-
 %
 % Get Matcher Code.
 %
-get_matcher_code(Match,H,B,MATCHER):-  atom(Match),!, MATCHER= term_matches_unify(99,Match,((H:-B))).
+get_matcher_code(Match,H,B,MATCHER):-  atom(Match),!, MATCHER= once(term_matches_unify(99,Match,((H:-B)))).
 get_matcher_code(Match,H,B,MATCHER):-  MATCHER = term_matches_hb(Match,H,B).
 
 :- meta_predicate xlisting_inner(3,+,+).
@@ -969,7 +965,7 @@ sourceTextPredicateSource(_):-fail.
 %
 % plisting  Secondary Helper.
 %
-plisting_1:-plisting(spft(_,_,_,_)).
+plisting_1:-plisting(spft(_,_,_)).
 
 
 %= 	 	 
@@ -1096,6 +1092,7 @@ term_matches_hb(D,M:HO,H,B):-!,term_matches_hb(D,(module(M),HO),H,B).
 term_matches_hb(D,[F1],H,B):-!,term_matches_hb(D,F1,H,B),!.
 term_matches_hb(D,[F1+FS],H,B):-!,term_matches_hb(D,(F1,FS),H,B).
 term_matches_hb(D,(F1+FS),H,B):-!,term_matches_hb(D,(F1,FS),H,B).
+term_matches_hb(D,(F1-FS),H,B):-!,term_matches_hb(D,(F1),H,B), \+(term_matches_hb(D,FS,H,B)).
 term_matches_hb(D,(F1,FS),H,B):-!,term_matches_hb(D,F1,H,B),term_matches_hb(D,FS,H,B).
 term_matches_hb(D,(F1;FS),H,B):-!, (term_matches_hb(D,F1,H,B);term_matches_hb(D,FS,H,B)).
 term_matches_hb(D,[F1|FS],H,B):-!,term_matches_hb(D,(F1;FS),H,B).
@@ -1106,13 +1103,15 @@ term_matches_hb(_,module(M),H,_):-!,predicate_property(H,imported_from(M)).
 term_matches_hb(D,h(P),H,_):-!,term_matches_hb(D,P,H,666666).
 term_matches_hb(D,b(P),_,B):-!,term_matches_hb(D,P,B,666666).
 term_matches_hb(_,string(HO),H,B):- nonvar(HO),logicmoo_util_first:term_to_string(HO,HS),!, with_output_to(string(H1B1),write_canonical((H:-B))), (sub_atom_icasechk(HS,_,H1B1);sub_atom_icasechk(H1B1,_,HS)),!.
-term_matches_hb(D,unify(HO),H,B):- nonvar(HO),!,term_matches_hb(D,HO,H,B).
 term_matches_hb(_,depth(Depth,HO),H,B):- term_matches_hb(Depth,HO,H,B).
 term_matches_hb(D,contains(HO),H,B):- !,term_matches_hb(D,string(HO),H,B).
-term_matches_hb(D,F/A,H,B):-atom(F),integer(A),!,functor(P,F,A),term_matches_hb(D,(unify(P);same(F/A)),H,B).
-term_matches_hb(D,F/A,H,B):-atom(F),var(A),!,term_matches_hb(D,(functor(F);same(F/A)),H,B).
-term_matches_hb(D,F/A,H,B):-var(F),integer(A),!,term_matches_hb(D,(arity(A);same(F/A)),H,B).
+term_matches_hb(D,F/A,H,B):-atom(F),var(A),!,term_matches_hb(D,functor(F),H,B).
+term_matches_hb(D,F/A,H,B):-var(F),integer(A),!,term_matches_hb(D,arity(A),H,B).
+
+term_matches_hb(D,F/A,H,B):-atom(F),integer(A),!,functor(P,F,A),!, (term_matches_unify(D,P,H);term_matches_unify(D,P,B)).
+% term_matches_hb(D,P,H,B):- (term_matches_unify(D,P,H);term_matches_unify(D,P,B)).
 term_matches_hb(D,HO,H,B):- \+ \+ term_matches_unify(D,HO,(H:-B)).
+
 
 % ?- xlisting((h(depth(0,pt/2)),same(tBird(A)))).
 
@@ -1124,14 +1123,17 @@ term_matches_hb(D,HO,H,B):- \+ \+ term_matches_unify(D,HO,(H:-B)).
 %
 % Term Matches Unify.
 %
+term_matches_unify(D,unify(HO),H,B):- nonvar(HO),!,term_matches_hb(D,HO,H,B).
 term_matches_unify(_R,same(HO),V):-HO=@=V.
-term_matches_unify(_R,_,V):-var(V),!,fail.
-term_matches_unify(_R,V,V).
+term_matches_unify(_R,_,V):- var(V),!,fail.
+term_matches_unify(_R,V,V):-!.
+term_matches_unify(_R,A,Str):- string(Str),atom(A),!,atom_string(A,Str).
 term_matches_unify(_R,_,V):- \+ compound(V),!,fail.
-term_matches_unify(_R,arity(A),H):-functor(H,_,A).
-term_matches_unify(_R,functor(F),H):-functor(H,F,_).
+%term_matches_unify(D,F/A,HB):- atom(F),integer(A),!, compound_name_arity(P,F,A), term_matches_unify(D,P,HB).
+term_matches_unify(_R,arity(A),H):- functor(H,_,A).
+term_matches_unify(_R,functor(F),H):- functor(H,F,_).
 term_matches_unify(0,_,_):-!,fail.
-term_matches_unify(R,HO,V):- RR is R -1, compound_name_arguments(V,F,ARGS),member(E,[F|ARGS]),term_matches_unify(RR,HO,E).
+term_matches_unify(R,HO,V):- RR is R -1, compound_name_arguments(V,F,ARGS),member(E,[F|ARGS]),term_matches_unify(RR,HO,E),!.
 
 
 
