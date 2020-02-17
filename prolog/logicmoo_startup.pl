@@ -515,7 +515,13 @@ if_debugging(Topic,Goal):- debugging(Topic)->call(Goal);true.
 all_source_file_predicates_are_exported:- current_prolog_flag(xref,true),!.
 all_source_file_predicates_are_exported:-
  source_location(S,_), prolog_load_context(module,LC),
- all_source_file_predicates_are_exported(S,LC).
+ all_source_file_predicates_are_exported(S,LC),!.
+all_source_file_predicates_are_exported:-
+ prolog_load_context(module,LC),'$current_typein_module'(TIM),
+ forall((LC\==user,module_property(LC,file(S))),all_source_file_predicates_are_exported(S,LC)),
+ forall((TIM\==LC,TIM\==user,module_property(TIM,file(S))),all_source_file_predicates_are_exported(S,TIM)).
+
+
 
 lmconfig:never_export_named(_,attr_unify_hook,2).
 lmconfig:never_export_named(_,attribute_goals,3).
@@ -566,7 +572,11 @@ sexport(M:F/A):- M:export(M:F/A),system:import(M:F/A).
 all_source_file_predicates_are_transparent:- current_prolog_flag(xref,true),!.
 all_source_file_predicates_are_transparent:-
  source_location(S,_), prolog_load_context(module,LC),
- all_source_file_predicates_are_transparent(S,LC).
+ all_source_file_predicates_are_transparent(S,LC),!.
+all_source_file_predicates_are_transparent:-
+ prolog_load_context(module,LC),'$current_typein_module'(TIM),
+ forall((LC\==user,module_property(LC,file(S))),all_source_file_predicates_are_transparent(S,LC)),
+ forall((TIM\==LC,TIM\==user,module_property(TIM,file(S))),all_source_file_predicates_are_transparent(S,TIM)).
 
 :- module_transparent(all_source_file_predicates_are_transparent/2).
 all_source_file_predicates_are_transparent(S,_LC):- 

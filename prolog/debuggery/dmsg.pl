@@ -373,6 +373,12 @@ matches_term0(F/A,Term):- (var(A)->member(A,[0,1,2,3,4]);true), cfunctor(Filter,
 matches_term0(Filter,Term):- sub_term(STerm,Term),nonvar(STerm),call(call,matches_term0(Filter,STerm)),!.
 
 
+dmsg_pretty(In):- \+ \+  (portray_vars:pretty_numbervars(In, Info),dmsg(Info)).
+
+wdmsg_pretty(In):- \+ \+ (portray_vars:pretty_numbervars(In, Info),wdmsg(Info)).
+
+wdmsg_pretty(F,In):- \+ \+ (portray_vars:pretty_numbervars(In, Info),wdmsg(F,Info)).
+
 %= 	 	 
 
 %% dmsg_hide( ?Term) is det.
