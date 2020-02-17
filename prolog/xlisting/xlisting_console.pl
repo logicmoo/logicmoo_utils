@@ -1089,6 +1089,7 @@ term_matches_hb(D,_,_,_):- D<0,!,fail.
 term_matches_hb(_,noinfo,_,info(_)):-!,fail. 
 
 term_matches_hb(D,M:HO,H,B):-!,term_matches_hb(D,(module(M),HO),H,B).
+term_matches_hb(D,unify(HO),H,B):- !,term_matches_unify(D,HO,(H:-B)).
 term_matches_hb(D,[F1],H,B):-!,term_matches_hb(D,F1,H,B),!.
 term_matches_hb(D,[F1+FS],H,B):-!,term_matches_hb(D,(F1,FS),H,B).
 term_matches_hb(D,(F1+FS),H,B):-!,term_matches_hb(D,(F1,FS),H,B).

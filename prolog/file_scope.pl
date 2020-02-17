@@ -67,8 +67,9 @@ Thread.
 %:-must(forall(retract(at_eof_action(CALL)),must(CALL))).
 % :-must((asserta((user:term_expansion(A,B):-cyc_to_clif_notify(A,B),!),CLREF),asserta(at_eof_action(erase(CLREF))))).
 
-:- set_module(class(library)).
-
+:- system:reexport(library(debug),[debug/3]).
+:- use_module(library(must_sanity)).
+ 
 
 % % % OFF :- system:use_module(library(must_sanity)).
 % % % OFF :- system:use_module(library(logicmoo/misc_terms)).
@@ -316,7 +317,9 @@ set_skip_file_expansion(File,TF):-
   ignore(((\+ atom_concat('$',_,F),(export(F/A) , current_predicate(system:F/A)->true; system:import(M:F/A))))),
   ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A]))))))))).
 
- 
+
+l_once(G):- once(G),!.
+l_once(G):- trace, G,!.
 
 :-meta_predicate(term_expansion_option(:,+,-)).
 term_expansion_option(Option,(:-Body),Out):- 
@@ -344,11 +347,11 @@ system:term_expansion(In,Pos,Out,Pos):- nonvar(Pos),compound(In),functor(In,(:-)
    term_expansion_option(Option,In,Out),!.
 */
 
-notice_file(end_of_file,File,_LineNo):- !,must(once(signal_eof(File))),
+notice_file(end_of_file,File,_LineNo):- !, l_once(signal_eof(File)),
   retractall('$file_scope':opened_file(File,_)).
 notice_file(_,File,LineNo):- 
   '$file_scope':opened_file(File,_) -> true; 
-   (asserta('$file_scope':opened_file(File,LineNo)),must(once(begin_file_scope(File)))).
+   (asserta('$file_scope':opened_file(File,LineNo)), l_once(begin_file_scope(File))).
 
 
 system:term_expansion(EOF,Pos,_,_):- 

@@ -11,7 +11,7 @@
 % ===================================================================
 */
 
-:- module(must_trace,
+:- module(must_sanity,
    [
       must/1, % Goal must succeed at least once once
       must_once/1, % Goal must succeed at most once
