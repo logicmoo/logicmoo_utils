@@ -623,7 +623,8 @@ renumbervars1(X,Y):-renumbervars1(X,[],Y,_).
 %
 renumbervars1(V,IVs,'$VAR'(X),Vs):- var(V), sformat(atom(X),'~w_RNV',[V]), !, (memberchk(X=V,IVs)->Vs=IVs;Vs=[X=V|IVs]).
 renumbervars1(X,Vs,X,Vs):- ( \+ compound(X)),!.
-renumbervars1('$VAR'(V),IVs,Y,Vs):- sformat(atom(X),'~w_VAR',[V]), !, (memberchk(X=Y,IVs)->Vs=IVs;Vs=[X=Y|IVs]).
+renumbervars1('$VAR'(V),IVs,Y,Vs):- sformat(atom(X),'~w_',[V]), !, (memberchk(X=Y,IVs)->Vs=IVs;Vs=[X=Y|IVs]).
+%renumbervars1('$VAR'(V),IVs,Y,Vs):- sformat(atom(X),'~w_VAR',[V]), !, (memberchk(X=Y,IVs)->Vs=IVs;Vs=[X=Y|IVs]).
 renumbervars1([X|XM],IVs,[Y|YM],Vs):-!,
   renumbervars1(X,IVs,Y,VsM),
   renumbervars1(XM,VsM,YM,Vs).

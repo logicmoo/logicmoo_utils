@@ -153,6 +153,26 @@
 :-endif.
 
 
+assert_at_line_count(M,Pos,File,Cl):-
+  stream_position_data(line_count,Pos,Line),
+  '$compile_aux_clauses'([M:Cl], '$source_location'(File, Line)).
+
+assert_at_line_count_p1(Pred1,Cl,_Vs,_):- call(Pred1,Cl).
+assert_at_line_count_p2(Pred2,Cl, Vs,_):- call(Pred2,Cl,Vs).
+
+load_with_asserter(File0,File,Asserter,Options):-    
+   once(absolute_file_name(File0, File, [access(read)]);
+        absolute_file_name(File0, File, [access(read),file_type(prolog)])),
+   open(File, read, In),
+   set_stream(In, encoding(iso_latin_1)),
+   repeat,
+   read_clause(In, Cl, Options),
+   % DMiles: i am putting them in backwards (cuz, the hypens- confuse me if they pop out first in the debugger)
+   call(Asserter,Cl),
+   Cl==end_of_file, !,
+   close(In).
+   
+
 
 % '/root/lib/swipl/pack/mpi'
 % pack_property(Pack, directory(PackDir)),atom_concat(PackDir,'/*',writeln(WC),expand_file_name(WC,O),O\=[],length(O,L).
