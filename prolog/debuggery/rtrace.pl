@@ -62,6 +62,8 @@ call_call(G):-call(G).
 
 on_f_rtrace(Goal):-  Goal *-> true; (rtrace(Goal),debugCallWhy(on_f_rtrace(Goal),Goal)).
 
+on_f_ftrace(Goal):-  Goal *-> true; (ftrace(Goal),debugCallWhy(on_f_ftrace(Goal),Goal)).
+
 
 
 %! on_x_debug( :Goal) is det.

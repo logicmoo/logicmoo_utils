@@ -2457,6 +2457,7 @@ pp_i2tml_0(is_disabled_clause(H)):- pp_i2tml_0((disabled)=H).
 
 
 % pp_i2tml_0(FET):-fully_expand(change(assert,html_gen),FET,NEWFET),FET\=@=NEWFET,!,pp_i2tml_0(NEWFET).
+pp_i2tml_0(spft(_MZ,P,F,T)):- !, pp_i2tml_0(spft(P,F,T)).
 
 pp_i2tml_0(spft(P,F,T)):-!,
    locally_tl(current_why_source(T),pp_i2tml_0(spft(P,F,T))).

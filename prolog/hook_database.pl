@@ -847,6 +847,7 @@ safe_univ0(Call,[L|List]):- not(is_list(Call)),sanity(atom(L);compound(Call)), C
 safe_univ0([L|List],[L|List]):- var(List),\+ atom(L),!,rtrace,_ =.. [L|List],warn_bad_functor(L).
 safe_univ0(Call,[L|List]):- sanity(atom(L);compound(Call)),catchv(Call =.. [L|List],E,(dumpST,'format'('~q~n',[E=safe_univ(Call,List)]))),warn_bad_functor(L).
 
+
 /*
 
 %% bad_functor( ?L) is semidet.

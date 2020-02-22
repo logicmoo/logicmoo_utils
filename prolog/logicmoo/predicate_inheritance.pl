@@ -202,8 +202,8 @@ uses_predicate(break,_,_,_,_,Error):- !,dumpST_dbreak,Error=error.
 uses_predicate(_DEF,_,System, _,_, error):- module_property(System,class(system)),!.
 uses_predicate(_DEF,_,System, _,_, error):- module_property(System,class(library)),!.
 
-uses_predicate(Setting,SM,M,F,A,Act):- Setting\==kb_shared, SM\==user, M\==baseKB,
-     (dmsg(uses_predicate(Setting,SM,M,F,A,Act))),fail.
+uses_predicate(Setting,SM,M,F,A,Act):- Setting\== (kb_shared), SM\==user, M\==baseKB,
+     dmsg(uses_predicate(Setting,SM,M,F,A,Act)),fail.
 
 uses_predicate(kb_shared,System, M, F,A, retry):-   
    show_failure(uses_undefined_hook(M)),

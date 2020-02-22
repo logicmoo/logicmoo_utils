@@ -133,35 +133,78 @@ with_no_mpred_expansions(Goal):-
 :- system:import(with_no_mpred_expansions/1).
 
 
-
-
 maybe_add_import_module(A,B):-maybe_add_import_module(A,B,start).
 %TODO
-maybe_add_import_module(_From,_To,_):- !.
-maybe_add_import_module(_From,user,_Start).
-maybe_add_import_module(From,To,_):- (call(ereq,mtCycL(From)); call(ereq,mtCycL(To))),!.
+%maybe_add_import_module(_From,_To,_):- !.
+%maybe_add_import_module(_From,user,_Start).
+maybe_add_import_module(From,To,_):- From==To.
+%maybe_add_import_module(From,To,_):- (call(ereq,mtCycL(From)); call(ereq,mtCycL(To))),!.
 maybe_add_import_module(From,To,_):- default_module(From,To),!.
 maybe_add_import_module(user,_,start):-!.
-maybe_add_import_module(baseKB,_,_):-!.
-maybe_add_import_module(_,baseKB,_):-!.
+%maybe_add_import_module(baseKB,_,_):-!.
+%maybe_add_import_module(_,baseKB,_):-!.
 maybe_add_import_module(From,To,Start):-  
    maybe_delete_import_module(To,From),
-   catch(nop(add_import_module(From,To,Start)),E,writeln(E=add_import_module(From,To,Start))).
+   catch((add_import_module(From,To,Start)),E,writeln(E=add_import_module(From,To,Start))).
 
 maybe_delete_import_module(_From,To):- To = user,!.
 maybe_delete_import_module(_From,To):- To = system,!.
-maybe_delete_import_module(From,To):- dmsg(ignore(system:delete_import_module(From,To))).
+maybe_delete_import_module(From,To):- writeln(ignore(system:delete_import_module(From,To))).
 
 
+:- multifile(baseKB:is_global_module/1).
+:- dynamic(baseKB:is_global_module/1).
+:- baseKB:export(baseKB:is_global_module/1).
+:- system:import(baseKB:is_global_module/1).
 
-fix_baseKB_imports:- 
-   ignore(add_import_module(baseKB,system,start)),
-   ignore(delete_import_module(baseKB,pfc_lib)),
-   ignore(delete_import_module(baseKB,user)),
-   ignore(delete_import_module(user,baseKB)),
-   forall((import_module(baseKB,X),X\==system),ignore(delete_import_module(baseKB,X))),
-   forall(current_module(M),forall(import_module(M,baseKB),ignore(delete_import_module(M,baseKB)))).
+baseKB:is_global_module(baseKB).
+baseKB:is_global_module(eggdrop).
+baseKB:is_global_module(parser_all).
+baseKB:is_global_module(parser_chat80).
+baseKB:is_global_module(mu).
+baseKB:is_global_module(parser_bratko).
+baseKB:is_global_module(lmconf).
+baseKB:is_global_module(clpfd).
+%baseKB:is_global_module(user).
+%baseKB:is_global_module(system).
 
+:- multifile(baseKB:is_promiscuous_module/1).
+:- dynamic(baseKB:is_promiscuous_module/1).
+:- baseKB:export(baseKB:is_promiscuous_module/1).
+:- system:import(baseKB:is_promiscuous_module/1).
+
+
+global_module(M):- baseKB:is_global_module(M),!.
+global_module(M):- assertz(baseKB:is_promiscuous_module(M)),
+     \+ (baseKB:is_promiscuous_module(P), \+ baseKB:is_global_module(P,M,end)).
+
+promiscuous_module(M):- baseKB:is_promiscuous_module(M),!.
+promiscuous_module(M):- 
+     assertz(baseKB:is_promiscuous_module(M)),
+     ignore((M\==system,M:use_module(library(clpfd),except([sum/3])))), 
+     \+ (baseKB:is_global_module(G), \+ maybe_add_import_module(M,G,end)),
+     !.
+
+:- export(promiscuous_module/1).
+:- system:import(promiscuous_module/1).
+
+:- promiscuous_module(mu).
+:- promiscuous_module(baseKB).
+
+fix_baseKB_imports:- !.
+fix_baseKB_imports_now:- 
+  % ignore(delete_import_module(system,baseKB)),
+  % ignore(add_import_module(baseKB,system,start)),
+  % ignore(delete_import_module(baseKB,pfc_lib)),
+  % ignore(delete_import_module(baseKB,user)),
+  % ignore(delete_import_module(user,baseKB)),
+  % \+ ((import_module(baseKB,X),X\==system), \+ ignore(delete_import_module(baseKB,X))),
+  % \+ (current_module(M), \+ ignore(( \+ import_module(M,baseKB), \+ ignore(delete_import_module(M,baseKB))))),
+   \+ (baseKB:is_promiscuous_module(MM), 
+     \+ ignore( \+ ( baseKB:is_global_module(G), \+ maybe_add_import_module(MM,G,end)))).
+
+
+:- initialization(fix_baseKB_imports,now).
 :- initialization(fix_baseKB_imports,restore).
 :- initialization(fix_baseKB_imports,program).
 

@@ -356,6 +356,8 @@ maplist_atom_string(M,O):- catch(notrace(maplist(any_to_string,M,O)),_,fail).
 
 text_to_uq_atom(A,InOut):- (atom_concat('"',R,A),atom_concat(Sub,'"',R))->Sub=InOut;A=InOut.
 
+will_mws(Wff0):- atomic(Wff0),atom_length(Wff0,L),L>2,atom_contains(Wff0,' ').
+
 is_s_string(I):-compound(I),functor(I,s,_),!.
 
 :- thread_local(t_l:no_cycstrings/0).

@@ -965,7 +965,7 @@ sourceTextPredicateSource(_):-fail.
 %
 % plisting  Secondary Helper.
 %
-plisting_1:-plisting(spft(_,_,_)).
+plisting_1:-plisting(spft(_,_,_,_)).
 
 
 %= 	 	 
