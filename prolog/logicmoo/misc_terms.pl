@@ -87,7 +87,7 @@ nd_subst/4,
 nd_subst1/5,
 nd_subst2/4,
 pred_delete/4,
-pred_juncts_to_list/2,
+pred_juncts_to_list2/3,
 pred_juncts_to_list/3,
 pred_subst/5,
 pred_term_parts/3,
@@ -169,8 +169,8 @@ compound_name_arity_safe/3
         nd_subst/4,
         nd_subst1/5,
         nd_subst2/4,
-        pred_juncts_to_list/2,
-        pred_juncts_to_list/3,
+        pred1_juncts_to_list/2,
+        pred1_juncts_to_list/3,
         proccess_status/3,
         read_each_term/3,
         remove_dupes/2,
@@ -321,40 +321,48 @@ conjuncts_to_list((A,B),ABL):-!,
 conjuncts_to_list(Lit,[Lit]).
 
 
-:- export(pred_juncts_to_list/3).
+
+pred_juncts_to_list(F,AB,ABL):- pred1_juncts_to_list(==(F),AB,ABL).
+
+:- export(pred1_juncts_to_list/3).
 
 %= 	 	 
 
-%% pred_juncts_to_list( ?F, ?AB, ?ABL) is semidet.
+%% pred1_juncts_to_list( ?F, ?AB, ?ABL) is semidet.
 %
 % Predicate Juncts Converted To List.
 %
-pred_juncts_to_list(_,Var,[Var]):-is_ftVar(Var),!.
-pred_juncts_to_list(_,true,[]).
-pred_juncts_to_list(_,[],[]).
-pred_juncts_to_list(F,AB,ABL):-AB=..[F,A,B],!,
-  pred_juncts_to_list(A,AL),
-  pred_juncts_to_list(B,BL),
+pred1_juncts_to_list(_,Var,[Var]):-is_ftVar(Var),!.
+pred1_juncts_to_list(_,true,[]).
+pred1_juncts_to_list(_,[],[]).
+pred1_juncts_to_list(Pred1,AB,ABL):-AB=..[F,A,B],
+  call(Pred1,F),!,
+  pred1_juncts_to_list(Pred1,A,AL),
+  pred1_juncts_to_list(Pred1,B,BL),
   append(AL,BL,ABL).
-pred_juncts_to_list(F,AB,AL):-AB=..[F,A],!,
-  pred_juncts_to_list(A,AL).
-pred_juncts_to_list(F,AB,ABL):-AB=..[F,A|ABB],
-  pred_juncts_to_list(A,AL),
-  B=..[F|ABB],
-  pred_juncts_to_list(B,BL),
+pred1_juncts_to_list(Pred1,AB,AL):-AB=..[F,A],!,
+  call(Pred1,F),
+  pred1_juncts_to_list(Pred1,A,AL).
+
+pred1_juncts_to_list(Pred1,AB,ABL):-AB=..[F,A|ABB],call(Pred1,F),
+  pred1_juncts_to_list(Pred1,A,AL),
+  B=..[F|ABB],  
+  pred1_juncts_to_list(Pred1,B,BL),
   append(AL,BL,ABL).
+pred1_juncts_to_list(_Pred1,Lit,[Lit]).
 
 %= 	 	 
 
-%% pred_juncts_to_list( ?A, ?ABL) is semidet.
+%% pred1_juncts_to_list( ?A, ?ABL) is semidet.
 %
 % Predicate Juncts Converted To List.
 %
-pred_juncts_to_list([A|B],ABL):-!,
-  pred_juncts_to_list(A,AL),
-  pred_juncts_to_list(B,BL),
+pred_juncts_to_list2(_Pred1,I,I):- (is_ftVar(I);I==[]),!.
+pred_juncts_to_list2(Pred1,[A|B],ABL):-!,
+  pred_juncts_to_list2(Pred1,A,AL),
+  pred_juncts_to_list2(Pred1,B,BL),
   append(AL,BL,ABL).
-pred_juncts_to_list(Lit,[Lit]).
+pred_juncts_to_list2(_Pred1,Lit,[Lit]).
 
 
 :- export(list_to_conjuncts/2).

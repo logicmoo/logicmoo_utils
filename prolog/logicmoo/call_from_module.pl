@@ -133,6 +133,8 @@ with_no_mpred_expansions(Goal):-
 :- system:import(with_no_mpred_expansions/1).
 
 
+writeln_safely(G):- fmt(G).
+
 maybe_add_import_module(A,B):-maybe_add_import_module(A,B,start).
 %TODO
 %maybe_add_import_module(_From,_To,_):- !.
@@ -145,11 +147,13 @@ maybe_add_import_module(user,_,start):-!.
 %maybe_add_import_module(_,baseKB,_):-!.
 maybe_add_import_module(From,To,Start):-  
    maybe_delete_import_module(To,From),
-   catch((add_import_module(From,To,Start)),E,writeln(E=add_import_module(From,To,Start))).
+   catch((add_import_module(From,To,Start)),E,writeln_safely(E=add_import_module(From,To,Start))).
 
 maybe_delete_import_module(_From,To):- To = user,!.
 maybe_delete_import_module(_From,To):- To = system,!.
-maybe_delete_import_module(From,To):- writeln(ignore(system:delete_import_module(From,To))).
+maybe_delete_import_module( From,To):- \+ default_module(From,To),!.
+maybe_delete_import_module(From,To):- ignore(system:delete_import_module(From,To)),!.
+maybe_delete_import_module(From,To):- writeln_safely(ignore(system:delete_import_module(From,To))).
 
 
 :- multifile(baseKB:is_global_module/1).

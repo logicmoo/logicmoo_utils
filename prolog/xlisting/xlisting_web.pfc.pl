@@ -18,7 +18,7 @@
 % Param Default Value.
 %
 
-:- mpred_trace_exec.
+% :- mpred_trace_exec.
 :- kb_global(baseKB:param_default_value/2).
 ==> singleValueInArg(param_default_value,2).
 

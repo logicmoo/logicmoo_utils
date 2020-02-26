@@ -527,39 +527,46 @@ lmconfig:never_export_named(_,attr_unify_hook,2).
 lmconfig:never_export_named(_,attribute_goals,3).
 lmconfig:never_export_named(_,project_attributes,2).
 lmconfig:never_export_named(_,attr_portray_hook,2).
+lmconfig:never_export_named(_,F,_):- atom_concat('$',_,F) ; atom_concat('__aux',_,F).
+
+lmconfig:never_reexport_named(_,goal_expansion,_).
+lmconfig:never_reexport_named(_,term_expansion,_).
+
 % lmconfig:never_export_named(_M,F,A):- current_predicate(user:F/A).
 
 % :- module_transparent(all_source_file_predicates_are_exported/2).
+maybe_export([],_,_,_):-!.
+maybe_export([LC|LCT],M,F,A):- maybe_export(LC,M,F,A),!,maybe_export(LCT,M,F,A).
+maybe_export(false,_,_,_):-!.
+maybe_export(true, M,F,A):- !, maybe_export(system, M,F,A).
+maybe_export(_, M,F,A):- lmconfig:never_export_named(M,F,A). 
+maybe_export(LC,M,_,_):- \+ (atom(LC); \+ atom(M)), !.
+maybe_export(LC,M,F,A):- LC==M, !, M:export(M:F/A).
+maybe_export(LC,_,F,A):- current_predicate(LC:F/A),!.
+maybe_export(LC,M,F,A):- 
+   LC:import(M:F/A),
+   (lmconfig:never_reexport_named(LC,F,A)-> true ; LC:export(M:F/A)).
 
-%:- set_prolog_flag(logicmoo_import_to_system, baseKB).
+:- set_prolog_flag(logicmoo_import_to_system, baseKB).
+
 all_source_file_predicates_are_exported(S,LC)
  :- 
- ignore(source_location(S,_);prolog_load_context(source,S)),
- ignore(prolog_load_context(module,LC)),
- (current_prolog_flag(logicmoo_import_to_system, BaseKB)->true;BaseKB=[]),
+ (ignore(source_location(S,_);prolog_load_context(source,S))),
+  ignore(prolog_load_context(module,LC)),
+ 
  forall(source_file(M:H,S),
- ignore((functor(H,F,A), 
-  \+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F),
-  \+ lmconfig:never_export_named(M,F,A),
+ ignore((functor(H,F,A),   
   %(module_property(M,exports(List))-> \+ member(F/A,List); true),
-
-  ignore(con_x_fail((atom(LC),atom(M),LC\==M, M:multifile(M:F/A),
-    M:export(M:F/A),ignore(atom_concat('$',_,F)),LC:import(M:F/A),LC:export(M:F/A)))),
-
-  ignore(con_x_fail(((\+ atom_concat('$',_,F),\+ atom_concat('__aux',_,F), 
-     (true->true;ignore(( \+ current_predicate(baseKB:F/A))))),
-     M:export(M:F/A),
-     LC:export(M:F/A)))),
-
-  ignore(con_x_fail(
-    (M\==BaseKB,
-     \+ atom_concat('$',_,F), 
-     \+ current_predicate(system:F/A), 
-     % ignore(( \+ current_predicate(baseKB:F/A))),
-     sexport(M:F/A))))))).
+  % M:public(M:F/A),
+  maybe_export(M,M,F,A),
+  maybe_export(LC,M,F,A),
+  (current_prolog_flag(logicmoo_import_to_system, BaseKB)-> maybe_export(BaseKB,M,F,A) ; true),
+  maybe_export(system,M,F,A)))).
 
 :- export(con_x_fail/1).
 :- meta_predicate(con_x_fail(:)).
+con_x_fail((G1,G2)):-!, con_x_fail(G1),con_x_fail(G2).
+con_x_fail(M:(G1,G2)):-!, con_x_fail(M:G1),con_x_fail(M:G2).
 con_x_fail(G):-catch(G,_,fail).
 
 :- meta_predicate(sexport(:)).

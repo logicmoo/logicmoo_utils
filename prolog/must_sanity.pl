@@ -56,6 +56,13 @@
 %
 
 must(Goal):- (Goal*->true;must_0(Goal)).
+
+keep_going(Goal):- how_must(keep_going, Goal).
+
+ignore_must(Goal):- how_must(fail, Goal).
+
+how_must(How, Goal):- locally(current_prolog_flag(runtime_must,How),Goal).
+
 must_0(Goal):- quietly(get_must(Goal,MGoal))-> call(MGoal).
 
 must_or_rtrace(P):- call(P) *-> true ; rtrace(P).
@@ -83,6 +90,7 @@ get_must(Goal,CGoal):-
 
 get_must_type(speed,Goal,Goal).
 get_must_type(warning,Goal,show_failure(Goal)).
+get_must_type(fail,Goal,Goal).
 get_must_type(rtrace,Goal,on_f_rtrace(Goal)).
 get_must_type(keep_going,Goal,must_keep_going(Goal)).
 get_must_type(retry,Goal,must_retry(Goal)).
