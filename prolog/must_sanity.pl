@@ -56,13 +56,6 @@
 %
 
 must(Goal):- (Goal*->true;must_0(Goal)).
-
-keep_going(Goal):- how_must(keep_going, Goal).
-
-ignore_must(Goal):- how_must(fail, Goal).
-
-how_must(How, Goal):- locally(current_prolog_flag(runtime_must,How),Goal).
-
 must_0(Goal):- quietly(get_must(Goal,MGoal))-> call(MGoal).
 
 must_or_rtrace(P):- call(P) *-> true ; rtrace(P).
@@ -104,11 +97,12 @@ must_retry(Call):-
       catch((ignore(rtrace(Call)),leash(+all),visible(+all),
         repeat,wdmsg(failed(Call)),trace,Call,fail),'$aborted',true))).
 
-must_keep_going(Goal):- set_prolog_flag(debug_on_error,false),
-  (catch(Goal,E,
+must_keep_going(Goal):- 
+ locally(set_prolog_flag(debug_on_error,false),
+  ((catch(Goal,E,
       xnotrace(((dumpST_error(sHOW_MUST_go_on_xI__xI__xI__xI__xI_(E,Goal)),ignore(rtrace(Goal)),badfood(Goal)))))
             *-> true ;
-              xnotrace(dumpST_error(sHOW_MUST_go_on_failed_F__A__I__L_(Goal))),ignore(rtrace(Goal)),badfood(Goal)).
+              xnotrace(dumpST_error(sHOW_MUST_go_on_failed_F__A__I__L_(Goal))),ignore(rtrace(Goal)),badfood(Goal)))).
 
 :- '$hide'(get_must/2).
 

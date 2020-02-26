@@ -406,6 +406,14 @@ ftrace(Goal):- restore_trace((
 
 
 
+how_must(How, Goal):- locally(set_prolog_flag(runtime_must,How),Goal).
+
+keep_going(Goal):- how_must(keep_going, Goal).
+
+ignore_must(Goal):- how_must(fail, Goal).
+
+
+
 :- ignore((source_location(S,_),prolog_load_context(module,M),module_property(M,class(library)),
  forall(source_file(M:H,S),
  ignore((functor(H,F,A),
