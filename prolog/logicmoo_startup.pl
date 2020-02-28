@@ -555,10 +555,11 @@ all_source_file_predicates_are_exported(S,LC)
   ignore(prolog_load_context(module,LC)),
  
  forall(source_file(M:H,S),
- ignore((functor(H,F,A),   
+ ignore((functor(H,F,A),  
+   \+ atom_concat(_,'__aux_',F),
   %(module_property(M,exports(List))-> \+ member(F/A,List); true),
   % M:public(M:F/A),
-  maybe_export(M,M,F,A),
+  notrace(catch(maybe_export(M,M,F,A),_,fail)),
   maybe_export(LC,M,F,A),
   (current_prolog_flag(logicmoo_import_to_system, BaseKB)-> maybe_export(BaseKB,M,F,A) ; true),
   maybe_export(system,M,F,A)))).

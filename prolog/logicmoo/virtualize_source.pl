@@ -97,8 +97,15 @@ get_current_clause(_).
      get_how_virtualize_file/2)).
 
 virtualize_alias(pfc,heads).
-virtualize_alias(prolog,false).
+virtualize_alias(full,heads).
+
+virtualize_alias(part,bodies).
 virtualize_alias(plmoo,bodies).
+virtualize_alias(true,bodies).
+
+virtualize_alias(none,false).
+virtualize_alias(prolog,false).
+
 
 is_pfcname(F) :- atom(F), \+ \+ (((atom_concat(_,'.pfc.pl',F);atom_concat(_,'_pfc.pl',F);atom_concat(_,'.clif',F);atom_concat(_,'.pfc',F)))).
 

@@ -372,12 +372,22 @@ matches_term0(Filter,Term):- atomic(Filter),!,contains_atom(Term,Filter).
 matches_term0(F/A,Term):- (var(A)->member(A,[0,1,2,3,4]);true), cfunctor(Filter,F,A), matches_term0(Filter,Term).
 matches_term0(Filter,Term):- sub_term(STerm,Term),nonvar(STerm),call(call,matches_term0(Filter,STerm)),!.
 
+hide_some_hiddens(P,P):- ((\+ compound(P));compound_name_arity(P,_,0)),!.
+hide_some_hiddens(pfc_hide(_),pfc_hide($)):-!.
+%hide_some_hiddens('{}'(_),'{}'($)):-!.
+hide_some_hiddens(S,M):- 
+   compound_name_arguments(S,F,Args),
+   must_maplist(hide_some_hiddens,Args,ArgsO),
+   compound_name_arguments(M,F,ArgsO),!.
 
-dmsg_pretty(In):- \+ \+  (portray_vars:pretty_numbervars(In, Info),dmsg(Info)).
 
-wdmsg_pretty(In):- \+ \+ (portray_vars:pretty_numbervars(In, Info),wdmsg(Info)).
+pretty_and_hide(In, Info):- portray_vars:pretty_numbervars(In,M),hide_some_hiddens(M,Info),!.
 
-wdmsg_pretty(F,In):- \+ \+ (portray_vars:pretty_numbervars(In, Info),wdmsg(F,Info)).
+dmsg_pretty(In):- \+ \+  (pretty_and_hide(In, Info),dmsg(Info)).
+
+wdmsg_pretty(In):- \+ \+ (pretty_and_hide(In, Info),wdmsg(Info)).
+
+wdmsg_pretty(F,In):- \+ \+ (pretty_and_hide(In, Info),wdmsg(F,Info)).
 
 %= 	 	 
 

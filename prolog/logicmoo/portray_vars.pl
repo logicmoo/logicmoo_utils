@@ -205,6 +205,7 @@ pretty1(Env=List):- compound(List),var(Env),List=[H|_],compound(H),H=bv(_,_), ma
 pretty1(debug_var(R,V)):- may_debug_var(R,V).
 pretty1(bv(R,V)):- may_debug_var(R,V).
 pretty1(isa(V,R)):- may_debug_var(R,V).
+pretty1(iza(V,R)):- may_debug_var(R,V).
 pretty1(H):-compound_name_arguments(H,_,ARGS),must_maplist_det(pretty1,ARGS).
 
 pretty1a(H):- pretty_enough(H),!.
@@ -231,6 +232,7 @@ maplist_not_tail(_,ArgS):- var(ArgS),!.
 maplist_not_tail(G,[X|ArgS]):-call(G,X),maplist_not_tail(G,ArgS).
 
 pretty2(H):- pretty_enough(H),!.
+pretty2(_).
 %pretty2([H|T]):-!,maplist_not_tail(pretty2,[H|T]).
 
 pretty2(H):- pretty2a(H),pretty2b(H).
@@ -240,7 +242,7 @@ pretty2a(H):-
   %  (A>1 -> may_debug_var(F,'_Param',P1) ; true),
    must_maplist_det(pretty1,[P1|ARGS]))),!. 
 
-pretty2b(H):-  
+pretty2b(H):- fail, 
  must_det((compound_name_arity(H,F,A),
    compound_name_arguments(H,F,[P1|ARGS]),   
    (A>1 -> may_debug_var(F,'_Param',P1) ; true),
@@ -265,7 +267,7 @@ pretty5(H):-
  must_det((compound_name_arity(H,F,A),
    compound_name_arguments(H,F,[P1|ARGS]),   
    arg(A,H,R),may_debug_var(F,'_Ret',R),   
-   nop(may_debug_var(F,'_Param',P1)),
+   may_debug_var(F,'_Param',P1),
    must_maplist_det(pretty5,[P1|ARGS]))),!. 
 
 atom_concat_or_rtrace_priv(X,Y,Z):- tracing->atom_concat(X,Y,Z);catch(atom_concat(X,Y,Z),_,break).

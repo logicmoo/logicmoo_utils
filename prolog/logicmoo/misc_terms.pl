@@ -242,6 +242,12 @@ is_true(B):-is_proof(B).
 is_proof(P):-compound(P),functor(P,ftProofFn,_).
 
 
+:- export(structureless/1).
+structureless(A) :- \+ compound(A),!.
+structureless(A) :- compound_name_arity(A,_,0),!.
+% structureless('$VAR'(_)).
+
+
 
 % What would be a good way to describe the manipulations?
 % Function: maptree func expr many
@@ -264,7 +270,7 @@ is_proof(P):-compound(P),functor(P,ftProofFn,_).
 % Maptree.
 %
 maptree(Pred,I,O):- call(Pred,I,O),!.
-maptree(_ ,I,O):- ( \+ compound(I) ),!, must(I=O).
+maptree(_ ,I,O):- structureless(I),!, must(I=O).
 maptree(Pred,[F|IL],LIST):- is_list([F|IL]), (maplist(maptree(Pred),[F|IL],LIST)),!.
 maptree(Pred,I,O):- I=..[F|IL], 
  (maplist(maptree(Pred),[F|IL],[FO|OL])),
@@ -322,7 +328,7 @@ conjuncts_to_list(Lit,[Lit]).
 
 
 
-pred_juncts_to_list(F,AB,ABL):- pred1_juncts_to_list(==(F),AB,ABL).
+pred_juncts_to_list(F,AB,ABL):- pred1_juncts_to_list(==(F),AB,ABL),!.
 
 :- export(pred1_juncts_to_list/3).
 

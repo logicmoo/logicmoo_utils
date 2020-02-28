@@ -166,7 +166,7 @@ baseKB:is_global_module(eggdrop).
 baseKB:is_global_module(parser_all).
 baseKB:is_global_module(parser_chat80).
 baseKB:is_global_module(mu).
-baseKB:is_global_module(parser_e2fc).
+baseKB:is_global_module(parser_e2c).
 baseKB:is_global_module(lmconf).
 baseKB:is_global_module(clpfd).
 %baseKB:is_global_module(user).
