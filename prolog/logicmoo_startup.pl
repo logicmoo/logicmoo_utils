@@ -34,7 +34,7 @@
 
 %:- use_module(library(logicmoo_utils_all)).
 :- create_prolog_flag(dmsg_level,filter,[type(term),keep(true)]).
-
+:- use_module(library(prolog_pack)).
 %=======================================
 % Utils
 %=======================================
@@ -292,7 +292,7 @@ user:expand_query(_Goal, _Expanded, _Bindings, _ExpandedBindings):-  run_pending
 %:- fixup_exports.
 
 :- if( app_argv1('--upgrade') ).
-:- whenever_flag_permits(run_network,pack_upgrade).
+:- whenever_flag_permits(run_network,logicmoo_update).
 :- endif.
 
 
@@ -423,14 +423,85 @@ iff_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
           all_source_file_predicates_are_exported/2)).
 
 :- meta_predicate(ignore_not_not(0)).
-:- export(pack_upgrade/0).
-pack_upgrade:- call((user:use_module(library(prolog_pack)),use_module(library(predicate_streams)), 
+
+:- export(logicmoo_update/0).
+
+teamspoon_pack(Pack):-
+  call((user:use_module(library(prolog_pack)))),
+  pack_property(Pack,home(Home)),once(sub_string(Home, _, _, _, 'github.com/TeamSPoon')).
+
+logicmoo_update:-  call((user:use_module(library(prolog_pack)))),
+    forall(teamspoon_pack(Pack),maybe_pack_upgrade(Pack)).
+/*
+pack_upgrade_wrong:- call((user:use_module(library(prolog_pack)),use_module(library(predicate_streams)), 
   call(call,
    with_input_from_predicate(({}/[X]>>(repeat,X='YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY')))),
     forall(call(call,prolog_pack:current_pack,Pack),maybe_pack_upgrade(Pack)))).
-
+*/
 maybe_pack_upgrade(Pack):- pack_property(Pack, directory(PackDir)),\+ access_file(PackDir,write),!.
-maybe_pack_upgrade(Pack):- pack_upgrade(Pack).
+maybe_pack_upgrade(Pack):- pack_soft_upgrade(Pack).
+
+
+%!  pack_soft_upgrade(+Pack) is semidet.
+%
+%   Try to upgrade the package Pack.
+%
+%   @tbd    Update dependencies when updating a pack from git?
+
+which_pack(Pack,Pack):- pack_property(Pack,_),!.
+which_pack(Dir,Pack):-  prolog_pack:pack_info(Pack, _, directory(Dir)).
+which_pack(Pack,Pack):- prolog_pack:pack_info(Pack, _, _).
+which_pack(Lib,Pack):-  pack_property(Pack,library(Lib)).
+which_pack(Home,Pack):- pack_property(Pack,home(Home)).
+
+:- export(pack_soft_upgrade/1).
+pack_soft_upgrade(Which) :- which_pack(Which,Pack)-> Which\==Pack,!,
+  pack_soft_upgrade(Pack).
+pack_soft_upgrade(Pack) :-
+   prolog_pack:(
+ 
+    (pack_info(Pack, _, directory(Dir));pack_property(Pack, directory(Dir))),
+    directory_file_path(Dir, '.git', GitDir),
+    exists_directory(GitDir),
+    !,
+
+    print_message(informational, pack(git_fetch(Dir))),
+    git([fetch], [ directory(Dir) ]),
+    git_describe(V0, [ directory(Dir) ]),
+    git_describe(V1, [ directory(Dir), commit('origin/master') ]),
+    (   V0 == V1
+    ->  print_message(informational, pack(up_to_date(Pack)))
+    ;   confirm(upgrade(Pack, V0, V1), yes, []),
+        git([merge, 'origin/master'], [ directory(Dir) ]),
+        pack_rebuild(Pack)
+    )).
+
+pack_soft_upgrade(Pack) :-  fail,
+   prolog_pack:(
+
+    once(pack_info(Pack, _, version(VersionAtom))),
+    atom_version(VersionAtom, Version),
+    pack_info(Pack, _, download(URL)),
+    (   wildcard_pattern(URL)
+    ->  true
+    ;   github_url(URL, _User, _Repo)
+    ),
+    !,
+    available_download_versions(URL, [Latest-LatestURL|_Versions]),
+    (   Latest @> Version
+    ->  confirm(upgrade(Pack, Version, Latest), yes, []),
+        pack_install(Pack,
+                     [ url(LatestURL),
+                       upgrade(true),
+                       pack(Pack)
+                     ])
+    ;   print_message(informational, pack(up_to_date(Pack)))
+    )).
+
+
+pack_soft_upgrade(Pack) :-
+    print_message(warning, pack(no_upgrade_info(Pack))).
+
 
 
 
