@@ -808,7 +808,7 @@ time_file_safe(F,INNER_XML):-exists_file_safe(F),!,time_file(F,INNER_XML).
 %
 % Global Pathname.
 %
-global_pathname(B,A):-absolute_file_name(B,A),!.
+global_pathname(B,A):- atom(B), absolute_file_name(B,A),!.
 global_pathname(B,A):-relative_pathname(B,A).
 
 
