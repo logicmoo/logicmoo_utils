@@ -248,6 +248,14 @@ structureless(A) :- compound_name_arity(A,_,0),!.
 % structureless('$VAR'(_)).
 
 
+sub_compound(_,LF):- \+ compound(LF),!,fail.
+sub_compound(X,X).
+sub_compound(X, Term) :-
+    (is_list(Term) ->
+     (member(E,Term), sub_compound(X,E)) ; 
+     (arg(_, Term, Arg), sub_compound(X, Arg))).
+
+
 
 % What would be a good way to describe the manipulations?
 % Function: maptree func expr many
@@ -786,7 +794,7 @@ nd_subst2( _X, _Sk, L, L ).
 %
 % Univ Term.
 %
-univ_term(P1,[FS|ArgS]):- compound(FS),!,append_term(FS,ArgS,P1).
+univ_term(P1,[FS|ArgS]):- compound(FS),!,append_termlist(FS,ArgS,P1).
 univ_term(P1,[FS|ArgS]):- univ_safe(P1 , [FS|ArgS]).
 
 
@@ -920,15 +928,16 @@ functor_h('$VAR'(Obj),F,A):- !, trace_or_throw(var_functor_h('$VAR'(Obj),F,A)).
 % functor_h(Obj,F,A):- var(Obj),!,(number(A)->functor(Obj,F,A);((current_predicate(F/A);throw(var_functor_h(Obj,F,A))))).
 
 functor_h(M:Obj,MF,A):-(callable(Obj);atom(M)),!,functor_h(Obj,F,A),(MF=F;MF=M:F).
-functor_h(F//A,F,Ap2):-number(A),!,Ap2 is A+2,( atom(F) ->  true ; current_predicate(F/Ap2)).
+functor_h(F//A,
+ F,Ap2):-number(A),!,Ap2 is A+2,( atom(F) ->  true ; current_predicate(F/Ap2)).
 functor_h(F/A,F,A):-number(A),!,( atom(F) ->  true ; current_predicate(F/A)).
 functor_h(Obj,F,A):-atom(F),strip_module(Obj,_M,P),functor(P,F,A).
 
 functor_h([L|Ist],F,A):- is_list([L|Ist]),!,var(F),L=F,length(Ist,A).
+functor_h(':-'(Obj,_),F,A):- nonvar(Obj), !,functor_h(Obj,F,A).
 functor_h(M:_,F,A):- atom(M),!, ( M=F -> current_predicate(F/A) ; current_predicate(M:F/A)).
 functor_h(':-'(Obj),F,A):- nonvar(Obj), !,functor_h(Obj,F,A).
 
-functor_h(':-'(Obj,_),F,A):- nonvar(Obj), !,functor_h(Obj,F,A).
 functor_h(Obj,F,0):- string(Obj),!,maybe_notrace(atom_string(F,Obj)).
 
 functor_h(Obj,Obj,0):- \+ compound(Obj),!.

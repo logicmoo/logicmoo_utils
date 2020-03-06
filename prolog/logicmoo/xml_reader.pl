@@ -30,8 +30,8 @@ get_sgml_parser_defs(
 
 
 
-%% ?- string_to_structure('<?xml version="1.0" encoding="ISO-8859-1"?>\n<aiml><p>hi</p></aiml>',X).
-%% ?- string_to_structure('<category><pattern>_ PLANETS</pattern></category>',X).
+% % ?- string_to_structure('<?xml version="1.0" encoding="ISO-8859-1"?>\n<aiml><p>hi</p></aiml>',X).
+% % ?- string_to_structure('<category><pattern>_ PLANETS</pattern></category>',X).
 
 
 on_end('aiml', _) :- !,
@@ -216,7 +216,7 @@ load_inner_aiml_w_lineno(_SrcFile,_OuterTag,_Parent,_Attributes,_Ctx,Atom,Atom):
 load_inner_aiml_w_lineno(SrcFile,OuterTag,Parent,Attributes,Ctx,[H|T],LL):-!,
       must_maplist(load_inner_aiml_w_lineno(SrcFile,OuterTag,Parent,Attributes,Ctx),[H|T],LL),!.
 
-%% offset
+% % offset
 load_inner_aiml_w_lineno(SrcFile,[OuterTag|PREV],Parent,Attributes,Ctx,element(Tag,Attribs,ContentIn),element(Tag,NewAttribs,ContentOut)):-
    Context=[Tag,OuterTag|_],
    MATCH = lineInfoElement(SrcFile,Line:Offset, Context, element(Tag, Attribs, no_content_yet)),
@@ -224,7 +224,7 @@ load_inner_aiml_w_lineno(SrcFile,[OuterTag|PREV],Parent,Attributes,Ctx,element(T
    ignore(Line = nonfile),
    ignore(Offset = nonfile),
    appendAttributes(Ctx,Attributes,Attribs,RightAttribs),
-   %% Src = element(Tag,Attribs,ContentIn),
+   % % Src = element(Tag,Attribs,ContentIn),
    Src = nosrc,
    appendAttributes(Ctx,[srcfile=SrcFile:Line-Offset,srcinfo=Src],RightAttribs,NewAttribs),
    ignore(retract(MATCH)),

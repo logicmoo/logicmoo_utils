@@ -1103,7 +1103,7 @@ term_matches_hb(D,+(C),H,B):-nonvar(C),!, term_matches_hb(D,C,H,B).
 term_matches_hb(_,module(M),H,_):-!,predicate_property(H,imported_from(M)).
 term_matches_hb(D,h(P),H,_):-!,term_matches_hb(D,P,H,666666).
 term_matches_hb(D,b(P),_,B):-!,term_matches_hb(D,P,B,666666).
-term_matches_hb(_,string(HO),H,B):- nonvar(HO),logicmoo_util_first:term_to_string(HO,HS),!, with_output_to(string(H1B1),write_canonical((H:-B))), (sub_atom_icasechk(HS,_,H1B1);sub_atom_icasechk(H1B1,_,HS)),!.
+term_matches_hb(_,string(HO),H,B):- nonvar(HO),any_to_atom(HO,HS),!, with_output_to(string(H1B1),write_canonical((H:-B))), (sub_atom_icasechk(HS,_,H1B1);sub_atom_icasechk(H1B1,_,HS)),!.
 term_matches_hb(_,depth(Depth,HO),H,B):- term_matches_hb(Depth,HO,H,B).
 term_matches_hb(D,contains(HO),H,B):- !,term_matches_hb(D,string(HO),H,B).
 term_matches_hb(D,F/A,H,B):-atom(F),var(A),!,term_matches_hb(D,functor(F),H,B).
