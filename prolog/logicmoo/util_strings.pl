@@ -606,7 +606,7 @@ all_upper_atom(X):-toUppercase(X,N),!,N=X.
 % Atom Contains.
 %
 %
-atom_contains(F,X):- on_x_debug(sub_string(F,_,_,_,X)).
+atom_contains(F,X):- atomic(F),on_x_debug(sub_string(F,_,_,_,X)).
 % atom_contains(F0,C0):- must((any_to_atom(F0,F),!,any_to_atom(C0,C))),!,sub_string(F,_,_,_,C).
 
 
@@ -647,8 +647,8 @@ atomic_list_concat_safe([V],V):-!.
 string_or_atom_concat(A,B,C):- \+ string(A),\+ string(B),\+ string(C),!, atom_concat(A,B,C).
 string_or_atom_concat(A,B,C):-string_concat(A,B,C).
 
-sub_string_or_atom(V, NBefore, Len, NumAfter, Atom):- (atom(V);atom(V)),!,sub_atom(V, NBefore, Len, NumAfter, Atom).
-sub_string_or_atom(V, NBefore, Len, NumAfter, Atom):- sub_string(V, NBefore, Len, NumAfter, Atom).
+sub_string_or_atom(V, NBefore, Len, NumAfter, Atom):- (atom(V);atom(Atom)),!,sub_atom(V, NBefore, Len, NumAfter, Atom).
+sub_string_or_atom(V, NBefore, Len, NumAfter, Atom):- assertion(string(V);string(Atom)),sub_string(V, NBefore, Len, NumAfter, Atom).
 
 
 %= 	 	 
