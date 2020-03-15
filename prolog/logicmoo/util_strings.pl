@@ -606,7 +606,7 @@ all_upper_atom(X):-toUppercase(X,N),!,N=X.
 % Atom Contains.
 %
 %
-atom_contains(F,X):- atomic(F),on_x_debug(sub_string(F,_,_,_,X)).
+atom_contains(F,X):- atomic(F),F\==[],on_x_debug(sub_string(F,_,_,_,X)).
 % atom_contains(F0,C0):- must((any_to_atom(F0,F),!,any_to_atom(C0,C))),!,sub_string(F,_,_,_,C).
 
 
