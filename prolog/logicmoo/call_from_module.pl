@@ -259,7 +259,7 @@ module_sanity_check(NewModule):-
 %
 :- meta_predicate with_source_module(+,:).
 with_source_module(NewModule,Goal):-  
-  module_sanity_check(NewModule),
+  nop(module_sanity_check(NewModule)),
    '$current_source_module'(OldModule),
    with_source_module(NewModule,OldModule,Goal).
 
