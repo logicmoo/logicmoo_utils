@@ -6,6 +6,7 @@
   toCamelAtom0/2,
   simpler_textname/2,simpler_textname/3]).
 :- set_module(class(library)).
+:- use_module(util_varnames,[get_var_name/2]).
 /*  Logicmoo Debug Tools
 % ===================================================================
 % File 'logicmoo_util_varnames.pl'

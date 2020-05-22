@@ -424,7 +424,7 @@ ignore_must(Goal):- how_must(fail, Goal).
 :- fixup_exports.
 :- totally_hide('$toplevel':save_debug).
 :- totally_hide('$toplevel':toplevel_call/1).
-:- totally_hide('$toplevel':residue_vars(_,_)).
+%:- totally_hide('$toplevel':residue_vars(_,_)).
 :- totally_hide('$toplevel':save_debug).
 :- totally_hide('$toplevel':no_lco).
 

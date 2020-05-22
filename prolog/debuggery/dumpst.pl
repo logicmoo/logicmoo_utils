@@ -310,8 +310,8 @@ if_defined_mesg_color(G,C):- current_predicate(mesg_color/2),mesg_color(G,C).
 fdmsg1(txt(S)):-'format'(S,[]),!.
 fdmsg1(level=L):-'format'('(~q)',[L]),!.
 fdmsg1(context_module=G):- simplify_m(G,M),!,if_defined_mesg_color(G,Ctrl),ansicall(Ctrl,format('[~w]',[M])),!.
-fdmsg1(has_alternatives=G):- (G==false->true;'format'('<*>',[])),!.
-fdmsg1(hidden=G):- (G==false->true;'format'('$',[])),!.
+fdmsg1(has_alternatives=G):- (G==(false)->true;'format'('<*>',[])),!.
+fdmsg1(hidden=G):- (G==(false)->true;'format'('$',[])),!.
 fdmsg1(goal=G):- do_fdmsg1(G).
 fdmsg1(clause=[F,L]):- directory_file_path(_,FF,F),'format'('  %  ~w:~w: ',[FF,L]),!.
 fdmsg1(clause=[F,L]):- fresh_line,'format'('%  ~w:~w: ',[F,L]),!.

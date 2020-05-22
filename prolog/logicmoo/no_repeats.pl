@@ -365,11 +365,11 @@ no_repeats_findall5(Vs,Call,ExitDET,USE,NEW):-
     nb_setarg(1, HOLDER, NEW)))
       ->
        USE=true;
-       ((USE=false,CONS=NEW))
+       ((USE=(false),CONS=NEW))
        )),
    deterministic(ExitDET),true))
     *-> true;
-     (NEW=[],ExitDET=true,USE=false)).
+     (NEW=[],ExitDET=true,USE=(false))).
 
 :- export(no_repeats_save/4).
 :- meta_predicate no_repeats_save(+,0,-,-).

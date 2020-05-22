@@ -140,8 +140,8 @@ variant_i(A,B):- term_variables(A,AV),AV\==[],
 
 % % % OFF :- system:use_module(library(gvar_lib)).
 
-av_comp(A,B):-oo_get_attrs(A,AA),oo_get_attrs(B,BB),AA=@=BB,!.
-av_comp(A,B):-oo_get_attrs(A,attr(_,_,AB)),!,AB\==[],oo_get_attrs(B,attr(_,_,AB)).
+av_comp(A,B):-get_attrs(A,AA),get_attrs(B,BB),AA=@=BB,!.
+av_comp(A,B):-get_attrs(A,attr(_,_,AB1)),!,AB1\==[],get_attrs(B,attr(_,_,AB2)),!,AB1==AB2.
 av_comp(_A,_B):-!.
 
 :- fixup_exports.

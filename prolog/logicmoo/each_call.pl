@@ -122,21 +122,23 @@ each_call_cleanup(Setup,Goal,Cleanup):-
 		 *	  UTILITIES		*
 		 *******************************/
 
-ecc:throw_failure(Why):- throw(error(assertion_error(Why),_)).
+:- public(ecc_throw_failure/1).
+
+ecc_throw_failure(Why):- throw(error(assertion_error(Why),_)).
 
 pt1(HND) :- 
    clause(ecc:'$each_call_cleanup'(Setup,Cleanup),true,HND) 
    ->
    ('$sig_atomic'(Setup) -> 
      asserta(ecc:'$each_call_undo'(HND,Cleanup)) ; 
-       ecc:throw_failure(failed_setup(Setup)))
+       ecc_throw_failure(failed_setup(Setup)))
    ; 
-   ecc:throw_failure(pt1(HND)).
+   ecc_throw_failure(pt1(HND)).
 
 pt2(HND) :- 
   retract(ecc:'$each_call_undo'(HND,Cleanup)) ->
-    ('$sig_atomic'(Cleanup)->true ;ecc:throw_failure(failed_cleanup(Cleanup)));
-      ecc:throw_failure(failed('$each_call_undo'(HND))).
+    ('$sig_atomic'(Cleanup)->true ;ecc_throw_failure(failed_cleanup(Cleanup)));
+      ecc_throw_failure(failed('$each_call_undo'(HND))).
 
 :- if(true).
 :- system:import(each_call_cleanup/3).

@@ -14,6 +14,7 @@
 
 :- set_module(class(library)).
 
+:- use_module(util_varnames,[get_var_name/2]).
 
 
 %% lock_vars( :TermVar) is semidet.
@@ -80,7 +81,7 @@ locking_verbatum_var('avar'(_,_)).
 
 :- thread_local(t_l:varname_lock/1).
 
-unify_name_based0(Var1, Var2):- \+ atom(Var1),ger_var_name_or_ref(Var1,Name),!,unify_name_based0(Name, Var2).
+unify_name_based0(Var1, Var2):- \+ atom(Var1),variable_name_or_ref(Var1,Name),!,unify_name_based0(Name, Var2).
 unify_name_based0(Name1, Var):- if_defined(t_l:var_locked(What),fail),!,((get_var_name(Var,Name2),Name1==Name2)->true;call(What,Var)).
 unify_name_based0(_Form, _OtherValue):- local_override(no_kif_var_coroutines,G),!,call(G).
 unify_name_based0(Name1, Var):-  get_var_name(Var,Name2),!,Name1=Name2,!.

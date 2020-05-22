@@ -270,7 +270,8 @@ get_var_name1('avar'(Att3),Name):- !, get_var_name1(Att3,Name).
 get_var_name1('avar'(Name,Att3),Value):- !, get_var_name1('$VAR'(Name),Value); get_var_name1('avar'(Att3),Value).
 get_var_name1(att(vn,Name,_),Name):- !.
 get_var_name1(att(_,_,Rest),Name):- Rest\==[],get_var_name1(Rest,Name).
-get_var_name1(Var,Name):- oo_get_attr(Var, vn, Name),!. % ground(Name),!.
+get_var_name1(Var,Name):- get_attr(Var, vn, Name),!. % ground(Name),!.
+get_var_name1(Var,Name):- catch(call(call,oo_get_attr(Var, vn, Name)),_,fail),!. % ground(Name),!.
 get_var_name1(Var,Name):- nb_current('$variable_names', Vs),varname_of(Vs,Var,Name),!.
 
 

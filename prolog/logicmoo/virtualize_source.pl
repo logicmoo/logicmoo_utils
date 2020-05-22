@@ -625,7 +625,7 @@ xform(mpred_prop(M,F,A,P),mpred_prop(M,F,A,P)):-!.
 
 
 xform(PC,mpred_prop(M,F,A,P)):- current_assertion_module(M), PC=..[P,C],is_reltype(P),!,xform_arity(C,F,A).
-xform(PFA,mpred_prop(M,F,A,P)):- defaultAssertMt(M),PFA=..[P,F,A],is_reltype(P),!.
+xform(PFA,mpred_prop(M,F,A,P)):- if_defined(defaultAssertMt(M),fail),PFA=..[P,F,A],is_reltype(P),!.
 xform(In,PART):- map_compound_args(xform,In,PART),!.
 
 %:-multifile(baseKB:ttRelationType/1).

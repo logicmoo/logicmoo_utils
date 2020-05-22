@@ -176,9 +176,9 @@
 % % % OFF :- system:reexport(library(logicmoo/lockable_vars)).
 
 :-multifile(baseKB:first_std_provider/3).
-:-multifile(baseKB:next_std_provider/3).
 :-dynamic(baseKB:first_std_provider/3).
-:-dynamic(baseKB:next_std_provider/3).
+:-multifile(baseKB:next_std_provider/2).
+:-dynamic(baseKB:next_std_provider/2).
 
 baseKB:first_std_provider(_,_,mpred_op_prolog).
 
@@ -212,7 +212,7 @@ clause_safe(H,B):-predicate_property(H,number_of_clauses(C)),C>0,system:clause(H
 :- meta_predicate(if_flag_true(:,:)).
 if_flag_true(TF,Goal):-
   (current_prolog_flag(TF,F) -> 
-    (F\=false -> find_and_call(Goal); true);
+    (F\=(false) -> find_and_call(Goal); true);
    (find_and_call(TF)->find_and_call(Goal);true)).
 
 /*
@@ -725,6 +725,8 @@ clause_i(H,B):- clause_i(H,B,_).
 % TODO track which predicate have attributeds vars
 clause_i(H0,B0,Ref):- \+ current_prolog_flag(assert_attvars,true) ,!, system:clause(H0,B0,Ref).
 clause_i(H0,B0,Ref):- clause_attv(H0,B0,Ref).
+
+:- dynamic(system:check_never_assert/1).
 
 assert_i(X):- check_never_assert(X),fail.
 assert_i(HB):- clausify_attributes(HB,CL),assert(CL).

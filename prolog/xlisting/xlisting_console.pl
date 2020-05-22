@@ -339,6 +339,26 @@ print_clause_properties(REF, Out) :-
 %
 make_searchable_index(PI):- forall(to_matcher_pi(PI,H),forall(clause(H,B,Ref),make_searchable_ref((H:-B),Ref))).
 
+to_matcher_pi(I,O):- strip_module(I,M,P),to_matcher_pi(M,P,O).
+to_matcher_pi(M,I,O):-var(I),!,trace_or_throw(var_to_matcher_pi(M,I,O)).
+to_matcher_pi(_,M:PI, M:Head) :- !,
+	to_matcher_pi(M,PI, Head).
+to_matcher_pi(M,Name, M:Head) :- atom(Name), !, current_predicate(M:Name/Arity),functor(Head, Name, Arity).
+to_matcher_pi(M,Name/Arity, Head) :- var(Arity),!, current_predicate(M:Name/Arity),
+	functor(Head, Name, Arity).
+to_matcher_pi(M,Name//DCGArity, M:Term) :- 
+        var(DCGArity),!,
+        current_predicate(Name/Arity),  Arity>=2,
+	functor(Term, Name, Arity).
+to_matcher_pi(M,Name//DCGArity, M:Term) :- 
+        between(0,40,DCGArity),!,
+        current_predicate(Name/Arity),
+	plus(DCGArity,2,Arity),
+	functor(Term, Name, Arity).
+to_matcher_pi(M,Head, M:Head).
+
+
+
 
 %= 	 	 
 
@@ -772,7 +792,7 @@ xlisting_0(Match):- is_list(Match),!,must_maplist(xlisting_0,Match),!.
 xlisting_0(M:P):- atom(M),'$current_source_module'(W), 
    locally(before_after('$set_source_module'(M),
                     '$set_source_module'(W)),
-          xlisting_a(P)),!.
+          xlisting_0a(P)),!.
 xlisting_0(Match):- 
    xlisting_0a(Match).
 
@@ -1255,7 +1275,7 @@ real_list_undefined(A):-
         ;   print_message(warning, check(undefined_predicates)),
             keysort(E, F),
             group_pairs_by_key(F, G),
-            check:maplist(report_undefined, G)
+            prolog_autoload:maplist(report_undefined, G)
         ).
 
 
@@ -1382,12 +1402,14 @@ portray_hbr(M:P,M:predicate_property(P,Props),_):- (atom(P);compound(P)),
        NEWH = Props,
        in_cmt(portray_one_line(NEWH)),!.
 
-portray_hbr(H,B,R):- var(R), clause_u(H,B,R), nonvar(R),!, portray_hbr(H,B,R).
+portray_hbr(H,B,R):- var(R), clause_u_here(H,B,R), nonvar(R),!, portray_hbr(H,B,R).
 portray_hbr(H,B,in_cmt(NV)):- in_cmt(portray_hbr(H,B,NV)),!.
 portray_hbr(H,B,R):- nonvar(R),catch(clause_property(R,module(M)),_,fail),
   (((prolog_listing:list_clause(M:H,B,R,_Soure,[source(true)])));
      ((prolog_listing:list_clause(_,_,R,_Soure,[source(true)])))),!.
 portray_hbr(H,B,R):- portray_refinfo(R),portray_hb1(H,B).
+
+clause_u_here(H,B,R):- catch(call(call,clause_u(H,B,R)),_,clause(H,B,R)).
 
 portray_refinfo(R):- (var(R) ; R == 0),!.
 portray_refinfo(R):- \+ catch(clause_property(R,module(_)),_,fail), in_cmt(format('Ref: ~p',[R])),!.
@@ -1629,7 +1651,7 @@ get_print_mode(text).
 this_http_current_request(Request) :-
      current_output(CGI),
     http_stream:is_cgi_stream(CGI),
-    cgi_property(CGI, request(Request)).
+    http_stream:cgi_property(CGI, request(Request)).
 
 :- if(false).
 

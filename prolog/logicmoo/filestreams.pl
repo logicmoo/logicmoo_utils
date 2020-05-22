@@ -286,14 +286,17 @@ file_open_read(File,In):-open(File,read,In,[]),!,see(In),current_input(In).
 */
 
 % :- module(http_ssl_plugin, []).
-% % % OFF :- system:use_module(library(ssl),[]).
-
+% % % OFF 
+:- if(exists_source(library(ssl))).
+:- system:use_module(library(ssl),[]).
+:- endif.
 
 % % % OFF :- system:use_module(library(socket),[]).
 % % % OFF :- system:use_module(library(debug),[]).
 % % % OFF :- system:use_module(library(option),[]).
 % % % OFF :- system:use_module(library(http/thread_httpd),[]).
-% % % OFF :- system:use_module(library(http/http_header)).
+% % % OFF 
+:- system:use_module(library(http/http_header)).
 
 /* Part of LogicMOO Base SSL plugin for HTTP libraries
 
@@ -445,8 +448,12 @@ ssl_protocol_hook(Parts, PlainStreamPair, StreamPair, Options) :-
         stream_pair(PlainStreamPair, PlainIn, PlainOut),
         catch(ssl_negotiate(SSL, PlainIn, PlainOut, In, Out),
               Exception,
-              ( ssl_exit(SSL), throw(Exception)) ),
+              ( ssl_exit(SSL, PlainIn, PlainOut, In, Out), throw(Exception)) ),
         stream_pair(StreamPair, In, Out).
+
+ssl_exit(SSL, _PlainIn, _PlainOut, In, Out):- safely_try_close(Out),safely_try_close(In),safely_try_close(SSL).
+
+safely_try_close(Out):- ignore(catch(close(Out),_,true)).
 
 %	http:open_options(Parts, Options) is nondet.
 %  

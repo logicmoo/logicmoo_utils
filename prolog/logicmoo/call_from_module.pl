@@ -179,8 +179,9 @@ baseKB:is_global_module(clpfd).
 
 
 global_module(M):- baseKB:is_global_module(M),!.
-global_module(M):- assertz(baseKB:is_promiscuous_module(M)),
-     \+ (baseKB:is_promiscuous_module(P), \+ baseKB:is_global_module(P,M,end)).
+global_module(M):- 
+     \+ (baseKB:is_promiscuous_module(M), \+ baseKB:is_global_module(M)),
+     assertz(baseKB:is_promiscuous_module(M)).
 
 promiscuous_module(M):- baseKB:is_promiscuous_module(M),!.
 promiscuous_module(M):- 

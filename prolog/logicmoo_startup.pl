@@ -593,6 +593,8 @@ all_source_file_predicates_are_exported:-
  forall((TIM\==LC,TIM\==user,module_property(TIM,file(S))),all_source_file_predicates_are_exported(S,TIM)).
 
 
+:- dynamic(lmconfig:never_export_named/3).
+:- public(lmconfig:never_export_named/3).
 
 lmconfig:never_export_named(_,attr_unify_hook,2).
 lmconfig:never_export_named(_,attribute_goals,3).
@@ -793,7 +795,7 @@ logicmoo_base_port(Base):- getenv_or('LOGICMOO_BASE_PORT',Base,3000),!.
 % ==============================================
 :- '$hide'('$toplevel':restore_debug).
 :- '$hide'('$toplevel':save_debug).
-:- '$hide'('$toplevel':residue_vars/2).
+%:- '$hide'('$toplevel':residue_vars/2).
 :- '$hide'('system':deterministic/1).
 :- '$hide'(toplevel_call/2).
 :- '$hide'('$toplevel':'$query_loop'/0).
@@ -808,7 +810,7 @@ logicmoo_base_port(Base):- getenv_or('LOGICMOO_BASE_PORT',Base,3000),!.
 :- meta_predicate '$attvar':run_crv(0,*,*,*).
 :- meta_predicate '$expand':expand_term_list(4,*,*,*,*).
 :- meta_predicate '$parms':cached_library_directory(*,0,*).
-:- meta_predicate '$toplevel':residue_vars(0,-).
+%:- meta_predicate '$toplevel':residue_vars(0,-).
 :- meta_predicate '$toplevel':toplevel_call(0).
 :- meta_predicate '$toplevel':run_initialize(0,*).
 % :- meta_predicate '$toplevel':run_init_goal(0,*).

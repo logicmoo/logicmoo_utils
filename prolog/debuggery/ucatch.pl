@@ -187,7 +187,7 @@ hide_non_user_console:-current_input(In),stream_property(In, close_on_exec(true)
 		catchv(0, ?, 0),
 
 		if_defined(:),
-		if_defined(:, 0),
+		if_defined(+, 0),
 		ddmsg_call(0),
 
                 on_xf_log_cont(0),
@@ -1719,6 +1719,8 @@ allow_unsafe_code :- fail.
 
 unsafe_safe(_,O):- \+ allow_unsafe_code, !, call(O).
 unsafe_safe(N,O):- on_diff_throw(N,O).
+
+on_diff_throw(_G1,G2):- call(G2).
 
 :- export(need_speed/0).
 need_speed:-current_prolog_flag(unsafe_speedups , true) .

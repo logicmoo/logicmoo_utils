@@ -27,7 +27,7 @@ decl_kb_local/3,
 decl_kb_type/4,
 predicate_m_f_a_decl/4,
 do_import/4,
-kb_local/1,
+(kb_local)/1,
 (kb_global)/1,
 (kb_local)/1,
 (kb_shared)/1,
@@ -37,6 +37,8 @@ make_as_dynamic/4
 :- set_module(class(library)).
 % % % OFF :- system:reexport(library(must_sanity)).
 % % % OFF :- system:reexport(library(logicmoo/no_loops)).
+
+:- use_module(library(logicmoo/no_loops),[is_parent_goal/1,is_parent_goal/2]).
 
 :- meta_predicate decl_as(*,+).
 :- meta_predicate decl_as_rev(+,*).
@@ -85,13 +87,13 @@ make_as_dynamic/4
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_structs.pl
 :- export((	% uses_predicate/3,
          uses_undefined_hook/0,
-         install_retry_undefined/2,
+         install_retry_undefined/2
          % uses_predicate/5,
          %     retry_undefined/3,
-         is_parent_goal/1,
-         is_parent_goal/2,
-         is_parent_goal/1,
-         is_parent_goal/2
+         
+         
+         
+         
 )).
 
 :- thread_local(was_prolog_flag/1).
@@ -105,12 +107,11 @@ make_as_dynamic/4
    uses_undefined_hook/0,				
    uses_predicate/5,
    retry_undefined/3,
-   is_parent_goal/1,
+   
    install_retry_undefined/2,
-   is_parent_goal/2,
-   is_parent_goal/1,
-   get_retry_undefined_hook/2,
-   is_parent_goal/2)).
+   
+   
+   get_retry_undefined_hook/2)).
 
 :- dynamic(ru:retry_undefined_hook/2).
 
@@ -190,7 +191,7 @@ uses_predicate(_DEF,_,_, (:), _, error) :- !. % ,dumpST_dbreak.
 % uses_predicate(_DEF,_,M,F,A,R):- prolog_current_frame(FR), functor(P,F,A),(prolog_frame_attribute(FR,parent_goal,predicate_property(M:P,_))),!,R=error.
 uses_predicate(_DEF,_,Module,Name,Arity,Action) :-
       current_prolog_flag(autoload, true),
-	'$autoload'(Module, Name, Arity), !,
+	Module:'$autoload'(Module, Name, Arity), !,
 	Action = retry.
 
 
@@ -310,9 +311,9 @@ uses_undefined_hook(baseKB).
 
 user_exception_undefined_predicate(CM,M,F,A,ActionO):- 
   \+ prolog_load_context(reloading,true),
-  current_prolog_flag(retry_undefined, Was), Was \== false, Was \== none,
+  current_prolog_flag(retry_undefined, Was), Was \== (false), Was \== none,
   get_retry_undefined_hook(M,Setting),!, Setting\==error,    
-   CM:setup_call_cleanup(set_prolog_flag(retry_undefined, false),
+   CM:setup_call_cleanup(set_prolog_flag(retry_undefined, (false)),
                       (uses_predicate(Setting,CM,M,F,A, ActionO), ActionO \== error),
                       set_prolog_flag(retry_undefined, Was)),!.
 
@@ -350,7 +351,7 @@ now_inherit_above(_Reason,baseKB,F,A):- !,
      ignore((( \+ (defaultAssertMt(CallerMt),CallerMt\==baseKB,now_inherit_above(_Reason,CallerMt,F,A) )))).
 */
 now_inherit_above(Reason,abox,F,A):-  
-       !, must(defaultAssertMt(CallerMt)),
+       !, must(call(call,defaultAssertMt(CallerMt))),
        sanity(CallerMt\=abox),!,
        now_inherit_above(Reason,CallerMt,F,A).
 
@@ -430,7 +431,7 @@ system:do_call_inherited(MtAbove,Query):-
    functor(Query,F,A) -> create_predicate_inheritance(do_call_inherited(MtAbove,Query),MtAbove,F,A) -> fail.
 
 system:do_call_inherited(MtAbove,Query):- !, on_x_debug(MtAbove:Query).
-system:do_call_inherited(MtAbove,Query):- ireq(MtAbove:Query).
+system:do_call_inherited(MtAbove,Query):- on_x_debug(call(call,ireq(MtAbove:Query))).
   
 
 
