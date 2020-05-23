@@ -58,7 +58,9 @@
 must(Goal):- (Goal*->true;must_0(Goal)).
 must_0(Goal):- quietly(get_must(Goal,MGoal))-> call(MGoal).
 
-must_or_rtrace(P):- call(P) *-> true ; rtrace(P).
+must_or_rtrace((G1,G2)):- !, must_or_rtrace(G1),must_or_rtrace(G2).
+must_or_rtrace(G):- get_must_l(G,Must),!,call(Must).
+must_or_rtrace(G):- catch(G,Err,(dmsg(Err->G),ignore(rtrace(G)),throw(Err))) *->true; ftrace(G).
 
 %% get_must( ?Goal, ?CGoal) is semidet.
 %
@@ -74,7 +76,9 @@ get_must(Goal,CGoal):- hide_non_user_console,!,get_must_type(rtrace,Goal,CGoal).
 get_must(Goal,CGoal):- current_prolog_flag(runtime_must,How), How \== none, !, get_must_type(How,Goal,CGoal).
 get_must(Goal,CGoal):- current_prolog_flag(runtime_debug,2), !, 
    (CGoal = (on_x_debug(Goal) *-> true; debugCallWhy(failed(on_f_debug(Goal)),Goal))).
-get_must(Goal,CGoal):-
+get_must(Goal,CGoal):- get_must_l(Goal,CGoal).
+
+get_must_l(Goal,CGoal):-
    (CGoal = (catchv(Goal,E,
      ignore_each(((dumpST_error(must_ERROR(E,Goal)), %set_prolog_flag(debug_on_error,true),
          rtrace(Goal),nortrace,dtrace(Goal),badfood(Goal)))))
