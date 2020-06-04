@@ -139,7 +139,7 @@ update_packs:-
 :- discontiguous logicmoo_utils_all:'$exported_op'/3.
 :- system:reexport(library(logicmoo_common)).
 
-:- pack_list_installed.
+% :- pack_list_installed.
 
 
 % :- predicate_inheritance:kb_global(plunit:loading_unit/4).

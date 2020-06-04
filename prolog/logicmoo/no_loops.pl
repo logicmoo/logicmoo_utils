@@ -14,7 +14,8 @@
             transitive/3,
             transitive_except/4,
             transitive_lc/3,
-            is_parent_goal/2,
+          is_parent_goal/1,
+          is_parent_goal/2,
             lc_tcall/1
           ]).
 
@@ -310,7 +311,7 @@ lco_goal_expansion(B,A):-
 lco_goal_expansion(A,A).
 
 :- if(current_predicate(fixup_exports/0)).
-:- fixup_exports.
+%:- fixup_exports.
 :- endif.
 
 :- multifile system:goal_expansion/4.

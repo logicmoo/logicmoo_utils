@@ -30,8 +30,8 @@ do_import/4,
 (kb_local)/1,
 (kb_global)/1,
 (kb_local)/1,
-(kb_shared)/1,
-make_as_dynamic/4
+%make_as_dynamic/4,
+(kb_shared)/1
 ]).
 
 :- set_module(class(library)).
@@ -689,7 +689,7 @@ expand_already_decl(P,F,A,Out):- lmcache:already_decl(kb_global,M,F,A),Out=':'(M
 expand_already_decl(P,F,A,Out):- lmcache:already_decl(kb_shared,M,F,A),Out=':'(M,P),!.
 
 
-:- fixup_exports.
+% :- fixup_exports.
 
 :- multifile(lmcache:was_retry_undefined/2).
 :- dynamic(lmcache:was_retry_undefined/2).
@@ -711,6 +711,11 @@ user:exception(undefined_predicate, M:F/A, ActionO):- !, strip_module(F/A,CM,_),
   user_exception_undefined_predicate(CM,M,F,A, ActionO).
 
 */
+
+%:- kb_shared(system:rtArgsVerbatum/1).
+%:- kb_shared(system:prologBuiltin/1).
+%baseKB:module(_X,_Y).
+
 
 :- set_prolog_flag(predicate_inheritance,false).
 
