@@ -1313,7 +1313,7 @@ traceok(X):-  tlbugger:wastracing -> call_cleanup((dtrace,call(X)),notrace) ; ca
 %
 % Show Entry.
 %
-show_entry(Why,Call):-debugm1(Why,show_entry(Call)),show_call(Why,Call).
+show_entry(Why,Call):-debugm(Why,show_entry(Call)),show_call(Why,Call).
 
 
 
@@ -1341,7 +1341,7 @@ dcall0(Goal):- Goal. % on_x_debug(Goal). % dmsg(show_call(why,Goal)),Goal.
 %
 % Show Call.
 %
-show_call(Why,Goal):- show_success(Why,Goal)*->true;(dmsg(show_failure(Why,Goal)),!,fail).
+show_call(Why,Goal):- show_success(Why,Goal)*->true;(dmsg(sc_failure(Why,Goal)),!,fail).
 
 
 %% show_call( :Goal) is semidet.
@@ -1358,7 +1358,7 @@ show_call(Goal):- strip_module(Goal,Why,_),show_call(Why,Goal).
 %
 % Show Failure.
 %
-show_failure(Why,Goal):-one_must(dcall0(Goal),(debugm1(Why,sc_failed(Why,Goal)),!,fail)).
+show_failure(Why,Goal):-one_must(dcall0(Goal),(ignore(dumpST),debugm1(Why,show_failed(Why,Goal)),break,!,fail)).
 
 
 
@@ -1375,12 +1375,10 @@ show_failure(Goal):- strip_module(Goal,Why,_),show_failure(Why,Goal).
 %
 
 % show_success(_Why,Goal):-!,Goal.
-show_success(Why,Goal):- cyclic_term(Goal),dumpST,
- ((cyclic_term(Goal)->  dmsg(show_success(Why,cyclic_term)) ; 
-  \+ \+ zotrace(debugm(Why,sc_success(Why,Goal))))).
-show_success(Why,Goal):-  dcall0(Goal), 
- zotrace((cyclic_term(Goal)->  dmsg(show_success(Why,cyclic_term)) ; 
-  \+ \+ zotrace(debugm1(Why,c_success(Why,Goal))))).
+show_success(Why,Goal):- 
+  zotrace((ignore((cyclic_term(Goal),dumpST, dmsg(try_show_success(Why,cyclic_term)))))),
+  dcall0(Goal),
+  zotrace((cyclic_term(Goal)-> dmsg(show_success(Why,cyclic_term)) ; debugm(Why,show_success(Why,Goal)))).
 
 %= 	 	 
 
@@ -1388,10 +1386,12 @@ show_success(Why,Goal):-  dcall0(Goal),
 %
 % Debugm1.
 %
-debugm1(Why,Msg):- % dmsg(debugm(Why,Msg)), 
-                   zotrace(debugm10(Why,Msg)).
+debugm1(Why,Msg):- % dmsg(debugm(Why,Msg)),
+                   ignore(zotrace(debugm10(Why,Msg))).
 
-debugm10(Why,Msg):- \+ debugging(mpred), \+ debugging(Why), \+ debugging(mpred(Why)),!, debug(Why,'~N~p~n',[Msg]),!.
+% :- debug(mpred).
+debugm10(Why,Msg):- % \+ debugging(mpred),
+    \+ debugging(Why), \+ debugging(mpred(Why)),!, debug(Why,'~N~p~n',[Msg]),!.
 debugm10(Why,Msg):- dmsg(debugm(Why,Msg)), debug(Why,'~N~p~n',[Msg]),!.
 
 
@@ -1411,7 +1411,7 @@ show_success(Goal):- strip_module(Goal,Why,_),show_success(Why,Goal).
 %
 % Whenever Functor Log Fail.
 %
-on_f_log_fail(Goal):-one_must(Goal,zotrace((dmsg(on_f_log_fail(Goal)),cleanup_strings,!,fail))).
+on_f_log_fail(Goal):-one_must(Goal,zotrace((ignore(dumpST),wdmsg(on_f_log_fail(Goal)),cleanup_strings,!,fail))).
 
 
 

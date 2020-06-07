@@ -1288,7 +1288,9 @@ debugm(X):-zotrace((debugm(X,X))).
 % Debugm.
 %
 debugm(Why,Msg):- dmsg(debugm(Why,Msg)),!,debugm0(Why,Msg).
-debugm0(Why,Msg):- zotrace(( \+ debugging(mpred), \+ debugging(Why), \+ debugging(mpred(Why)),!, debug(Why,'~N~p~n',[Msg]))),!.
+debugm0(Why,Msg):- zotrace(( 
+   /*\+ debugging(mpred),*/
+   \+ debugging(Why), \+ debugging(mpred(Why)),!, debug(Why,'~N~p~n',[Msg]))),!.
 debugm0(Why,Msg):- zotrace(( debug(Why,'~N~p~n',[Msg]))),!.
 
 

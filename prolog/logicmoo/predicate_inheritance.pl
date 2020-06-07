@@ -367,22 +367,23 @@ now_inherit_above(Reason,CallerMt,F,A):-
    functor(Goal,F,A),
    CallerMt:import(inherit_above/2),
    CallerMt:import(do_ihherit_above/2),
-   get_inherit_above_clause(CallerMt,Goal,Head,Body),
+   predicate_inheritance:get_inherit_above_clause(CallerMt,Goal,Head,Body),
    CallerMt:assertz_new(Head:-Body).
 
 % get_inherit_above_clause(CallerMt,Goal,Head,Body)
-get_inherit_above_clause(From,Goal,IAHead,IABody):-
+
+system:get_inherit_above_clause(From,Goal,IAHead,IABody):-
    (nonvar(Goal)->(strip_module(Goal,_,Call), functor(Call,F,A),functor(Head,F,A)) ; Goal=Head),
    IAHead = From:Head,
    IABody = (zwc,inherit_above(From,Head)).
 
-awc:-true.
-zwc:-true.
+%awc:-true.
+%zwc:-true.
 
 :- module_transparent(system:inherit_above/2).
 :- export(system:inherit_above/2).
 system:inherit_above(Mt,Query):- 
-   \+ context_module(baseKB), 
+   % \+ context_module(baseKB), 
    Mt\=baseKB, 
    Query\=do_inherit_above(_,_),
    do_inherit_above(Mt,Query).
@@ -402,13 +403,13 @@ never_move(is_pfc_file,_):- dumpST,break.
 :- export(system:do_inherit_above/2).
 :- thread_local(t_l:exact_kb/1).
 system:do_inherit_above(Mt,_):- t_l:exact_kb(Mt),!,fail.
-system:do_inherit_above(user,_):- context_module(user),!,fail.
+system:do_inherit_above(user,G):- !,baseKB:G.
 
 system:do_inherit_above(Mt,QueryIn):- 
    functor(QueryIn,F,A),\+ never_move(F,A),
    predicate_property(QueryIn,number_of_clauses(N)),
    Mt:nth_clause(QueryIn,N,Ref),clause(_,Body,Ref),
-   get_inherit_above_clause(Mt,QueryIn,IAHead,IABody),
+   predicate_inheritance:get_inherit_above_clause(Mt,QueryIn,IAHead,IABody),
    Body\=IABody,
    once((Mt:clause(IAHead,IABody,Kill),
    erase(Kill),% functor(QueryIn,F,A),
@@ -420,6 +421,7 @@ system:do_inherit_above(Mt,QueryIn):-
 
 system:do_inherit_above(Mt,Query):- 
    clause(genlMt(Mt,MtAbove),true),
+   MtAbove \= Mt,
    do_call_inherited(MtAbove,Query).
 
 :- module_transparent(system:do_call_inherited/2).
@@ -689,7 +691,7 @@ expand_already_decl(P,F,A,Out):- lmcache:already_decl(kb_global,M,F,A),Out=':'(M
 expand_already_decl(P,F,A,Out):- lmcache:already_decl(kb_shared,M,F,A),Out=':'(M,P),!.
 
 
-% :- fixup_exports.
+:- fixup_exports.
 
 :- multifile(lmcache:was_retry_undefined/2).
 :- dynamic(lmcache:was_retry_undefined/2).

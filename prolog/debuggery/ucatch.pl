@@ -595,12 +595,13 @@ quietly_must(G):- /*quietly*/(must(G)).
 %
 % If Defined.
 %
-if_defined(Goal):- if_defined(Goal,((dmsg(warn_undefined(Goal))),!,fail)).
+if_defined(Goal):- if_defined(Goal,((dmsg(warn_undefined(Goal)),!,fail))).
 
 %% if_defined( ?Goal, :GoalElse) is semidet.
 %
 % If Defined Else.
 %
+if_defined((A,B),Else):-!, if_defined(A,Else),if_defined(B,Else).
 if_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
 % if_defined(M:Goal,Else):- !, current_predicate(_,OM:Goal),!,OM:Goal;Else.
 %if_defined(Goal,  Else):- current_predicate(_,OM:Goal)->OM:Goal;Else.

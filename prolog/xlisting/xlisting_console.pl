@@ -1258,6 +1258,10 @@ scansrc_list_undefined(_):-!.
 scansrc_list_undefined(A):- real_list_undefined(A).
 
 
+:- thread_local check:undef/2.
+:- dynamic check:undef/2.
+:- volatile check:undef/2.
+
 :- export(real_list_undefined/1).
 
 %= 	 	 
@@ -1266,17 +1270,31 @@ scansrc_list_undefined(A):- real_list_undefined(A).
 %
 % Real List Undefined.
 %
-real_list_undefined(A):- 
- merge_options(A, [module_class([user])], B),
-        prolog_walk_code([undefined(dtrace), on_trace(found_undef)|B]),
-        findall(C-D, retract(undef(C, D)), E),
-        (   E==[]
-        ->  true
-        ;   print_message(warning, check(undefined_predicates)),
-            keysort(E, F),
-            group_pairs_by_key(F, G),
-            prolog_autoload:maplist(report_undefined, G)
-        ).
+
+
+:- public check:collect_undef/1.
+
+real_collect_undef(Grouped) :-
+    findall(PI-From,
+            retract(check:undef(PI, From)),
+            Pairs),
+    keysort(Pairs, Sorted),
+    check:group_pairs_by_key(Sorted, Grouped).
+
+
+real_list_undefined(Options) :-
+    merge_options(Options, [module_class([user])], WalkOptions),
+    call_cleanup(prolog_walk_code(
+                                  [ undefined(trace),
+                                    on_trace(found_undef)
+                                  | WalkOptions
+                                  ]),
+                 real_collect_undef(Grouped)),
+    (   Grouped==[]
+    ->  true
+    ;   print_message(warning, check(undefined_procedures, Grouped))
+    ).
+
 
 
 :- export(mmake/0).
@@ -1287,8 +1305,9 @@ real_list_undefined(A):-
 %
 % Mmake.
 %
-% mmake:- lmcache:thread_main(user,Main), \+ thread_self(Main), !.
+% 
 
+% mmake:- lmcache:thread_main(user,Main), \+ thread_self(Main), !.
 % mmake:- lmcache:thread_main(user,Main),!,thread_signal(Main,catch(((ignore(update_changed_files), ignore(if_defined(mpred_update_changed_files,true)))),_,true)).
 mmake:- thread_signal(main,catch(((ignore(update_changed_files), ignore(if_defined(mpred_update_changed_files,true)))),_,true)).
 
@@ -1352,6 +1371,7 @@ remove_undef_search:- ((
  redefine_system_predicate(check:list_undefined(_)),
  abolish(check:list_undefined/1),
  assert((check:list_undefined(A):- not(thread_self_main),!, ignore(A=[]))),
+ assert((check:list_undefined(A):- dmsg(check:list_undefined(A)))),
  assert((check:list_undefined(A):- check:reload_library_index,  update_changed_files,call(thread_self_main),!, ignore(A=[]))),
  assert((check:list_undefined(A):- ignore(A=[]),scansrc_list_undefined(A))))).
 
