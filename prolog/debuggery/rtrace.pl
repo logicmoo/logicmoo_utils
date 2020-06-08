@@ -75,21 +75,6 @@ on_x_debug(Goal):-
    (catchv(Goal,E,(ignore(debugCallWhy(on_x_debug(E,Goal),Goal)),throw(E)))).
 
 
-:- meta_predicate('$with_unlocked_pred_local'(:,0)).
-'$with_unlocked_pred_local'(MP,Goal):- strip_module(MP,M,P),Pred=M:P,
-   (predicate_property(Pred,foreign)-> true ;
-  (
- ('$get_predicate_attribute'(Pred, system, OnOff)->true;throw('$get_predicate_attribute'(Pred, system, OnOff))),
- (==(OnOff,0) -> Goal ;
- setup_call_cleanup('$set_predicate_attribute'(Pred, system, 0),
-   catch(Goal,E,throw(E)),'$set_predicate_attribute'(Pred, system, 1))))).
-
-:- meta_predicate(totally_hide(:)).
-totally_hide(MP):- strip_module(MP,M,P),Pred=M:P,
-   % (current_prolog_flag(runtime_debug,N), N>2) -> unhide(Pred) ; 
-  '$with_unlocked_pred_local'(Pred,
-   (('$set_predicate_attribute'(Pred, trace, false),'$set_predicate_attribute'(Pred, hide_childs, true)))).
-
 unhide(Pred):- '$set_predicate_attribute'(Pred, trace, true),mpred_trace_childs(Pred).
 
 %! maybe_leash( +Flags) is det.
@@ -353,19 +338,26 @@ next_rtrace:- (nortrace;(rtrace,trace,notrace(fail))).
 :- 'totally_hide'(next_rtrace/0).
 
 
-rtrace(Goal):- notrace(tracing)-> rtrace0((trace,Goal)) ; 
+rtrace(Goal):- tracing -> rtrace0((trace,Goal)) ; 
   setup_call_cleanup(current_prolog_flag(debug,WasDebug),
-   rtrace0((trace,Goal)),(set_prolog_flag(debug,WasDebug),notrace(stop_rtrace))).
+   rtrace0((trace,Goal)),(set_prolog_flag(debug,WasDebug),stop_rtrace)).
 rtrace0(Goal):-
  setup_call_cleanup(notrace((current_prolog_flag(debug,O),rtrace)),
    (trace,Goal,notrace,deterministic(YN),
      (YN == true->!;next_rtrace)),
      notrace(set_prolog_flag(debug,O))).
 
-:- '$hide'(rtrace/1).
-:- '$hide'(rtrace0/1).
-:- '$set_predicate_attribute'(rtrace/1, hide_childs, true).
-:- '$set_predicate_attribute'(rtrace0/1, hide_childs, false).
+%:- '$hide'(system:tracing/0).
+%:- '$hide'(system:notrace/1).
+%:- '$set_predicate_attribute'(system:notrace/1, hide_childs, true).
+%:- '$hide'(system:notrace/0).
+%:- '$hide'(system:trace/0).
+
+:- 'totally_hide'(rtrace:rtrace/1).
+:- '$set_predicate_attribute'(rtrace:rtrace/1, hide_childs, false).
+:- '$hide'(rtrace:reset_rtrace0/1).
+:- '$set_predicate_attribute'(rtrace:reset_rtrace0/1, hide_childs, true).
+%:- '$set_predicate_attribute'(rtrace:reset_rtrace0/1, hide_childs, false).
 
 
 %! rtrace_break( :Goal) is nondet.

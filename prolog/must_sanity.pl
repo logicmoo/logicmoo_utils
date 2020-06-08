@@ -112,8 +112,8 @@ must_keep_going(Goal):-
 :- '$hide'(get_must/2).
 
 
-xnotrace(G):- G,!.
-:- '$hide'(xnotrace/2).
+xnotrace(G):- call(G),!.
+:- 'totally_hide'(xnotrace/2).
 
 %! sanity(:Goal) is det.
 %
@@ -195,15 +195,25 @@ X = 3.
 */
 
 scce_orig(Setup0,Goal,Cleanup0):-
-  xnotrace((Cleanup = notrace('$sig_atomic'(Cleanup0)),Setup = xnotrace('$sig_atomic'(Setup0)))),
+  notrace((Cleanup = xnotrace('$sig_atomic'(Cleanup0)),Setup = xnotrace('$sig_atomic'(Setup0)))),
    \+ \+ Setup, !,
    (catch(Goal, E,(Cleanup,throw(E)))
       *-> (notrace(tracing)->(notrace,deterministic(DET));deterministic(DET)); (Cleanup,!,fail)),
      Cleanup,
-     (DET == true -> ! ; (true;(Setup,fail))).
+     (notrace(DET == true) -> ! ; (true;(Setup,fail))).
       
-/*
-scce_orig(Setup,Goal,Cleanup):-
+:- '$hide'(must_sanity:scce_orig/3).
+:- '$hide'(must_sanity:xnotrace/1).
+:- '$set_predicate_attribute'(must_sanity:xnotrace/1, hide_childs, true).
+
+%:- '$hide'(system:setup_call_catcher_cleanup/4).
+%:- '$set_predicate_attribute'(system:setup_call_catcher_cleanup/4, hide_childs, false).
+
+:- '$hide'(system:call_cleanup/2).
+:- '$set_predicate_attribute'(system:call_cleanup/2, hide_childs, false).
+
+
+scce_orig2(Setup,Goal,Cleanup):-
    \+ \+ '$sig_atomic'(Setup), 
    catch( 
      ((Goal, deterministic(DET)),
@@ -212,7 +222,8 @@ scce_orig(Setup,Goal,Cleanup):-
           ; (true;('$sig_atomic'(Setup),fail)))), 
       E, 
       ('$sig_atomic'(Cleanup),throw(E))). 
-*/
+
+
 
 % % % OFF :- system:reexport(library('debuggery/first')).
 % % % OFF :- system:reexport(library('debuggery/ucatch')).

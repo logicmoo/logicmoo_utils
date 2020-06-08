@@ -72,6 +72,22 @@
 
 
 :- set_module(class(library)).
+
+:- meta_predicate('$with_unlocked_pred_local'(:,0)).
+'$with_unlocked_pred_local'(MP,Goal):- strip_module(MP,M,P),Pred=M:P,
+   (predicate_property(Pred,foreign)-> true ;
+  (
+ ('$get_predicate_attribute'(Pred, system, OnOff)->true;throw('$get_predicate_attribute'(Pred, system, OnOff))),
+ (==(OnOff,0) -> Goal ;
+ setup_call_cleanup('$set_predicate_attribute'(Pred, system, 0),
+   catch(Goal,E,throw(E)),'$set_predicate_attribute'(Pred, system, 1))))).
+                       
+:- meta_predicate(totally_hide(:)).
+totally_hide(MP):- strip_module(MP,M,P),Pred=M:P,
+   % (current_prolog_flag(runtime_debug,N), N>2) -> unhide(Pred) ; 
+  '$with_unlocked_pred_local'(Pred,
+   (('$hide'(Pred),'$set_predicate_attribute'(Pred, trace, false),'$set_predicate_attribute'(Pred, hide_childs, true)))).
+
 :- thread_local(tlbugger:ifHideTrace/0).% WAS OFF  :- system:reexport(library(logicmoo/util_varnames)).
 % % % OFF :- system:use_module(library(lists)).
 
