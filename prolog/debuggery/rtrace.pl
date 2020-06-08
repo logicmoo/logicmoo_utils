@@ -181,12 +181,8 @@ user:prolog_exception_hook(error(_, _),_, _, _) :- fail,
 % But also may be break when excpetions are raised during Goal.
 %
 
-% Version 1
-quietly(Goal):- \+ tracing,!,call(Goal).
-quietly(Goal):- notrace,call_cleanup(Goal,trace).
-
 % version 2 
-quietly2(Goal):- \+ tracing -> Goal ; (notrace,call_cleanup(scce_orig(notrace,Goal,trace),trace)).
+quietly(Goal):- \+ tracing -> Goal ; (notrace,call_cleanup(scce_orig(notrace,Goal,trace),trace)).
 
 % version 3 
 % quietly(Goal):- !, Goal.  % for overiding

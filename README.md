@@ -50,7 +50,7 @@ Example usages:
 
 ```prolog
 
-?- use_module(library(lm_utils/rtrace)).
+?- use_module(library(logicmoo_utils)).
 true.
 
 ?- rtrace(member(X,[1,2,3])).
@@ -130,7 +130,7 @@ Some better parts of that library are not yet added.
 
 Here are current uses:
 
-?- use_module(library(must_sanity)).
+?- use_module(library(logicmoo_utils)).
 
 
 Wrap `must/1` over parts of your code you do not trust yet.
@@ -187,7 +187,7 @@ New ways to avoid duplicate solutions
 
 ```prolog
 
-?- use_module(library(lm_utils/no_repeats)).
+?- use_module(library(logicmoo_utils)).
 
 ?- no_repeats( X , member(X-Y,[3-2,1-4,1-5,2-1])).
 % X = 3, Y = 2 ;
@@ -211,7 +211,7 @@ New simple loop checking
 Allows code to declare special locations that loop prevention will occur
 
 ```prolog
-?- use_module(library(lm_utils/no_loops)).
+?- use_module(library(logicmoo_utils)).
 true.
 
 ?-  TODO Doc this
@@ -236,7 +236,8 @@ true.
 Hook and/or override assert, retract, call, clause, erase, etc for specific predicates
 
 ```prolog
-?- use_module(library(hook_hybrid)).
+?- use_module(library(hook_database)).
+
 true.
 
 ?-  TODO Doc this
@@ -248,7 +249,7 @@ true.
 An alternate interface to the clause database to allow attributed variables to be asserted/read
 
 ```prolog
-?- use_module(library(hybrid_db/clause_attvars)).
+?- use_module(library(hook_database)).
 true.
 
 ?-  TODO Doc this
@@ -259,7 +260,7 @@ true.
 ## attvar_reader
 
 ```prolog
-?- use_module(library(hybrid_db/attvar_reader)).
+?- use_module(library(hook_database)).
 true.
 
 ?-  TODO Doc this
@@ -334,7 +335,7 @@ Call a Goal with local assertions
 # Utilities to open various objects for read/write
 
 ```prolog
-:- use_module(library(lmu/filestreams)).
+?- use_module(library(logicmoo_utils)).
 
 ```
 
@@ -343,7 +344,7 @@ Call a Goal with local assertions
 
 # mass wildcard expansions
 ```prolog
-:- use_module(library(lmu/filesystem)).
+?- use_module(library(logicmoo_utils)).
 
 ```
 
