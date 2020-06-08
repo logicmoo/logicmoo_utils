@@ -1407,6 +1407,7 @@ bad_pred(M:P):-!,atom(M),bad_pred(P).
 :- export(portray_hbr/3).
 :- export(portray_hb/2).
 
+:- use_module(library(listing)).
 
 %= 	 	 
 

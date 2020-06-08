@@ -17,41 +17,6 @@
 */
 
 :- module(logicmoo_common,[]).
-:- discontiguous logicmoo_common:'$exported_op'/3.
-
-:- use_module(library(prolog_autoload)).
-:- use_module(library(prolog_pack)).
-:- use_module(library(ansi_term), [ansi_get_color/2]).
-
-/** <module> Load a sensible theme based on the environment
-
-This module examines the environment and   selects an appropriate theme.
-THe current implementation is really basic.  Future versions should look
-at more, partly OS specific, clues.
-*/
-
-:- multifile
-    prolog:theme/1.
-
-is_theme(dark) :-
-    ansi_get_color(background, rgb(R,G,B)),
-    R+B+G < 20000.
-
-%:p- is_theme(dark).
-
-%:- user:[library('theme/auto.pl')].
-:- multifile(user:file_search_path/2).
-:-   dynamic(user:file_search_path/2).
-
-:- if( \+ exists_source(library(sldnfdraw)); \+ exists_source(library(phil))).
-:- attach_packs('/opt/logicmoo_workspace/packs_lib').
-:- endif.
-:- if( \+ exists_source(library(pfc))).
-:- attach_packs('/opt/logicmoo_workspace/packs_sys').
-:- endif.
-:- if( \+ exists_source(library(lps_syntax))).
-:- attach_packs('/opt/logicmoo_workspace/packs_web').
-:- endif.
 
 :- op(700,xfx,prolog:('univ_safe')).
 :- discontiguous logicmoo_utils_all:'$exported_op'/3.
