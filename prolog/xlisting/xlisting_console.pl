@@ -1669,10 +1669,11 @@ get_print_mode(html):- on_x_log_fail(this_http_current_request(_)),!.
 get_print_mode(bhtml):- getenv('COLORTERM',butterfly),!.
 get_print_mode(text).
 
+:- use_module(library(http/http_wrapper)). % ([is_cgi_stream/1,cgi_property/2]).
 this_http_current_request(Request) :-
      current_output(CGI),
-    http_stream:is_cgi_stream(CGI),
-    http_stream:cgi_property(CGI, request(Request)).
+    http_stream:(is_cgi_stream(CGI), 
+    cgi_property(CGI, request(Request))).
 
 :- if(false).
 
