@@ -112,8 +112,8 @@ must_keep_going(Goal):-
 :- '$hide'(get_must/2).
 
 
-xnotrace(G):- call(G),!.
-:- 'totally_hide'(xnotrace/2).
+xnotrace(G):- call(G).
+:- 'totally_hide'(xnotrace/1).
 
 %! sanity(:Goal) is det.
 %
@@ -194,15 +194,27 @@ X = 3.
 
 */
 
-scce_orig(Setup0,Goal,Cleanup0):-
+scce_orig(Setup,Goal,Cleanup):-
+   \+ \+ '$sig_atomic'(Setup), 
+   catch( 
+     ((Goal, xnotrace(deterministic(DET))),
+       '$sig_atomic'(Cleanup),
+         (DET == true -> !
+          ; (true;('$sig_atomic'(Setup),fail)))), 
+      E, 
+      ('$sig_atomic'(Cleanup),throw(E))). 
+
+scce_orig0(Setup0,Goal,Cleanup0):-
   notrace((Cleanup = xnotrace('$sig_atomic'(Cleanup0)),Setup = xnotrace('$sig_atomic'(Setup0)))),
    \+ \+ Setup, !,
    (catch(Goal, E,(Cleanup,throw(E)))
-      *-> (notrace(tracing)->(notrace,deterministic(DET));deterministic(DET)); (Cleanup,!,fail)),
+      *-> (tracing->(deterministic(DET));deterministic(DET)); (Cleanup,!,fail)),
      Cleanup,
      (notrace(DET == true) -> ! ; (true;(Setup,fail))).
       
 :- '$hide'(must_sanity:scce_orig/3).
+:- '$set_predicate_attribute'(must_sanity:scce_orig/3, hide_childs, false).
+
 :- '$hide'(must_sanity:xnotrace/1).
 :- '$set_predicate_attribute'(must_sanity:xnotrace/1, hide_childs, true).
 

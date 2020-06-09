@@ -60,7 +60,7 @@ call_call(G):-call(G).
 
 % on_f_rtrace(Goal):-  Goal *-> true; ((nortrace,notrace,debugCallWhy(failed(on_f_rtrace(Goal)),Goal)),fail).
 
-on_f_rtrace(Goal):-  Goal *-> true; (rtrace(Goal),debugCallWhy(on_f_rtrace(Goal),Goal)).
+on_f_rtrace(Goal):-  Goal *-> true; (ignore(rtrace(Goal)),debugCallWhy(on_f_rtrace(Goal),Goal)).
 
 
 
@@ -86,7 +86,8 @@ maybe_leash(Some):- notrace((maybe_leash->leash(Some);true)).
 
 maybe_leash:- notrace((\+ current_prolog_flag(runtime_must,keep_going), \+ non_user_console)).
 
-non_user_console:- !,fail.
+%non_user_console:- !,fail.
+non_user_console:- thread_self(main),!,fail.
 non_user_console:- \+ stream_property(current_input, tty(true)),!.
 non_user_console:- \+ stream_property(current_input,close_on_abort(false)).
 
@@ -95,9 +96,9 @@ non_user_console:- \+ stream_property(current_input,close_on_abort(false)).
 % Get Tracer.
 %
 get_trace_reset((notrace,set_prolog_flag(debug,WasDebug),CC3,'$visible'(_, OldV),'$leash'(_, OldL),RestoreTrace)):- 
-     (notrace(tracing) -> (notrace,RestoreTrace = trace) ; RestoreTrace = notrace),
+     (tracing -> (notrace,RestoreTrace = trace) ; RestoreTrace = notrace),
      '$leash'(OldL, OldL),'$visible'(OldV, OldV),
-     (current_prolog_flag(debug,true)->WasDebug=true;WasDebug=false),     
+      current_prolog_flag(debug,WasDebug),
      (current_prolog_flag(gui_tracer, GWas)->CC3=set_prolog_flag(gui_tracer, GWas);CC3=true),!,
      RestoreTrace.
 
@@ -165,21 +166,42 @@ user:prolog_exception_hook(error(_, _),_, _, _) :- fail,
 %
 % But also may be break when excpetions are raised during Goal.
 %
+% version 21
+quietly1(Goal):- \+ tracing -> Goal ; scce_orig(notrace,Goal,trace).
 
 % version 2 
-quietly(Goal):- \+ tracing -> Goal ; (notrace,call_cleanup(scce_orig(notrace,Goal,trace),trace)).
+quietly2(Goal):- \+ tracing -> Goal ; (setup_call_cleanup(notrace,scce_orig(notrace,Goal,trace),trace)).
 
 % version 3 
 % quietly(Goal):- !, Goal.  % for overiding
-quietly3(Goal):- \+ tracing -> Goal ; 
+quietly(Goal):- \+ tracing -> Goal ; 
  (notrace,
   (((Goal,deterministic(YN))) *->
      (YN == yes -> trace ; (trace;(notrace,fail)));
   (trace,!,notrace(fail)))).
 
+% :- 'totally_hide'(rtrace:quietly/1).
+:- '$set_predicate_attribute'(rtrace:quietly/1, hide_childs, true).
+
+% Alt version?
+quietlySE(Goal):- \+ tracing -> Goal ; 
+ notrace((S = notrace, E = trace)),
+ (S,
+  (((Goal,deterministic(YN))) *->
+     (YN == yes -> E ; (E;(S,fail)));
+  (E,!,notrace(fail)))).
+
+% Alt version?
+rtraceSE(Goal):-  
+ notrace((S = rtrace, E = nortrace)),
+ (S,
+  (((Goal,deterministic(YN))) *->
+     (YN == yes -> E ; (E;(S,fail)));
+  (E,!,notrace(fail)))).
 
 
-deterministically_must(G):- call(call,G),deterministic(YN),true,
+
+deterministically_must(G):- (call(call,G),deterministic(YN),true),
   (YN==true -> true; 
      ((wdmsg(failed_deterministically_must(G)),(!)))),!.
 
@@ -373,7 +395,7 @@ rtrace_break(Goal):- stop_rtrace,trace,debugCallWhy(rtrace_break(Goal),Goal).
 
 
 
-:- '$hide'(quietly/1).
+%:- '$hide'(quietly/1).
 %:- if_may_hide('totally_hide'(notrace/1,  hide_childs, 1)).
 %:- if_may_hide('totally_hide'(notrace/1)).
 :- totally_hide(system:tracing/0).
