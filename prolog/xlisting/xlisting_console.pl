@@ -949,7 +949,8 @@ bookeepingPredicateXRef(user:file_search_path(_,_)).
 %
 predicateUsesCall(_:G):-
   member(F/A,[module_property/2,predicate_property/2,pengine_property/2,current_pengine_application/1,source_file_property/2,
-            source_file/2,current_prolog_flag/2,current_op/3]),functor(G,F,A).
+            source_file/2,current_prolog_flag/2,current_op/3]),
+  functor(G,F,A).
 
 
 %= 	 	 

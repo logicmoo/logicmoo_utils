@@ -243,9 +243,9 @@ maybe_ensure_op(P,FXY,MOP):- strip_module(MOP,M,OP),
 
 insane_module(hook_database).
 insane_module(user) :- \+ '$current_source_module'(user).
-insane_module(mpred_core).
+%insane_module(mpred_core).
 insane_module(hook_hybrid).
-insane_module(mpred_kb_ops).
+%insane_module(mpred_kb_ops).
 insane_module(mpred_type_isa).
 insane_module(pfc_lib).
 insane_module(system).

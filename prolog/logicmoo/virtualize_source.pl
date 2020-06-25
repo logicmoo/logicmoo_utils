@@ -337,7 +337,7 @@ is_dynamic_module(M):- clause_b(mtHybrid(M)).
 
 is_static_module(system).
 is_static_module(file_scope).
-is_static_module(mpred_core).
+is_static_module(pfc_lib).
 is_static_module(M):- is_dynamic_module(M),!,fail.
 is_static_module(M):- module_property(M,class(development)),!,fail.
 is_static_module(M):- module_property(M,class(library)),!.
@@ -349,7 +349,7 @@ virtualize_dbreq_source :- prolog_load_context(source,F),
 virtualize_dbreq_source :- prolog_load_context(module,M), \+ is_static_module(M).
 % virtualize_dbreq_source.
 
-virtualize_ereq_source :- prolog_load_context(module,M), member(M,['mpred_core','mpred_expansion']),!,fail.
+virtualize_ereq_source :- prolog_load_context(module,M), member(M,['pfc_lib','mpred_expansion']),!,fail.
 virtualize_ereq_source.
 
 bad_functor_check(O):-var(O).
@@ -377,7 +377,7 @@ never_virtualize(_:','/2):-!,fail.
 never_virtualize(_:F/_):- !, never_virtualize_atom(F),!.
 never_virtualize(thread_util:_/A):-integer(A). % prevents query
 never_virtualize(M:F/A):- clause_b(mpred_prop(M,F,A,prologBuiltin)),!.
-never_virtualize(_M:F/A):- current_predicate(mpred_core:F/A),!.
+never_virtualize(_M:F/A):- current_predicate(pfc_lib:F/A),!.
 never_virtualize(M:F/A):- functor(P,F,A),source_file(M:P,_SF), 
    \+ predicate_property(M:P,meta_predicate(_)), 
    \+ predicate_property(M:P,transparent),  

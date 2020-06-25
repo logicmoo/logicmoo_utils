@@ -413,7 +413,7 @@ system:do_inherit_above(Mt,QueryIn):-
    Body\=IABody,
    once((Mt:clause(IAHead,IABody,Kill),
    erase(Kill),% functor(QueryIn,F,A),
-   dmsg(moving(IAHead)), % inherit_above(Mt,Query)
+   dmsg(moving_to_last_clause(Mt,IAHead):-IABody), % inherit_above(Mt,Query)
    Mt:assertz(IAHead:-IABody))),fail.
    
 
