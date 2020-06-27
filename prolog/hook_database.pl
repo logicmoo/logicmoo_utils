@@ -726,7 +726,12 @@ clause_i(H,B):- clause_i(H,B,_).
 clause_i(H0,B0,Ref):- \+ current_prolog_flag(assert_attvars,true) ,!, system:clause(H0,B0,Ref).
 clause_i(H0,B0,Ref):- clause_attv(H0,B0,Ref).
 
-:- dynamic(system:check_never_assert/1).
+:- multifile(pfc_lib:check_never_assert/1).
+:- dynamic(pfc_lib:check_never_assert/1).
+:- pfc_lib:export(pfc_lib:check_never_assert/1).
+:- system:import(pfc_lib:check_never_assert/1).
+%:- multifile(system:check_never_assert/1).
+%:- dynamic(system:check_never_assert/1).
 
 assert_i(X):- check_never_assert(X),fail.
 assert_i(HB):- clausify_attributes(HB,CL),assert(CL).

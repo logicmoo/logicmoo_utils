@@ -843,14 +843,14 @@ init_logicmoo :- ensure_loaded(library(logicmoo_repl)),init_why(init_logicmoo).
 % invert_varname(NV):-  ignore(((NV=(N=V), V='$VAR'(N)))).
 
 add_history(O):- 
-   ignore_not_not((make_historial(O,A),add_history0(A))),!.
+   ignore_not_not((nonvar(O),make_historial(O,A),add_history0(A))),!.
 
 ignore_not_not(G):- ignore((catch((( \+ \+ (ignore(once(G))))),_,fail))),!.
 
-make_historial(_:O,A):-!,make_historial(O,A).
+make_historial(M:O,A):- (M==user),!, make_historial(O,A).
 make_historial(whenever_flag_permits(_,O),A):-!,make_historial(O,A).
 make_historial(add_history(O),A):-!,make_historial(O,A).
-make_historial(O,A):-ground(O),format(atom(A), '~W', [O, [fullstop(true),portrayed(true),quoted(true),numbervars(true)]]).
+make_historial(O,A):-ground(O),format(atom(A), '~W', [O, [fullstop(true),portrayed(true),quoted(true),numbervars(true)]]),!.
 make_historial(O,A):-
     prolog_load_context(variable_names, Bindings),
     format(atom(A), '~W', [O, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]).

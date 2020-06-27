@@ -81,6 +81,8 @@ unhide(Pred):- '$set_predicate_attribute'(Pred, trace, true),mpred_trace_childs(
 %
 % Only leashes interactive consoles
 %
+maybe_leash(Some):- is_list(Some),!,maplist(maybe_leash,Some).
+maybe_leash(-Some):- !, leash(-Some).
 maybe_leash(Some):- notrace((maybe_leash->leash(Some);true)).
 :- totally_hide(maybe_leash/1).
 
@@ -218,6 +220,7 @@ rtrace:- start_rtrace,trace.
 
 :- 'totally_hide'(rtrace/0).
 
+start_rtrace:- t_l:rtracing, !,  leash(-all), assert(t_l:rtracing), push_guitracer.
 start_rtrace:-
       leash(-all),
       assert(t_l:rtracing),
@@ -359,15 +362,21 @@ set_leash_vis(OldL,OldV):- '$leash'(_, OldL),'$visible'(_, OldV),!.
 next_rtrace:- (nortrace;(rtrace,trace,notrace(fail))).
 :- 'totally_hide'(next_rtrace/0).
 
+rtrace(Goal):- notrace(non_user_console),!,notrace,set_prolog_flag(debug,false),setup_call_cleanup((leash(-all),set_prolog_flag(gui_tracer,false),trace),Goal,notrace).
+rtrace(Goal):- 
+  % notrace(non_user_console -> leash(-all) ; true),
+ tracing -> (notrace,(rtrace0(Goal)*->trace;(trace,fail))) ; 
 
-rtrace(Goal):- tracing -> rtrace0((trace,Goal)) ; 
-  setup_call_cleanup(current_prolog_flag(debug,WasDebug),
-   rtrace0((trace,Goal)),(set_prolog_flag(debug,WasDebug),stop_rtrace)).
+ setup_call_cleanup(
+    current_prolog_flag(debug,WasDebug),
+    rtrace0(Goal),
+    (set_prolog_flag(debug,WasDebug),stop_rtrace)).
+
 rtrace0(Goal):-
- setup_call_cleanup(notrace((current_prolog_flag(debug,O),rtrace)),
-   (trace,Goal,notrace,deterministic(YN),
-     (YN == true->!;next_rtrace)),
-     notrace(set_prolog_flag(debug,O))).
+ setup_call_cleanup(
+    notrace((current_prolog_flag(debug,WasDebug),rtrace)),
+    (trace,Goal,notrace,deterministic(YN), (YN == true -> !;next_rtrace)),
+    notrace(set_prolog_flag(debug,WasDebug))).
 
 %:- '$hide'(system:tracing/0).
 %:- '$hide'(system:notrace/1).

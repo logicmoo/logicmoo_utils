@@ -1083,17 +1083,20 @@ has_gui_debug :- getenv('DISPLAY',NV),NV\==''.
 
 :- thread_local(tlbugger:ifHideTrace/0).
 
+:- create_prolog_flag(nodebugx,false,[keep(true)]).
 %% nodebugx( :GoalX) is semidet.
 %
 % Nodebugx.
 %
-nodebugx(X):- prolog_debug:debugging(Topic, true, _),!,scce_orig(nodebug(Topic),nodebugx(X),debug(Topic)).
+nodebugx(X):- current_prolog_flag(nodebugx,true),!,call(X).
+% nodebugx(X):- prolog_debug:debugging(Topic, true, _),!,scce_orig(nodebug(Topic),nodebugx(X),debug(Topic)).
 nodebugx(X):- current_prolog_flag(debug_threads,true),!,call(X).
 nodebugx(X):- 
- locally(-tlbugger:ifCanTrace,
+ locally(set_prolog_flag(nodebugx,true),
+  locally(-tlbugger:ifCanTrace,
    locally(tlbugger:ifWontTrace,
     locally(tlbugger:show_must_go_on,
-       locally(tlbugger:ifHideTrace,quietly(X))))).
+       locally(tlbugger:ifHideTrace,quietly(X)))))).
 
 debugging_logicmoo(Mask):- logicmoo_topic(Mask,Topic),prolog_debug:debugging(Topic, TF, _),!,TF=true.
 
@@ -1102,6 +1105,7 @@ debugging_logicmoo_setting(_,true,[user_error]):- tracing.
 :- dynamic(prolog_debug:debugging/3).
 % % % OFF :- system:use_module(library(debug)).
 :- asserta((prolog_debug:debugging(X,Y,Z):-debugging_logicmoo_setting(X,Y,Z))).
+:- asserta((prolog_debug:debugging(_,False,[]):- current_prolog_flag(nodebugx,true),!,False=false)).
 
 
 logicmoo_topic(Mask,Topic):-var(Mask),!,Topic=logicmoo(_).
@@ -1358,7 +1362,7 @@ show_call(Goal):- strip_module(Goal,Why,_),show_call(Why,Goal).
 %
 % Show Failure.
 %
-show_failure(Why,Goal):-one_must(dcall0(Goal),(ignore(dumpST),debugm1(Why,show_failed(Why,Goal)),break,!,fail)).
+show_failure(Why,Goal):-one_must(dcall0(Goal),(nop(dumpST),debugm1(Why,show_failed(Why,Goal)),nop(break),!,fail)).
 
 
 
