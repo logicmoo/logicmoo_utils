@@ -20,15 +20,17 @@
 :- module(logicmoo_startup,[
           maybe_notrace/1,
           absolute_startup_script/1,
-          at_init/1,
-          during_init/1,
+          before_boot/1,
+          during_boot/1,
+          after_boot/1,
           has_ran_once/1,
+          has_ran_once/2,
           app_argv/1,
           app_argv1/1,
           app_argv_ok/1,
           app_argv_off/1,
           is_startup_script/1,
-          init_why/1,
+          init_why/2,
           run_pending_inits/0]).
 
 
@@ -196,7 +198,7 @@ sub_argv(X,Y):-app_argv(List),
 
 
 :- dynamic(lmconf:saved_app_argv/1).
-app_argv(Atom):- \+ atom(Atom),!,app_argv_l(Atom).
+app_argv(Atom):- \+ atom(Atom),!,current_app_argv(Atom).
 app_argv(Atom):- app_argv_off(Atom),!,fail.
 app_argv(Atom):- app_argv1(Atom),!.
 app_argv(Atom):- atom_concat(Pos,'=yes',Atom),!,app_argv1(Pos).
@@ -207,13 +209,14 @@ app_argv_ok(Atom):- \+ app_argv_off(Atom).
 
 app_argv_off(Atom):- atom_concat('--',Pos,Atom), atom_concat('--no',Pos,Neg),app_argv1(Neg),!.
 app_argv_off(Pos):- atom_concat('--no',Pos,Neg),app_argv1(Neg),!.
+app_argv_off(Pos):- atom_concat(Pos,'=no',Neg),app_argv1(Neg),!.
 
-app_argv1(Atom):- app_argv_l(List),member(Atom,List).
+app_argv1(Atom):- current_app_argv(List),member(Atom,List).
 app_argv1(Atom):- lmconf:saved_app_argv(Atom),\+ is_list(Atom).
 
-app_argv_l(List):- lmconf:saved_app_argv(List).
-app_argv_l(List):- current_prolog_flag(argv,List),List\==[].
-app_argv_l(List):- current_prolog_flag(os_argv,List).
+current_app_argv(List):- lmconf:saved_app_argv(List).
+current_app_argv(List):- current_prolog_flag(argv,List),List\==[].
+current_app_argv(List):- current_prolog_flag(os_argv,List).
 
 shell_format(Fmt,Args):-format(string(S),Fmt,Args),shell(S),!.
 start_tty_redirect(PORT):-
@@ -261,11 +264,11 @@ maybe_notrace(Goal,Else):-
 % DURING/AFTER BOOT HOOKS
 %=======================================
 
-:- multifile(lmconf:at_restore_goal/1).
-:- dynamic(lmconf:at_restore_goal/1).
+:- multifile(lmconf:at_restore_goal/2).
+:- dynamic(lmconf:at_restore_goal/2).
 
 
-%% at_init(:Goal) is semidet.
+%% before_boot(:Goal) is semidet.
 % 
 % Run a +Goal just before entering/returning to prolog/0 or main goal.
 %
@@ -280,11 +283,29 @@ maybe_notrace(Goal,Else):-
 %
 %  swipl -s some_startup_file   - run immediately unless is module
 % 
-:- meta_predicate(at_init(:)).
-at_init(Goal):- system:assertz(lmconf:at_restore_goal(Goal)),add_history(Goal).
 
+at_current_Y(_S,Goal):- call(Goal).
 
-%% during_init(:Goal) is semidet.
+:- meta_predicate(at_phase(:, +)).
+at_phase(Goal, When):- is_list(When), !, maplist(at_phase(Goal), When).
+at_phase(MGoal, When):- strip_module(MGoal,M,Goal),   
+  (\+ compound(Goal); \+ functor(Goal,at_current_Y,_)),
+  add_history(MGoal),
+  source_location(S,L),!,at_phase(at_current_Y(cuz(S:L),M:Goal), When).
+at_phase(Goal, When):- When == now, !, ignore(try_pending_init(When,Goal)).
+at_phase(Goal, When):-
+   current_prolog_flag(current_phase, Current), 
+   (When == Current ; before_phase(When, Current)), !,
+   system:assertz(lmconf:at_restore_goal(When,Goal)),
+   ignore(try_pending_init(When,Goal)).
+
+at_phase(Goal, When):- system:assertz(lmconf:at_restore_goal(When,Goal)).
+
+before_phase(P1,P2):- number_phase(N1,P1), number_phase(N2,P2), N1 < N2.
+
+:- set_prolog_flag(current_phase, load).
+
+%% before_boot(:Goal) is semidet.
 % 
 % Run a +Goal as soon as possible
 %
@@ -299,23 +320,31 @@ at_init(Goal):- system:assertz(lmconf:at_restore_goal(Goal)),add_history(Goal).
 %
 %  swipl -s some_startup_file   - like initialization(Goal,[now])
 %
-:- meta_predicate(during_init(:)).
-during_init(Goal):- ignore(try_pending_init(maybe_notrace,Goal)), at_init(Goal).
+:- meta_predicate(during_load(:)).
+during_load(G):- at_phase(G, [now,load]).
 
+:- meta_predicate(before_boot(:)).
+before_boot(G):- at_phase(G, [now,before_boot]).
 
-during_boot(G):- during_init(G).
-after_boot(G):- at_init(G).
+:- meta_predicate(during_boot(:)).
+during_boot(G):- at_phase(G, [during_boot]).
+
+:- meta_predicate(after_boot(:)).
+after_boot(G):- at_phase(G, [after_boot]).
+
+:- meta_predicate(during_runtime(:)).
+during_runtime(Goal):- at_phase(Goal, [runtime]).
 
 % doesnt run if --nonet
 :- meta_predicate(during_net_boot(:)).
-during_net_boot(M:Goal):- during_boot(whenever_flag_permits(run_network,M:Goal)).
+during_net_boot(M:Goal):- after_boot(whenever_flag_permits(run_network,M:Goal)).
 
 % --nonet
 :- meta_predicate(after_net_boot(:)).
-after_net_boot(M:Goal):- after_boot(whenever_flag_permits(run_network,M:Goal)).
+after_net_boot(M:Goal):- during_runtime(whenever_flag_permits(run_network,M:Goal)).
 
-:- meta_predicate(after_boot_sanity_test(:)).
-after_boot_sanity_test(M:Goal):- after_boot(M:sanity(M:Goal)).
+:- meta_predicate(runtime_sanity_test(:)).
+runtime_sanity_test(M:Goal):- nop(after_boot(M:sanity(M:Goal))).
 
 %% call_last_is_var( :GoalMCall) is semidet.
 %
@@ -343,49 +372,57 @@ is_startup_file(File):- is_startup_script(File).
 %=======================================
 %= CALL BOOT HOOKS
 %=======================================
-:- dynamic(lmcache:called_startup_goal/1).
-:- volatile(lmcache:called_startup_goal/1).
-
-:- meta_predicate run_pending_inits(1).
-run_pending_inits(How):- 
-   forall(lmconf:at_restore_goal(Goal),(try_pending_init(How,Goal))).
-
-has_ran_once(Goal):- lmcache:called_startup_goal(GoalW), GoalW =@= Goal,!.
+:- dynamic(lmcache:called_startup_goal/2).
+:- volatile(lmcache:called_startup_goal/2).
 
 
-:- meta_predicate try_pending_init(1,*).
-try_pending_init(_,Goal):- has_ran_once(Goal),!.
-try_pending_init(How,Goal):- assert(lmcache:called_startup_goal(Goal)),
-    ( \+ \+ call(How,Goal) 
-      -> true ; 
-       erase_clause(lmcache:called_startup_goal(Goal),true)).
+number_phase(1,load). % before compile
+number_phase(2,before_boot).  % before booting/compile  compiled sits at 2 (and resumes from 2)
+number_phase(3,during_boot).
+number_phase(4,after_boot).  % after booting
+number_phase(5,runtime).
 
 
-:- module_transparent(run_pending_inits/0).
-run_pending_inits:- run_pending_inits(maybe_notrace).
-
-init_why(Phase):- 
+init_why(Phase, Why):- 
   %dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),
   %dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),
-  dmsg(init_why(Phase)),
+  dmsg(init_why(Phase, Why)),
+  set_prolog_flag(current_phase, Phase),
   %dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),
   %dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),!,
-  run_pending_inits.
+  run_pending_inits(Phase).
+
+:- module_transparent(run_pending_inits/0).
+run_pending_inits:- 
+  current_prolog_flag(current_phase, Phase),
+  run_pending_inits(Phase).
+
+:- module_transparent(run_pending_inits/1).
+run_pending_inits(Until):- 
+ number_phase(UntilN,Until),
+ forall(
+  (number_phase(WhenN,When),
+   lmconf:at_restore_goal(When,Goal),
+   WhenN=<UntilN),
+   try_pending_init(When,Goal)).
+
+  
+has_ran_once(When,Goal):- lmcache:called_startup_goal(When,GoalW), GoalW =@= Goal,!.
+has_ran_once(Goal):- has_ran_once(_,Goal).
+
+:- meta_predicate try_pending_init(+,:).
+try_pending_init(_,Goal):- has_ran_once(_, Goal),!.
+try_pending_init(When,Goal):- 
+    assertz(lmcache:called_startup_goal(When,Goal)),
+    ( \+ \+ maybe_notrace(Goal) 
+      -> true ; 
+       erase_clause(lmcache:called_startup_goal(When,Goal),true)).
+
 
 :- if(app_argv('--nonet')).
 :- set_prolog_flag(run_network,false).
 :- endif.
 
-
-%=======================================
-%= REGISTER FOR INIT EVENTS
-%=======================================
-
-%= Register a hook after restore
-%:- initialization(init_why(restore),restore).
-
-%= Register a hook after restore
-%:- initialization(init_why(program),program).
 
 
 %= Register a hook after welcome
@@ -397,7 +434,7 @@ init_why(Phase):-
 :- dynamic(system:'$init_goal'/3).
 :- module_transparent(system:'$init_goal'/3).
 :- forall(absolute_startup_script(F),
-    (assertz(system:'$init_goal'(F,logicmoo_startup:init_why(after(F)),F:9999)))).
+    (assertz(system:'$init_goal'(F,logicmoo_startup:init_why(before_boot,after(F)),F:9999)))).
 
 :- if(false).
 :- user:multifile(expand_answer/2).
@@ -459,12 +496,12 @@ fav_debug:-
  set_prolog_flag(verbose_load,full),
  !.
 
-setup_hist:-  '$toplevel':setup_history.
-:- setup_hist.
+%setup_hist:-  '$toplevel':setup_history.
+%:- setup_hist.
 
 
 bt:-
-    use_module(library(prolog_stack)),
+   use_module(library(prolog_stack)),
   dumpST9,
  prolog_stack:export(prolog_stack:get_prolog_backtrace_lc/3),
  use_module(library(prolog_stack),[print_prolog_backtrace/2,get_prolog_backtrace_lc/3]),
@@ -475,9 +512,8 @@ bt:-
 
 
 :- meta_predicate(whenever_flag_permits(+,:)).
-
-whenever_flag_permits(Flag,G):- (current_prolog_flag(Flag,false) -> true ; G).
-whenever(Flag,G):- whenever_flag_permits(Flag,G).
+whenever_flag_permits(Flag,G):- (current_prolog_flag(Flag, false) -> true ; G).
+whenever(Flag, G):- whenever_flag_permits(Flag,G).
 
 
 % startup_file0(File):- sub_argv(['-g',Opt]),atom_to_term(Opt,LoadsFile,_),is_loads_file(LoadsFile,File).
@@ -507,12 +543,13 @@ if_file_exists(M:Call):- arg(1,Call,MMFile),strip_module(MMFile,_,File),
 :- module_transparent(load_library_system/1).
 load_library_system(M:File):- !, load_library_system(M,File). 
 load_library_system(File):- context_module(M),load_library_system(M,File).
+:- export(load_library_system/1).
 :- system:import(load_library_system/1).
 
 :- module_transparent(load_library_system/2).
-load_library_system(user,File):-!, during_boot(gripe_time(40,(if_file_exists(ensure_loaded(system:File))))).
-load_library_system(M,File):- during_boot(gripe_time(40,(if_file_exists(ensure_loaded(M:File))))).
-
+load_library_system(user,File):-!, before_boot(gripe_time(40,(if_file_exists(ensure_loaded(system:File))))).
+load_library_system(M,File):- before_boot(gripe_time(40,(if_file_exists(ensure_loaded(M:File))))).
+:- export(load_library_system/2).
 :- system:import(load_library_system/2).
 
 
@@ -575,8 +612,7 @@ which_pack(Lib,Pack):-  pack_property(Pack,library(Lib)).
 which_pack(Home,Pack):- pack_property(Pack,home(Home)).
 
 :- export(pack_soft_upgrade/1).
-pack_soft_upgrade(Which) :- which_pack(Which,Pack)-> Which\==Pack,!,
-  pack_soft_upgrade(Pack).
+pack_soft_upgrade(Which) :- which_pack(Which,Pack)-> Which\==Pack,!, pack_soft_upgrade(Pack).
 pack_soft_upgrade(Pack) :-
    prolog_pack:(
  
@@ -594,7 +630,7 @@ pack_soft_upgrade(Pack) :-
     ;   confirm(upgrade(Pack, V0, V1), yes, []),
         git([merge, 'origin/master'], [ directory(Dir) ]),
         pack_rebuild(Pack)
-    )).
+    )).                             
 
 pack_soft_upgrade(Pack) :-  fail,
    prolog_pack:(
@@ -682,7 +718,7 @@ system:logicmoo_user_stacks:- Six = 6, set_prolog_stack(global, limit(Six*10**9)
 :- set_prolog_stack(local, limit(32*10**9)).
 :- set_prolog_stack(trail, limit(32*10**9)).
 :- module_transparent( (set_prolog_stack_gb)/1).
-:- during_boot(set_prolog_stack_gb(16)).
+:- before_boot(set_prolog_stack_gb(16)).
 
 
 */
@@ -836,8 +872,8 @@ qsave_lm0(LM):- statistics(globallimit,G),statistics(locallimit,L),statistics(tr
    call(X).
 
 
-run_prologmud :- ensure_loaded(library(prologmud_sample_games/run_mud_server)),init_why(run_prologmud).
-init_logicmoo :- ensure_loaded(library(logicmoo_repl)),init_why(init_logicmoo).
+run_prologmud :- ensure_loaded(library(prologmud_sample_games/run_mud_server)),init_why(runtime,run_prologmud).
+init_logicmoo :- ensure_loaded(library(logicmoo_repl)),init_why(during_booting,init_logicmoo).
 
 
 % invert_varname(NV):-  ignore(((NV=(N=V), V='$VAR'(N)))).
@@ -850,15 +886,16 @@ ignore_not_not(G):- ignore((catch((( \+ \+ (ignore(once(G))))),_,fail))),!.
 make_historial(M:O,A):- (M==user),!, make_historial(O,A).
 make_historial(whenever_flag_permits(_,O),A):-!,make_historial(O,A).
 make_historial(add_history(O),A):-!,make_historial(O,A).
-make_historial(O,A):-ground(O),format(atom(A), '~W', [O, [fullstop(true),portrayed(true),quoted(true),numbervars(true)]]),!.
+make_historial(O,A):-ground(O),format(string(A), '~W', [O, [fullstop(true),portrayed(true),quoted(true),numbervars(true)]]),!.
 make_historial(O,A):-
     prolog_load_context(variable_names, Bindings),
-    format(atom(A), '~W', [O, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]).
+    format(string(A), '~W', [O, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]).
 
 :- multifile prolog:history/2.
 
-add_history0(_):- \+ app_argv('--history'),!.
-add_history0(A):- prolog:history(user_input,add(A)),
+add_history0(_):- notrace(app_argv('--nohistory')),!.
+add_history0(A):- forall(retract('$history':'$history'(_,A)),true),
+                  prolog:history(user_input,add(A)),
                   prolog:history(current_input,add(A)).
 
 
@@ -924,11 +961,11 @@ logicmoo_base_port(Base):- getenv_or('LOGICMOO_BASE_PORT',Base,3000),!.
 % ==============================================
 :- meta_predicate '$syspreds':bit(2,?,?).
 :- meta_predicate '$bags':findnsols_loop(*,*,0,*,*).
-:- meta_predicate '$bags':findall_loop(*,0,*,*).
+%:- meta_predicate '$bags':findall_loop(*,0,*,*).
 :- meta_predicate '$attvar':unfreeze(0).
 :- meta_predicate '$attvar':run_crv(0,*,*,*).
 :- meta_predicate '$expand':expand_term_list(4,*,*,*,*).
-:- meta_predicate '$parms':cached_library_directory(*,0,*).
+%:- meta_predicate '$parms':cached_library_directory(*,0,*).
 %:- meta_predicate '$toplevel':residue_vars(0,-).
 :- meta_predicate '$toplevel':toplevel_call(0).
 :- meta_predicate '$toplevel':run_initialize(0,*).
@@ -965,6 +1002,20 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
   wdmsg(File : '?='(SourceModule , TypeIn)),
   SourceModule == TypeIn,
   run_pending_inits, fail.
+
 :- endif.
+
+%=======================================
+%= REGISTER FOR INIT EVENTS
+%=======================================
+
+%= Register a hook after restore
+:- initialization(init_why(during_boot,restore),restore).
+
+%= Register a hook
+:- initialization(init_why(after_boot,program),program).
+
+%= Register a hook
+:- initialization(init_why(runtime,main),main).
 
 

@@ -29,6 +29,10 @@
 :- meta_predicate(visit_script_term(*)).
 :- meta_predicate(visit_if(0)).
 :- meta_predicate(in_space_cmt(0)).
+:- meta_predicate(now_doing(1,?)).
+:- meta_predicate each_doing(1,?).
+:- meta_predicate doing(1,*).
+
 
 % % % OFF :- system:use_module('../file_scope').
 :- module_transparent(process_this_script_now/0).
@@ -43,9 +47,6 @@
 :- thread_local(t_l:block_comment_mode/1).
 :- thread_local(t_l:echo_mode/1).
 
-:- meta_predicate now_doing(1,?).
-:- meta_predicate each_doing(1,?).
-:- meta_predicate doing(1,*).
 
 
 till_eof(In) :-

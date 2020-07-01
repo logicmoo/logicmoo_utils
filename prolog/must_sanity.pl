@@ -95,7 +95,7 @@ get_must_type(retry,Goal,must_retry(Goal)).
 get_must_type(How,Goal,CGoal):- 
      (How == assertion -> CGoal = (Goal*->true;call(prolog_debug:assertion_failed(fail, must(Goal))));
      (How == error ; true ) 
-       -> CGoal = (Goal*-> true; throw(failed_must(Goal)))).
+       -> CGoal = (Goal*-> true; (rtrace(Goal),throw(failed_must(Goal))))).
 
 must_retry(Call):- 
    (repeat, (catchv(Call,E,(dmsg(E:Call),fail)) *-> true ; 

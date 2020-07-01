@@ -31,6 +31,10 @@ virtualize_source/3,
 vwc/0
 ]).
 
+:- autoload(library(apply),[maplist/2]).
+:- autoload(library(lists),[member/2,append/3]).
+:- autoload(library(occurs),[sub_term/2]).
+
 :- module_transparent((
 %cnas/3,
 nb_current_or_nil/2,
@@ -177,7 +181,7 @@ could_safe_virtualize(File):- prolog_load_context(module,M), \+ clause_b(mtHybri
 % file late late joiners
 :- if( \+ prolog_load_context(reload,true)).
 
-:- source_location(File, Line)-> during_boot(((set_how_virtualize_file(false,File, Line)))).
+:- source_location(File, Line)-> before_boot(((set_how_virtualize_file(false,File, Line)))).
 
 :- doall((module_property(M,file(File)),
           \+ baseKB:how_virtualize_file(_,File, _),

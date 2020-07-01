@@ -442,6 +442,7 @@
 % % % % OFF :- system:use_module('logicmoo_util_rtrace').
 :- set_module(class(library)).
 
+not_debugging:- \+ tracing, \+ current_prolog_flag(debug,true).
 
 /*
 %% all_source_file_predicates_are_transparent() is det.
@@ -454,6 +455,8 @@ all_source_file_predicates_are_transparent:-
   must(prolog_load_context(source,SFile)),all_source_file_predicates_are_transparent(SFile),
   must(prolog_load_context(file,File)),(SFile==File->true;all_source_file_predicates_are_transparent(File)).
 */
+
+:- system:use_module(library(debug)).
 
 :- module_transparent(all_source_file_predicates_are_transparent/1).
 :- export(all_source_file_predicates_are_transparent/1).
@@ -1103,7 +1106,6 @@ debugging_logicmoo(Mask):- logicmoo_topic(Mask,Topic),prolog_debug:debugging(Top
 debugging_logicmoo_setting(_,true,[user_error]):- tracing.
 :- multifile(prolog_debug:debugging/3).
 :- dynamic(prolog_debug:debugging/3).
-% % % OFF :- system:use_module(library(debug)).
 :- asserta((prolog_debug:debugging(X,Y,Z):-debugging_logicmoo_setting(X,Y,Z))).
 :- asserta((prolog_debug:debugging(_,False,[]):- current_prolog_flag(nodebugx,true),!,False=false)).
 
@@ -1509,7 +1511,7 @@ set_no_debug_thread:-
 % Set Gui Debug.
 %
 set_gui_debug(TF):- current_prolog_flag(gui,true),!,
-   ((TF, has_gui_debug,set_yes_debug, ignore((use_module(library(gui_tracer)),catchv(guitracer,_,true)))) 
+   ((TF, has_gui_debug, set_yes_debug, ignore((use_module(library(gui_tracer)),catchv(guitracer,_,true)))) 
      -> set_prolog_flag(gui_tracer, true) ;
         set_prolog_flag(gui_tracer, false)).
 :- endif.
@@ -1530,7 +1532,7 @@ set_yes_debug:-
    set_prolog_flag(generate_debug_info, true),
    set_prolog_flag(report_error,true),   
    set_prolog_flag(debug_on_error,true),
-   set_prolog_flag(debug, true),   
+   % set_prolog_flag(debug, true),   
    set_prolog_flag(query_debug_settings, debug(true, true)),
    % set_gui_debug(true),
    maybe_leash(+all),
@@ -1817,7 +1819,7 @@ singletons(_).
 % Set Optimize.
 %
 set_optimize(_):- !.
-set_optimize(TF):- set_prolog_flag(gc,TF),set_prolog_flag(last_call_optimisation,TF),set_prolog_flag(optimise,TF).
+set_optimize(TF):- set_prolog_flag(gc,TF),set_prolog_flag(last_call_optimisation,TF),set_prolog_flag(optimise,TF),do_gc0.
 
 
 
@@ -1836,8 +1838,10 @@ do_gc:- do_gc0,!.
 %
 % Do Gc Primary Helper.
 %
-do_gc0:- current_prolog_flag(gc,true),!,do_gc1.
-do_gc0:- set_prolog_flag(gc,true), do_gc1, set_prolog_flag(gc,false).
+do_gc0:- current_prolog_flag(gc, true),!,do_gc1.
+do_gc0:- set_prolog_flag(gc, true), do_gc1, set_prolog_flag(gc,false), 
+         dmsg(warning(set_prolog_flag(gc,false))).
+
 
 
 
@@ -1845,8 +1849,13 @@ do_gc0:- set_prolog_flag(gc,true), do_gc1, set_prolog_flag(gc,false).
 %
 % Do Gc Secondary Helper.
 %
-do_gc1:- zotrace((garbage_collect, cleanup_strings /*garbage_collect_clauses*/ /*, statistics*/
-                    )).
+do_gc1:- notrace((
+  trim_stacks,
+  cleanup_strings,
+  garbage_collect_atoms,
+  %garbage_collect_clauses
+  %statistics
+  garbage_collect)).
 
 
 
@@ -3137,9 +3146,9 @@ must_det(Level,Goal) :- Goal,
 % :- must(('$set_source_module'(X,X),!,X==user)).
 
 :- '$set_predicate_attribute'(t_l:dont_varname, trace, 0).
-:- unlock_predicate(system:true/0).
+:- swi_system_utilities:unlock_predicate(system:true/0).
 :- '$set_predicate_attribute'(system:true, trace, 0).
-:- lock_predicate(system:true/0).
+:- swi_system_utilities:lock_predicate(system:true/0).
 
 % 
 

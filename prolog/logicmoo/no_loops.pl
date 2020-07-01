@@ -18,6 +18,12 @@
           is_parent_goal/2,
             lc_tcall/1
           ]).
+% :- autoload(library(apply),[maplist/2, maplist/3]).
+:- system:use_module(library(lists)).
+:- system:use_module(library(apply)).
+:- user:use_module(library(yall)).
+:- system:use_module(library(threadutil)).
+:- system:use_module(library(debug)).
 
 :- module_transparent((is_loop_checked/1,
             lco_goal_expansion/2,            

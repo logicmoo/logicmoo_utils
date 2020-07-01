@@ -488,8 +488,10 @@ save_streams:- thread_self(ID),save_streams(ID),!.
 set_mains:-
        stream_property(In, alias(user_input)),set_stream(In,alias(main_input)),
        stream_property(Out, alias(user_output)),set_stream(Out,alias(main_output)),
-       find_main_eror(Err),set_stream(Err,alias(main_error)), set_stream(Err,alias(current_error)),set_stream(Err, alias(user_error)).
+       find_main_eror(Err),set_stream(Err,alias(main_error)), 
+       set_stream(Err,alias(current_error)),set_stream(Err, alias(user_error)).
 
+find_main_eror(Err):-stream_property(Err, file_no(2)).
 find_main_eror(Err):-stream_property(Err, alias(user_error)).
 find_main_eror(Err):-stream_property(Err, alias(main_error)).
 find_main_eror(Err):-stream_property(Err, alias(current_error)).
@@ -504,7 +506,7 @@ current_error_stream_ucatch(Err):-
   stream_property(Err,file_no(2)).
 
 
-%=
+:- autoload(library(backcomp),[thread_at_exit/1]).
 
 %% save_streams( ?ID) is semidet.
 %

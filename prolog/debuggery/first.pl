@@ -72,21 +72,31 @@
 
 
 :- set_module(class(library)).
+old_set_predicate_attribute(M:F/A, Name, Val):- functor(P,F,A), !, old_set_predicate_attribute(M:P, Name, Val).
+%old_set_predicate_attribute(MA, system, Val):- !, old_set_predicate_attribute(MA, iso, Val).
+old_set_predicate_attribute(MA, Name, Val) :-
+    catch('$set_predicate_attribute'(MA, Name, Val),error(E, _), nop(print_message(error, error(E, context(Name/1, _))))).
+
+
+old_get_predicate_attribute(M:F/A, Name, Val):- functor(P,F,A), !, old_get_predicate_attribute(M:P, Name, Val).
+%old_get_predicate_attribute(MA, system, Val):- !, old_get_predicate_attribute(MA, iso, Val).
+old_get_predicate_attribute(MA, Name, Val) :-
+    catch('$get_predicate_attribute'(MA, Name, Val),error(E, _), nop(print_message(error, error(E, context(Name/1, _))))).
 
 :- meta_predicate('$with_unlocked_pred_local'(:,0)).
 '$with_unlocked_pred_local'(MP,Goal):- strip_module(MP,M,P),Pred=M:P,
    (predicate_property(Pred,foreign)-> true ;
   (
- ('$get_predicate_attribute'(Pred, system, OnOff)->true;throw('$get_predicate_attribute'(Pred, system, OnOff))),
+ ('old_get_predicate_attribute'(Pred, system, OnOff)->true;throw('old_get_predicate_attribute'(Pred, system, OnOff))),
  (==(OnOff,0) -> Goal ;
- setup_call_cleanup('$set_predicate_attribute'(Pred, system, 0),
-   catch(Goal,E,throw(E)),'$set_predicate_attribute'(Pred, system, 1))))).
+ setup_call_cleanup('old_set_predicate_attribute'(Pred, system, 0),
+   catch(Goal,E,throw(E)),'old_set_predicate_attribute'(Pred, system, 1))))).
                        
 :- meta_predicate(totally_hide(:)).
 totally_hide(MP):- strip_module(MP,M,P),Pred=M:P,
    % (current_prolog_flag(runtime_debug,N), N>2) -> unhide(Pred) ; 
   '$with_unlocked_pred_local'(Pred,
-   (('$hide'(Pred),'$set_predicate_attribute'(Pred, trace, false),'$set_predicate_attribute'(Pred, hide_childs, true)))).
+   (('$hide'(Pred),'old_set_predicate_attribute'(Pred, trace, false),'old_set_predicate_attribute'(Pred, hide_childs, true)))).
 
 :- thread_local(tlbugger:ifHideTrace/0).% WAS OFF  :- system:reexport(library(logicmoo/util_varnames)).
 % % % OFF :- system:use_module(library(lists)).
@@ -283,9 +293,9 @@ if_may_hide(G):-G.
 with_unlocked_pred(MP,Goal):- strip_module(MP,M,P),Pred=M:P,
    (predicate_property(Pred,foreign)-> true ;
   (
- ('$get_predicate_attribute'(Pred, system, 0) -> Goal ;
- setup_call_cleanup('$set_predicate_attribute'(Pred, system, 0),
-   catch(Goal,E,throw(E)),'$set_predicate_attribute'(Pred, system, 1))))).
+ ('old_get_predicate_attribute'(Pred, system, 0) -> Goal ;
+ setup_call_cleanup('old_set_predicate_attribute'(Pred, system, 0),
+   catch(Goal,E,throw(E)),'old_set_predicate_attribute'(Pred, system, 1))))).
 
 
 on_xf_cont(Goal):- ignore(catch(Goal,_,true)).
@@ -299,10 +309,10 @@ on_xf_cont(Goal):- ignore(catch(Goal,_,true)).
 % Managed Predicate  Trace less.
 %
 mpred_trace_less(W):- if_may_hide(forall(match_predicates(W,M,Pred,_,_),(
-with_unlocked_pred(M:Pred,(
-  '$set_predicate_attribute'(M:Pred, noprofile, 1),
-  (A==0 -> '$set_predicate_attribute'(M:Pred, hide_childs, 1);'$set_predicate_attribute'(M:Pred, hide_childs, 1)),
-  (A==0 -> '$set_predicate_attribute'(M:Pred, trace, 0);'$set_predicate_attribute'(M:Pred, trace, 1))))))).
+ with_unlocked_pred(M:Pred,(
+  'old_set_predicate_attribute'(M:Pred, noprofile, 1),
+  (A==0 -> 'old_set_predicate_attribute'(M:Pred, hide_childs, 1);'old_set_predicate_attribute'(M:Pred, hide_childs, 1)),
+  (A==0 -> 'old_set_predicate_attribute'(M:Pred, trace, 0);'old_set_predicate_attribute'(M:Pred, trace, 1))))))).
 
 :- export(mpred_trace_none/1).
 
@@ -313,7 +323,7 @@ with_unlocked_pred(M:Pred,(
 % Managed Predicate  Trace none.
 %
 mpred_trace_none(W):- (forall(match_predicates(W,M,Pred,F,A),
-  with_unlocked_pred(M:Pred,(('$hide'(M:F/A),'$set_predicate_attribute'(M:Pred, hide_childs, 1),noprofile(M:F/A),nop(nospy(M:Pred))))))).
+  with_unlocked_pred(M:Pred,(('$hide'(M:F/A),'old_set_predicate_attribute'(M:Pred, hide_childs, 1),noprofile(M:F/A),nop(nospy(M:Pred))))))).
 
 :- export(mpred_trace_nochilds/1).
 
@@ -325,9 +335,9 @@ mpred_trace_none(W):- (forall(match_predicates(W,M,Pred,F,A),
 %
 mpred_trace_nochilds(W):- if_may_hide(forall(match_predicates(W,M,Pred,_,_),(
 with_unlocked_pred(M:Pred,(
-'$set_predicate_attribute'(M:Pred, trace, 1),
-%'$set_predicate_attribute'(M:Pred, noprofile, 0),
-'$set_predicate_attribute'(M:Pred, hide_childs, 1)))))).
+'old_set_predicate_attribute'(M:Pred, trace, 1),
+%'old_set_predicate_attribute'(M:Pred, noprofile, 0),
+'old_set_predicate_attribute'(M:Pred, hide_childs, 1)))))).
 
 :- export(mpred_trace_childs/1).
 
@@ -339,9 +349,9 @@ with_unlocked_pred(M:Pred,(
 %
 mpred_trace_childs(W) :- if_may_hide(forall(match_predicates(W,M,Pred,_,_),(
    with_unlocked_pred(M:Pred,(
-   '$set_predicate_attribute'(M:Pred, trace, 0),
-   %'$set_predicate_attribute'(M:Pred, noprofile, 0),
-   '$set_predicate_attribute'(M:Pred, hide_childs, 0)))))).   
+   'old_set_predicate_attribute'(M:Pred, trace, 0),
+   %'old_set_predicate_attribute'(M:Pred, noprofile, 0),
+   'old_set_predicate_attribute'(M:Pred, hide_childs, 0)))))).   
 
 
 %= 	 	 
@@ -352,9 +362,9 @@ mpred_trace_childs(W) :- if_may_hide(forall(match_predicates(W,M,Pred,_,_),(
 %
 mpred_trace_all(W) :- forall(match_predicates(W,M,Pred,_,A),( 
  with_unlocked_pred(M:Pred,(
- (A==0 -> '$set_predicate_attribute'(M:Pred, trace, 0);'$set_predicate_attribute'(M:Pred, trace, 1)),
- % '$set_predicate_attribute'(M:Pred, noprofile, 0),
-'$set_predicate_attribute'(M:Pred, hide_childs, 0))))).
+ (A==0 -> 'old_set_predicate_attribute'(M:Pred, trace, 0);'old_set_predicate_attribute'(M:Pred, trace, 1)),
+ % 'old_set_predicate_attribute'(M:Pred, noprofile, 0),
+'old_set_predicate_attribute'(M:Pred, hide_childs, 0))))).
 
 %:-mpred_trace_all(prolog:_).
 %:-mpred_trace_all('$apply':_).
@@ -448,7 +458,7 @@ unnumbervars(X,Y):- must(zotrace(unnumbervars_and_save(X,Y))).
 zotrace(G):- call(G).
 %zotrace(G):- notrace(tracing)->notrace(G);call(G).
 :- '$hide'(zotrace/1).
-:- '$set_predicate_attribute'(zotrace/1, hide_childs, true).
+:- 'old_set_predicate_attribute'(zotrace/1, hide_childs, true).
 
 first_scce_orig(Setup0,Goal,Cleanup0):-
   notrace((Cleanup = notrace('$sig_atomic'(Cleanup0)),Setup = notrace('$sig_atomic'(Setup0)))),
@@ -970,9 +980,9 @@ export_if_noconflict_mfa(SM,P):-functor(P,F,A),export_if_noconflict_mfa(SM,F,A).
 :- module_transparent(export_if_noconflict_mfa/3).
 export_if_noconflict_mfa(M,F,A):- functor(P,F,A),
    predicate_property(M:P,imported_from(Other)),
-   (Other==system->unlock_predicate(Other:P);true),
+   (Other==system->swi_system_utilities:unlock_predicate(Other:P);true),
    Other:export(Other:F/A),
-   (Other==system->lock_predicate(Other:P);true),
+   (Other==system->swi_system_utilities:lock_predicate(Other:P);true),
    M:import(Other:F/A),!,
    M:export(Other:F/A), writeln(rexporting(M=Other:F/A)).
 export_if_noconflict_mfa(M,F,A):- 

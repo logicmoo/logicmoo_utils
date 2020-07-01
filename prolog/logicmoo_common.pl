@@ -18,6 +18,8 @@
 
 :- module(logicmoo_common,[]).
 
+:- set_module(class(library)).
+
 :- op(700,xfx,prolog:('univ_safe')).
 :- discontiguous logicmoo_utils_all:'$exported_op'/3.
 

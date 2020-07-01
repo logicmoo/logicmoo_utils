@@ -153,6 +153,9 @@ dmsg000/1,
         with_output_to_stream(?, 0),
         with_show_dmsg(?, 0).
 
+:- autoload(library(apply),[maplist/2]).
+:- autoload(library(lists),[member/2,append/3,nth1/3]).
+:- autoload(library(occurs),[sub_term/2]).
 
 univ_safe_2(A,B):- compound(A),compound_name_arity(A,F,0),!,F=..B.
 univ_safe_2(A,B):- A=..B.
@@ -986,7 +989,7 @@ color_line(C,N):-
 %
 % (debug)message.
 %
-dmsg(C):- dzotrace((tlbugger:no_slow_io,!,writeln(main_error,dmsg(C)))).
+dmsg(C):- dzotrace((tlbugger:no_slow_io,!,stream_property(X,file_no(2)),writeln(X,dmsg(C)))).
 dmsg(V):- dzotrace((locally(set_prolog_flag(retry_undefined,none), if_defined_local(dmsg0(V),logicmoo_util_catch:ddmsg(V))))),!.
 %dmsg(F,A):- dzotrace((tlbugger:no_slow_io,on_x_fail(format(atom(S),F,A))->writeln(dmsg(S));writeln(dmsg_fail(F,A)))),!.
 

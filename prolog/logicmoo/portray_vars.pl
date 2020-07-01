@@ -190,13 +190,17 @@ pretty_enough(H):- ground(H), !.
 pretty_enough(H):- \+ compound(H),!. % may_debug_var(F,'_Call',H).
 pretty_enough(H):- compound_name_arity(H,_,0), !.
 
+name_one(V,R):- var(V), ground(R), may_debug_var(R,V).
+name_one(R,V):- var(V), ground(R), may_debug_var(R,V).
+name_one(_,_).
+
 pretty1(H):- pretty_enough(H),!.
 pretty1(as_rest(Name, Rest, _)):- may_debug_var_v(Name,Rest).
 pretty1(get_var(Env, Name, Val)):- may_debug_var('GEnv',Env),may_debug_var(Name,Val).
 pretty1(deflexical(Env,_Op, Name, Val)):- may_debug_var('SEnv',Env),may_debug_var(Name,Val).
 pretty1(set_var(Env,Name, Val)):- may_debug_var('SEnv',Env),may_debug_var(Name,Val).
 
-pretty1(f_slot_value(_Env, Name, Val)):- may_debug_var(slot,Name,Val).
+pretty1(f_slot_value(_Env, Name, Val)):- may_debug_var(slot,Name,Val),!.
 %pretty1(get_kw(ReplEnv, RestNKeys, test, test, f_eql, true, True)
 pretty1(Env=RIGHT):- compound(RIGHT),RIGHT=[List|_],compound(List),var(Env),List=[H|_],compound(H),H=bv(_,_), may_debug_var('Env',Env),
   maplist(pretty1,List).
@@ -204,9 +208,9 @@ pretty1(Env=List):- compound(List),var(Env),List=[H|_],compound(H),H=bv(_,_), ma
   maplist_not_tail(pretty1,List).
 %pretty1(P):- compound_name_arguments(P,_,[_|List]),append(_,[Name, Val|_],List),atom(Name),var(Val),may_debug_var(Name,Val).
 pretty1(debug_var(R,V)):- may_debug_var(R,V).
-pretty1(bv(R,V)):- may_debug_var(R,V).
-pretty1(isa(V,R)):- may_debug_var(R,V).
-pretty1(iza(V,R)):- may_debug_var(R,V).
+pretty1(bv(R,V)):- name_one(V,R).
+pretty1(isa(V,R)):- name_one(V,R).
+pretty1(iza(V,R)):- name_one(V,R).
 pretty1(H):-compound_name_arguments(H,_,ARGS),must_maplist_det(pretty1,ARGS).
 
 pretty1a(H):- pretty_enough(H),!.

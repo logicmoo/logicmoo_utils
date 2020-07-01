@@ -58,8 +58,8 @@
             my_module_sensitive_code/1
           ]).
 
-:- meta_predicate clause_asserted_i(:).
 :- set_module(class(library)).
+:- meta_predicate clause_asserted_i(:).
 
 :- meta_predicate
         ain(:),

@@ -29,9 +29,12 @@
       push_guitracer/0,pop_guitracer/0
    ]).
 
+
 :- set_module(class(library)).
 :- module_transparent(nortrace/0).
 :- system:use_module(library(logicmoo_startup)).
+
+
 
 :-thread_local(t_l:rtracing/0).
 :-thread_local(t_l:tracer_reset/1).
@@ -63,6 +66,8 @@ call_call(G):-call(G).
 on_f_rtrace(Goal):-  Goal *-> true; (ignore(rtrace(Goal)),debugCallWhy(on_f_rtrace(Goal),Goal)).
 
 
+:- meta_predicate on_x_rtrace(*).
+on_x_rtrace(G):-on_x_debug(G).
 
 %! on_x_debug( :Goal) is det.
 %
@@ -72,10 +77,11 @@ on_x_debug(Goal):-
  ((( tracing; t_l:rtracing),maybe_leash(+exception))) 
   -> Goal
    ;
-   (catchv(Goal,E,(ignore(debugCallWhy(on_x_debug(E,Goal),Goal)),throw(E)))).
+   (catchv(Goal,E,(ignore(debugCallWhy(on_x_debug(E,Goal),rtrace(Goal))),throw(E)))).
 
 
-unhide(Pred):- '$set_predicate_attribute'(Pred, trace, true),mpred_trace_childs(Pred).
+
+unhide(Pred):- old_set_predicate_attribute(Pred, trace, true),mpred_trace_childs(Pred).
 
 %! maybe_leash( +Flags) is det.
 %
@@ -183,7 +189,7 @@ quietly(Goal):- \+ tracing -> Goal ;
   (trace,!,notrace(fail)))).
 
 % :- 'totally_hide'(rtrace:quietly/1).
-:- '$set_predicate_attribute'(rtrace:quietly/1, hide_childs, true).
+:- old_set_predicate_attribute(rtrace:quietly/1, hide_childs, true).
 
 % Alt version?
 quietlySE(Goal):- \+ tracing -> Goal ; 
@@ -263,6 +269,7 @@ nortrace:- stop_rtrace,ignore(pop_tracer).
 :- totally_hide(nortrace/0).
 
 
+
 :- thread_local('$leash_visible'/2).
 
 %! restore_trace( :Goal) is det.
@@ -292,7 +299,7 @@ push_leash_visible:- notrace((('$leash'(OldL0, OldL0),'$visible'(OldV0, OldV0), 
 restore_leash_visible:- notrace((('$leash_visible'(OldL1,OldV1)->('$leash'(_, OldL1),'$visible'(_, OldV1));true))).
 
 % restore_trace(Goal):- setup_call_cleanup(get_trace_reset(Reset),Goal,notrace(Reset)).
-:- totally_hide(restore_trace/0).
+:- totally_hide(restore_trace/1).
 
 
 
@@ -380,15 +387,15 @@ rtrace0(Goal):-
 
 %:- '$hide'(system:tracing/0).
 %:- '$hide'(system:notrace/1).
-%:- '$set_predicate_attribute'(system:notrace/1, hide_childs, true).
+%:- old_set_predicate_attribute(system:notrace/1, hide_childs, true).
 %:- '$hide'(system:notrace/0).
 %:- '$hide'(system:trace/0).
 
 :- 'totally_hide'(rtrace:rtrace/1).
-:- '$set_predicate_attribute'(rtrace:rtrace/1, hide_childs, false).
+:- old_set_predicate_attribute(rtrace:rtrace/1, hide_childs, false).
 :- '$hide'(rtrace:reset_rtrace0/1).
-:- '$set_predicate_attribute'(rtrace:reset_rtrace0/1, hide_childs, true).
-%:- '$set_predicate_attribute'(rtrace:reset_rtrace0/1, hide_childs, false).
+:- old_set_predicate_attribute(rtrace:reset_rtrace0/1, hide_childs, true).
+%:- old_set_predicate_attribute(rtrace:reset_rtrace0/1, hide_childs, false).
 
 
 %! rtrace_break( :Goal) is nondet.
@@ -399,7 +406,7 @@ rtrace0(Goal):-
 rtrace_break(Goal):- \+ maybe_leash, !, rtrace(Goal).
 rtrace_break(Goal):- stop_rtrace,trace,debugCallWhy(rtrace_break(Goal),Goal).
 %:- totally_hide(rtrace_break/1).
-:- '$set_predicate_attribute'(rtrace_break/1, hide_childs, false).
+:- old_set_predicate_attribute(rtrace_break/1, hide_childs, false).
 
 
 
@@ -435,7 +442,8 @@ ignore_must(Goal):- how_must(fail, Goal).
  forall(source_file(M:H,S),
  ignore((functor(H,F,A),
   ignore(((\+ atom_concat('$',_,F),(export(F/A) , current_predicate(system:F/A)->true; system:import(M:F/A))))),
-  ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A]))))))))).
+  ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), \+ atom_concat('__aux',_,F),
+   prolog_debug:debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A]))))))))).
 
 % % % OFF :- system:use_module(library(logicmoo_utils_all)).
 :- fixup_exports.
