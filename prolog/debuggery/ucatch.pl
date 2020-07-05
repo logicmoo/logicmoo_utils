@@ -512,6 +512,7 @@ current_error_stream_ucatch(Err):-
 %
 % Save Streams.
 %
+save_streams(_):-!.
 save_streams(ID):-
   retractall((lmcache:thread_current_input(ID,_))),
   retractall((lmcache:thread_current_error_stream(ID,_))),

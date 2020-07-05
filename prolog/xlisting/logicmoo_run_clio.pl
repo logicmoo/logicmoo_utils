@@ -166,9 +166,9 @@ mpred_online:semweb_startup:- do_semweb_startup_late_once.
 
 :- if_startup_script(do_semweb_startup_late_once).
 
-:- initialization(do_semweb_startup_late_once).
+:- during_boot(do_semweb_startup_late_once).
 
-:- initialization(ensure_webserver).
+:- during_boot(ensure_webserver).
 
 :- do_semweb_startup_late_once, ensure_webserver.
 

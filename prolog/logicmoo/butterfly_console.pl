@@ -18,7 +18,7 @@
 
 % We save the name of the module loading this module
 :- module(butterfly,[bformat/1,bformat/2,bformat/3]).
-
+%:- use_module(library(logicmoo/butterfly_console)).
 :- thread_local(t_l:in_block_format/0).
 pre_style:-!.
 pre_style:- format("P;HTML|<style> pre {

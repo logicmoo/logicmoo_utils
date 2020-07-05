@@ -234,7 +234,6 @@ erase_clause(H,B):-
   BH=@=BHC,
   erase(Ref).   
 
-:- meta_predicate(maybe_notrace(0)).
 
 %% maybe_notrace(:Goal) is nondet.
 %
@@ -247,18 +246,20 @@ erase_clause(H,B):-
 %
 % @NOTE quietly/1 is the nondet version of notrace/1.
 
-% maybe_notrace(Goal):- !, call(Goal).
-maybe_notrace(Goal):- tracing -> (debug,maybe_notrace(quietly(Goal), Goal)) ; maybe_notrace(Goal,rtrace(Goal)).
+:- meta_predicate(at_current_Y(+, :)).
+at_current_Y(_S,Goal):- maybe_notrace(Goal).
 
-:- meta_predicate(maybe_notrace(0,0)).
+:- meta_predicate(maybe_notrace(0)).
+maybe_notrace(Goal):- tracing -> (debug,maybe_one(quietly(Goal), rtrace(Goal))) ; maybe_one(notrace(Goal),rtrace(Goal)).
 
-maybe_notrace(Goal,Else):- !, (call(Goal)*-> true ; Else).
-maybe_notrace(Goal,Else):-   
+:- meta_predicate(maybe_one(0,0)).
+maybe_one(Goal,Else):- catch(call(Goal),_,fail)*-> true ; Else.
+/*maybe_one(Goal,Else):-   
   (catch(Goal,E1,(wdmsg(error_maybe_zotrace(E1,Goal)),Else)) 
    -> ! 
    ; (( wdmsg(failed_maybe_zotrace(Goal)),
      ignore(catch(Else,E2,(wdmsg(else_error_maybe_zotrace(E2, Else, goal(Goal))),(nonvar(E1)->throw(E1);throw(E2)))))))).
-
+*/
 
 %=======================================
 % DURING/AFTER BOOT HOOKS
@@ -284,7 +285,6 @@ maybe_notrace(Goal,Else):-
 %  swipl -s some_startup_file   - run immediately unless is module
 % 
 
-at_current_Y(_S,Goal):- call(Goal).
 
 :- meta_predicate(at_phase(:, +)).
 at_phase(Goal, When):- is_list(When), !, maplist(at_phase(Goal), When).
@@ -320,8 +320,8 @@ before_phase(P1,P2):- number_phase(N1,P1), number_phase(N2,P2), N1 < N2.
 %
 %  swipl -s some_startup_file   - like initialization(Goal,[now])
 %
-:- meta_predicate(during_load(:)).
-during_load(G):- at_phase(G, [now,load]).
+:- meta_predicate(loadtime_boot(:)).
+loadtime_boot(G):- at_phase(G, [now,load]).
 
 :- meta_predicate(before_boot(:)).
 before_boot(G):- at_phase(G, [now,before_boot]).
@@ -332,8 +332,8 @@ during_boot(G):- at_phase(G, [during_boot]).
 :- meta_predicate(after_boot(:)).
 after_boot(G):- at_phase(G, [after_boot]).
 
-:- meta_predicate(during_runtime(:)).
-during_runtime(Goal):- at_phase(Goal, [runtime]).
+:- meta_predicate(runtime_boot(:)).
+runtime_boot(Goal):- at_phase(Goal, [runtime]).
 
 % doesnt run if --nonet
 :- meta_predicate(during_net_boot(:)).
@@ -341,10 +341,10 @@ during_net_boot(M:Goal):- after_boot(whenever_flag_permits(run_network,M:Goal)).
 
 % --nonet
 :- meta_predicate(after_net_boot(:)).
-after_net_boot(M:Goal):- during_runtime(whenever_flag_permits(run_network,M:Goal)).
+after_net_boot(M:Goal):- runtime_boot(whenever_flag_permits(run_network,M:Goal)).
 
-:- meta_predicate(runtime_sanity_test(:)).
-runtime_sanity_test(M:Goal):- nop(after_boot(M:sanity(M:Goal))).
+:- meta_predicate(test_runtime_boot(:)).
+test_runtime_boot(M:Goal):- nop(after_boot(M:sanity(M:Goal))).
 
 %% call_last_is_var( :GoalMCall) is semidet.
 %
@@ -380,7 +380,7 @@ number_phase(1,load). % before compile
 number_phase(2,before_boot).  % before booting/compile  compiled sits at 2 (and resumes from 2)
 number_phase(3,during_boot).
 number_phase(4,after_boot).  % after booting
-number_phase(5,runtime).
+number_phase(5,runtime). % when running
 
 
 init_why(Phase, Why):- 
@@ -421,6 +421,8 @@ try_pending_init(When,Goal):-
 
 :- if(app_argv('--nonet')).
 :- set_prolog_flag(run_network,false).
+:- else.
+:- set_prolog_flag(run_network,true).
 :- endif.
 
 
@@ -588,7 +590,7 @@ teamspoon_pack(Pack):-
   pack_property(Pack,home(Home)),once(sub_string(Home, _, _, _, 'github.com/TeamSPoon')).
 
 logicmoo_update:-  call((user:use_module(library(prolog_pack)))),
-    forall(teamspoon_pack(Pack),maybe_pack_upgrade(Pack)).
+    forall(teamspoon_pack(Pack),wdmsg(maybe_pack_upgrade(Pack))).
 /*
 pack_upgrade_wrong:- call((user:use_module(library(prolog_pack)),use_module(library(predicate_streams)), 
   call(call,
@@ -940,9 +942,10 @@ fixup_exports_system:-   (prolog_load_context(source,SF)-> system:reexport(SF) ;
 
 %:- logicmoo_startup:use_module(library(option),[options/3]).
 
-logicmoo_base_port(Base):- app_argv1(One),\+ is_list(One),
-   (atom(One)-> (atomic_list_concat([_,Atom],'port=',One),atom_number(Atom,Base))),!.
 logicmoo_base_port(Base):- getenv_or('LOGICMOO_BASE_PORT',Base,3000),!.
+logicmoo_base_port(Base):- app_argv1(One),\+ is_list(One),
+   (atom(One)-> (atomic_list_concat([_,Atom],'port=',One),atom_number(Atom,Base20))),!,Base is Base20 -20,
+   setenv('LOGICMOO_BASE_PORT',Base).
 :- export(logicmoo_base_port/1).
 :- system:import(logicmoo_base_port/1).
 
@@ -1016,6 +1019,6 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
 :- initialization(init_why(after_boot,program),program).
 
 %= Register a hook
-:- initialization(init_why(runtime,main),main).
+%:- initialization(init_why(runtime,main),main).
 
 

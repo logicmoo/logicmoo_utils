@@ -525,11 +525,13 @@ new_line_if_needed:- flush_output,format('~N',[]),flush_output.
 fmt9(Msg):- new_line_if_needed, must(fmt90(Msg)),!,new_line_if_needed.
 
 fmt90(fmt0(F,A)):-on_x_fail(fmt0(F,A)),!.
-fmt90(Msg):- on_x_fail(((string(Msg)),format(Msg,[fmt90_x1,fmt90_x2,fmt90_x3]))),!.
-fmt90(Msg):- on_x_fail((with_output_to(string(S),
-   on_x_fail(if_defined_local(portray_clause_w_vars(Msg),fail))),format('~s',[S]))),!.
-fmt90(Msg):- on_x_fail(format('~p',[Msg])),!.
-fmt90(Msg):- writeq(fmt9(Msg)).
+fmt90(Msg):- notrace(on_x_fail(((string(Msg)),format(Msg,[])))),!.
+fmt90(Msg):- 
+ on_x_fail((with_output_to(string(S),
+   on_x_fail(if_defined_local(portray_clause_w_vars(Msg),fail))),
+    format('~s',[S]))),!.
+fmt90(Msg):- notrace(on_x_fail(format('~p',[Msg]))),!.
+fmt90(Msg):- notrace(writeq(fmt9(Msg))).
 
 % :-reexport(library(ansi_term)).
 % % % OFF :- system:use_module(library(ansi_term)).
@@ -1126,7 +1128,7 @@ dmsg00(V):- dmsg000(V),!.
 dmsg000(V):-
  with_output_to_main_error(
    (dzotrace(format(string(K),'~p',[V])),
-   (tlbugger:in_dmsg(K)-> dmsg5(V);  % format_to_error('~N% ~q~n',[dmsg0(V)]) ;
+   (tlbugger:in_dmsg(K)-> dmsg5(dmsg5(V));  % format_to_error('~N% ~q~n',[dmsg0(V)]) ;
       asserta(tlbugger:in_dmsg(K),Ref),call_cleanup(dmsg1(V),erase(Ref))))),!.
 
 % = :- export(dmsg1/1).
@@ -1138,7 +1140,7 @@ dmsg000(V):-
 %
 % (debug)message Secondary Helper.
 %
-dmsg1(V):- tlbugger:is_with_dmsg(FP),!,univ_safe_2(FP,FPL),append(FPL,[V],VVL),univ_safe_2(VV,VVL),once(dmsg1(VV)).
+dmsg1(V):- tlbugger:is_with_dmsg(FP),!,univ_safe_2(FP,FPL),append(FPL,[V],VVL),univ_safe_2(VV,VVL),once(dmsg1(VV)),!.
 dmsg1(_):- current_prolog_flag(dmsg_level,never),!.
 dmsg1(V):- var(V),!,dmsg1(warn(dmsg_var(V))).
 dmsg1(NC):- cyclic_term(NC),!,dtrace,format_to_error('~N% ~q~n',[dmsg_cyclic_term_1]).
@@ -1163,7 +1165,7 @@ dmsg2(skip_dmsg(_)):-!.
 dmsg2(Msg):-dzotrace((tlbugger:no_slow_io,!,dmsg3(Msg))),!.
 dmsg2(ansi(Ctrl,Msg)):- !, ansicall(Ctrl,dmsg3(Msg)).
 dmsg2(color(Ctrl,Msg)):- !, ansicall(Ctrl,dmsg3(Msg)).
-dmsg2(Msg):- mesg_color(Msg,Ctrl),ansicall(Ctrl,dmsg3(Msg)).
+dmsg2(Msg):- mesg_color(Msg,Ctrl),ansicall(Ctrl,dmsg3(Msg)),!.
 
 
 %= 	 	 
@@ -1187,8 +1189,7 @@ dmsg3(C):-dmsg4(C),!.
 % Dmsg4.
 %
 dmsg4(_):- current_prolog_flag(dmsg_level,never),!.
-dmsg4(_):- dzotrace(show_source_location),fail.
-dmsg4(Msg):-dmsg5(Msg).
+dmsg4(Msg):- ignore(dzotrace(show_source_location)),dmsg5(Msg).
 
 
 %= 	 	 
