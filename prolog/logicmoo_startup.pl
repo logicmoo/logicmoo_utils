@@ -1092,7 +1092,7 @@ my_pack_upgrade(Pack):-
                        upgrade(true),
                        pack(Pack)
                      ]).
-    
+my_pack_upgrade(_Pack).    
 :- my_pack_upgrade(pfc),pack_upgrade(logicmoo_utils),pack_upgrade(dictoo).
 
 %=======================================
