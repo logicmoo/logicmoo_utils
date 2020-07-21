@@ -453,7 +453,6 @@
 :- pce:export(pce:send/2).
 :- pce_host:import(pce:get/3).
 :- pce_host:import(pce:send/2).
-:- thread_util:import(editline:el_wrap/0).
 :- gui_tracer:import(edinburgh:debug/0).
 :- pce_portray:import(prolog_listing:portray_clause/1).
 :- ifprolog:import(date:day_of_the_week/2).
