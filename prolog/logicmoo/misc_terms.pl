@@ -116,6 +116,7 @@ compound_name_arity_safe/3
           ]).
 
 :- set_module(class(library)).
+:- autoload(library(memfile),[memory_file_to_atom/2,atom_to_memory_file/2,open_memory_file/3,open_memory_file/4,free_memory_file/1]).
 
 :-op(700,xfx,('univ_safe')).
 :- system:use_module(library(logicmoo_startup)).

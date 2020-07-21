@@ -274,6 +274,8 @@
 :- meta_predicate toCaseSplit(?,2,?,?).
 
 :- set_module(class(library)).
+:- autoload(library(memfile),[memory_file_to_atom/2,atom_to_memory_file/2,open_memory_file/3]).
+
 % % % OFF :- system:use_module(library(apply)).
 % % % OFF :- system:use_module(library(check)).
 % % % OFF :- system:use_module(library(must_sanity)).

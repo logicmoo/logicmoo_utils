@@ -156,6 +156,7 @@ dmsg000/1,
 :- autoload(library(apply),[maplist/2]).
 :- autoload(library(lists),[member/2,append/3,nth1/3]).
 :- autoload(library(occurs),[sub_term/2]).
+:- autoload(library(memfile),[memory_file_to_atom/2]).
 
 
 wldmsg_0(_CM,ops):- !.
@@ -327,7 +328,6 @@ if_defined_local(G,Else):- current_predicate(_,G)->G;Else.
 %:- user:ensure_loaded(logicmoo_util_rtrace).
 :- ensure_loaded(library(logicmoo/each_call)).
 %:- user:ensure_loaded(logicmoo_util_loop_check).
-
 
 
 :- meta_predicate with_output_to_each(+,0).

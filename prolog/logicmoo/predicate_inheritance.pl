@@ -542,7 +542,7 @@ check_mfa(_Why,M,F,A):-sanity(atom(F)),sanity(integer(A)),sanity(current_module(
 
 
 % kb_global(SPEC):- SPEC=(_:_), !, decl_as(decl_kb_global,SPEC), context_module(M),!,( \+ mtHybrid(M) -> M:import(SPEC); true).
-kb_global(SPEC):- with_no_retry_undefined( must(decl_as(decl_kb_global,SPEC))),!.
+kb_global(SPEC):- must(decl_as(decl_kb_global,SPEC)),!.
 
 
 
@@ -624,8 +624,8 @@ do_decl_kb_global_2(M,F,A,_PI):-
 
 
 
-kb_local(SPEC):-  with_no_retry_undefined(decl_as(decl_kb_local,SPEC)),!.
-kb_shared(SPEC):- with_no_retry_undefined(decl_as(decl_kb_shared,SPEC)),!.
+kb_local(SPEC):-  decl_as(decl_kb_local,SPEC),!.
+kb_shared(SPEC):- decl_as(decl_kb_shared,SPEC),!.
 
 decl_kb_shared(M,F,A):- lmcache:already_decl(kb_global,R,F,A), nop(dmsg(warn(kb_local(already_decl(kb_global,R->M,F,A))))),!.
 decl_kb_shared(R,F,A):- lmcache:already_decl(kb_global,M,F,A),!,do_import(M,R,F,A).
@@ -651,7 +651,7 @@ decl_kb_type(Type,M,F,A):- trace_or_throw(bad_decl_kb_type(Type,M,F,A)).
 do_decl_kb_type(Type,Type,M,prologSingleValued,0):- 
   trace_or_throw(do_decl_kb_type(Type,Type,M,prologSingleValued,0)).
 
-do_decl_kb_type(Type,Type,M,F,A):-functor(PI,F,A), with_no_retry_undefined(do_decl_kb_type_1(Type,M,F,A,PI)),!.
+do_decl_kb_type(Type,Type,M,F,A):-functor(PI,F,A), do_decl_kb_type_1(Type,M,F,A,PI),!.
 
 do_decl_kb_type_1(Type,M,F,A,_):- lmcache:already_decl(Other,M,F,A),Other\=(Type),!. % ,dmsg(lmcache:already_decl(Other,M,F,A)).
 
@@ -709,8 +709,8 @@ prolog:make_hook(before, C):- current_prolog_flag(retry_undefined, WAS),
 prolog:make_hook(after, C):- retract(lmcache:was_retry_undefined(WAS,C)),
   set_prolog_flag(retry_undefined, WAS),fail.
 
-%:- meta_predicate( /*ex*/predicate_property(:,?)).
-% /*ex*/predicate_property(P,Prop):- with_no_retry_undefined(predicate_property(P,Prop)).
+%:- meta_predicate( ex_predicate_property(:,?)).
+% ex_predicate_property(P,Prop):- with_no_retry_undefined(predicate_property(P,Prop)).
 
 %:- kb_shared(system:rtArgsVerbatum/1).
 %:- kb_shared(system:prologBuiltin/1).
