@@ -1080,6 +1080,21 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
 
 :- endif.
 
+my_pack_upgrade(Pack):- 
+   pack_info(Pack, _, download(URL)),
+    (   wildcard_pattern(URL)
+    ->  true
+    ;   github_url(URL, _User, _Repo)
+    ),
+    !,
+        pack_install(Pack,
+                     [ url(LatestURL),
+                       upgrade(true),
+                       pack(Pack)
+                     ]).
+    
+:- my_pack_upgrade(pfc),pack_upgrade(logicmoo_utils),pack_upgrade(dictoo).
+
 %=======================================
 %= REGISTER FOR INIT EVENTS
 %=======================================
