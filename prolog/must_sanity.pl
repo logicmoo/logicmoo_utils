@@ -59,9 +59,9 @@ must(Goal):- (Goal*->true;must_0(Goal)).
 must_0(Goal):- quietly(get_must(Goal,MGoal))-> call(MGoal).
 
 %must_or_rtrace((G1,G2)):- !, must_or_rtrace(G1),must_or_rtrace(G2).
-must_or_rtrace(G):- !,(G*->true;rtrace(G)).
-must_or_rtrace(G):- get_must_l(G,Must),!,call(Must).
-must_or_rtrace(G):- catch(G,Err,(dmsg(Err->G),ignore(rtrace(G)),throw(Err))) *->true; ftrace(G).
+must_or_rtrace(G):- (catch(G,Err,(wdmsg(error_must_or_rtrace(Err,G)),ignore(rtrace(G)),throw(Err)))*->true;(wdmsg(failed_must_or_rtrace(i,G)),dumpST,wdmsg(failed_must_or_rtrace(i,G)),ftrace(G),wdmsg(failed_must_or_rtrace(i,G)),dtrace(G))).
+%must_or_rtrace(G):- get_must_l(G,Must),!,call(Must).
+%must_or_rtrace(G):- catch(G,Err,(dmsg(error_must_or_rtrace(Err)->G),ignore(rtrace(G)),throw(Err))) *->true; ftrace(G).
 
 %% get_must( ?Goal, ?CGoal) is semidet.
 %

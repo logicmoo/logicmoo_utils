@@ -77,9 +77,9 @@
         asserta_new(:),
         assertz_if_new(:),
         call_provider(*),
-        clause_asserted(:),
-        clause_asserted(:, ?),
-        clause_asserted(:, ?, -),
+        clause_asserted(*),
+        clause_asserted(*, ?),
+        clause_asserted(*, ?, -),
         clause_safe(?, ?),
         eraseall(+, +),
         find_and_call(*),
@@ -366,7 +366,7 @@ mpred_op_prolog0(OP,MTerm):- call(OP,MTerm).
 :- module_transparent((asserta_new/1,asserta_if_new/1,assertz_new/1,assertz_if_new/1,assert_if_new/1)). % ,assertz_if_new_clause/1,assertz_if_new_clause/2,clause_asserted/2,expand_to_hb/2,clause_asserted/1,eraseall/2)).
 
 :- meta_predicate paina(:),pain(:),painz(:),ain0(:),ainz_clause(:),ainz_clause(:,?).
-:- meta_predicate clause_asserted(:,?),expand_to_hb(?,?,?),clause_asserted(:),eraseall(+,+).
+:- meta_predicate clause_asserted(*,?),expand_to_hb(?,?,?),clause_asserted(*),eraseall(+,+).
 
 % aina(NEW):-ignore((system:retract(NEW),fail)),system:asserta(NEW).
 % ainz(NEW):-ignore((system:retract(NEW),fail)),system:assertz(NEW).
@@ -541,7 +541,7 @@ ainz(N):-call_provider(painz(N)).
 %
 % Ainz Clause.
 %
-ainz_clause(C):- expand_to_hb(C,H,B),ainz_clause(H,B).
+ainz_clause(C):- notrace(expand_to_hb(C,H,B)),ainz_clause(H,B).
 
 %= 	 	 
 
@@ -596,7 +596,7 @@ hb_to_clause(H,B,(H:-B)).
 
 
 :-export(clause_asserted/1).
-:-meta_predicate(clause_asserted(:)).
+:-meta_predicate(clause_asserted(*)).
 
 %= 	 	 
 
@@ -604,10 +604,10 @@ hb_to_clause(H,B,(H:-B)).
 %
 % Clause Asserted.
 %
-clause_asserted(C):- expand_to_hb(C,H,B),clause_asserted(H,B).
+clause_asserted(C):- notrace(expand_to_hb(C,H,B)),clause_asserted(H,B).
 
 :-export(clause_asserted/2).
-:-meta_predicate(clause_asserted(:,?)).
+:-meta_predicate(clause_asserted(*,?)).
 
 %= 	 	 
 
@@ -618,7 +618,7 @@ clause_asserted(C):- expand_to_hb(C,H,B),clause_asserted(H,B).
 clause_asserted(H,B):-clause_asserted(H,B,_).
 
 :-export(clause_asserted/3).
-:-meta_predicate(clause_asserted(:,?,-)).
+:-meta_predicate(clause_asserted(*,?,-)).
 
 %= 	 	 
 
@@ -626,7 +626,7 @@ clause_asserted(H,B):-clause_asserted(H,B,_).
 %
 % Clause Asserted.
 %
-clause_asserted(M:H,B,R):- copy_term(v(M,H,B),MHB),system:clause(M:H,B,R),variant(v(M,H,B),MHB).
+clause_asserted(H,B,R):- notrace((copy_term(v(H,B),HB),clause(H,B,R),variant(v(H,B),HB))).
 
 :- meta_predicate(clause_asserted1(:,?,?)).
 clause_asserted1(M:H,B,R):-
@@ -719,11 +719,11 @@ attributes_equal(L,R,[H|TODO]):- select(H,L,LL), select(HH,R,RR),H =HH,!,
 %
 % Clause For Internal Interface.
 %
-clause_i(HB):- expand_to_hb(HB,H,B)->clause_i(H,B,_).
+clause_i(HB):- notrace(expand_to_hb(HB,H,B))->clause_i(H,B,_).
 clause_i(H,B):- clause_i(H,B,_).
 
 % TODO track which predicate have attributeds vars
-clause_i(H0,B0,Ref):- \+ current_prolog_flag(assert_attvars,true) ,!, system:clause(H0,B0,Ref).
+clause_i(H0,B0,Ref):- notrace(( \+ current_prolog_flag(assert_attvars,true))) ,!, system:clause(H0,B0,Ref).
 clause_i(H0,B0,Ref):- clause_attv(H0,B0,Ref).
 
 :- multifile(pfc_lib:check_never_assert/1).
@@ -733,16 +733,18 @@ clause_i(H0,B0,Ref):- clause_attv(H0,B0,Ref).
 %:- multifile(system:check_never_assert/1).
 %:- dynamic(system:check_never_assert/1).
 
-assert_i(X):- check_never_assert(X),fail.
+notrace_check_never_assert(X):- notrace(check_never_assert(X)),check_never_assert(X).
+
+assert_i(X):- notrace_check_never_assert(X),fail.
 assert_i(HB):- clausify_attributes(HB,CL),assert(CL).
 
-asserta_i(X):- check_never_assert(X),fail.
+asserta_i(X):- notrace_check_never_assert(X),fail.
 asserta_i(HB):-clausify_attributes(HB,CL),system:asserta(CL).
 
-assertz_i(X):- check_never_assert(X),fail.
+assertz_i(X):- notrace_check_never_assert(X),fail.
 assertz_i(HB):-clausify_attributes(HB,CL),system:assertz(CL).
 
-retract_i(HB):- expand_to_hb(HB,H,B), (clause_i(H,B,Ref)*->erase(Ref)).
+retract_i(HB):- notrace(expand_to_hb(HB,H,B)), (clause_i(H,B,Ref)*->erase(Ref)).
 retractall_i(H):-expand_to_hb(H,HH,_),forall(clause_i(HH,_,Ref),erase(Ref)).
 
 

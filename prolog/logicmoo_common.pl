@@ -25,6 +25,7 @@
 
 
 :- system:reexport(library(logicmoo_startup)).
+:- system:reexport(library(logicmoo/predicate_inheritance)).
 
 :- system:reexport(library(debuggery/first)).
 :- system:reexport(library(logicmoo/util_strings)).
@@ -56,7 +57,6 @@
 :- system:reexport(library(logicmoo/virtualize_source)).
 :- system:reexport(library(file_scope)).
 :- system:reexport(library(logicmoo/script_files)).
-:- system:reexport(library(logicmoo/predicate_inheritance)).
 %:- system:reexport(library(logicmoo/retry_undefined)).
 
 

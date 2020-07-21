@@ -51,6 +51,18 @@
 % % % OFF :- system:use_module((rtrace)).
 % % % OFF :- system:use_module(library(must_sanity)).
 
+:- use_module(library(backcomp)).
+:- use_module(library(debug)).
+:- use_module(library(occurs)).
+:- use_module(library(check)).
+:- use_module(library(edinburgh)).
+:- use_module(library(debug)).
+:- use_module(library(prolog_stack)).
+:- use_module(library(make)).
+
+
+
+
 
 :- set_prolog_flag(backtrace_depth,      200).
 :- set_prolog_flag(backtrace_goal_depth, 20).

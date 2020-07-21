@@ -18,6 +18,9 @@
           is_parent_goal/2,
             lc_tcall/1
           ]).
+
+:- set_module(class(library)).
+
 % :- autoload(library(apply),[maplist/2, maplist/3]).
 :- system:use_module(library(lists)).
 :- system:use_module(library(apply)).
@@ -116,7 +119,7 @@ memberchk_same_two(X, [Y|Ys]) :- (   X =@= Y ->  (var(X) -> X==Y ; true) ;   (no
 %
 % Cyclic Break.
 %
-cyclic_break(Cyclic):-cyclic_term(Cyclic)->(writeq(cyclic_break(Cyclic)),nl,prolog);true.
+cyclic_break(Cyclic):- notrace(cyclic_term(Cyclic))->(writeq(cyclic_break(Cyclic)),nl,prolog);notrace(true).
 
 
 % ===================================================================

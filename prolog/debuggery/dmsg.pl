@@ -157,6 +157,77 @@ dmsg000/1,
 :- autoload(library(lists),[member/2,append/3,nth1/3]).
 :- autoload(library(occurs),[sub_term/2]).
 
+
+wldmsg_0(_CM,ops):- !.
+wldmsg_0(_CM,ops):-
+ notrace((
+ dmsg:wldmsg_2('======================\\'),
+ (prolog_load_context(stream,X)-> dmsgln(prolog_load_context(stream,X)) ; (current_input(X),dmsgln(current_input(X)))),
+ ignore((
+ fail,
+ %dmsgln(forall(stream_property(X,_))),
+ % call(stream_property(X,position(Pos))-> 
+ prolog_load_context(module,LM),
+ dmsgln(prolog_load_context(module,LM)),
+ dmsgln(forall(LM:current_op(_,_,LM:if))),
+ dmsgln(forall(LM:current_op(_,_,LM:then))),
+ dmsgln(forall(LM:current_op(_,_,LM:'=>'))),
+ dmsgln(forall(LM:current_op(_,_,LM:'==>'))),
+ dmsgln(forall(LM:current_op(_,_,LM:'-'))),
+ dmsgln(forall(prolog_load_context(_,_))))),
+ strip_module(_,M,_),
+ dmsgln(strip_module(M)),
+ dmsgln(call('$current_source_module'(_SM))),
+ dmsgln(call('$current_typein_module'(_TM))),
+  (source_location(F,L)-> dmsg:wldmsg_2(X=source_location(F,L)) ; dmsg:wldmsg_2(no_source_location(X))),
+   %dmsgln(forall(byte_count(X,_))),
+   %dmsgln(forall(character_count(X,_))),
+   dmsgln(forall(line_count(X,_))),
+   dmsgln(forall(line_position(X,_))),
+  dmsg:wldmsg_2('======================/'))),
+ !.
+
+wldmsg_0(_,CM:Goal):- !, wldmsg_0(CM,Goal).
+wldmsg_0(_,forall(CM:Goal)):- !,ignore((nonvar(Goal),wldmsg_0(CM,forall(Goal)))).
+wldmsg_0(_,call(CM:Goal)):- !,ignore((nonvar(Goal),wldmsg_0(CM,call(Goal)))).
+wldmsg_0(CM,List):- is_list(List),!,maplist(wldmsg_0(CM),List).
+wldmsg_0(CM,forall(Goal)):- !, ignore((nonvar(Goal),forall(CM:call(Goal), wldmsg_1(Goal)))).
+wldmsg_0(CM,call(Goal)):- !, ignore((nonvar(Goal),CM:call(Goal), wldmsg_1(Goal))).
+wldmsg_0(_,Info):-wldmsg_1(Info). 
+
+wldmsg_1(List):- is_list(List),!,maplist(wldmsg_1,List).
+wldmsg_1(Info):- compound(Info),compound_name_arguments(Info,F,[A]),!,wldmsg_1(F=A).
+wldmsg_1(Info):- compound(Info),compound_name_arguments(Info,(-),[F,A]),!,wldmsg_1(F=A).
+wldmsg_1(Info):- 
+  stream_property(O,file_no(1)),flush_output(O),format(O,'~N',[]),flush_output(O),
+  wldmsg_2(Info),!.
+
+same_streams(X,Y):- notrace((into_stream(X,XX),into_stream(Y,YY),!,XX==YY)).
+
+into_stream(X,S):- notrace(into_stream_0(X,S)).
+into_stream_0(file_no(N),XX):- !, stream_property(X,file_no(N)),!,X=XX.
+into_stream_0(Atom,XX):- atom(Atom),stream_property(X,alias(Atom)),!,X =XX.
+into_stream_0(S,XX):- atomic(S),is_stream(S),!,S = XX.
+into_stream_0(S,XX):- stream_property(X,file_name(F)),F==S,!,X=XX.
+
+wldmsg_2(Info):- same_streams(current_output,file_no(1)), stream_property(X,file_no(1)), !, output_to_x(X,Info).
+wldmsg_2(Info):- same_streams(current_output,file_no(2)), stream_property(X,file_no(2)), !, output_to_x(X,Info).
+wldmsg_2(Info):- output_to_x(current_output,Info), stream_property(X,file_no(2)), !, output_to_x(X,Info).
+
+output_to_x(S,Info):- ignore(notrace(catch(output_to_x_0(S,Info),_,true))).
+output_to_x_0(S,Info):- into_stream(S,X),!, flush_output(X),
+  catch(format(X,'~N% ~p~n',[Info]),_,format(X,'~N% DMSGQ: ~q~n',[Info])),flush_output(X).
+
+dmsgln(CMSpec):- strip_module(CMSpec,CM,Spec),!, ignore(notrace(dmsg:wldmsg_0(CM,Spec))).
+% system:dmsgln(List):-!,notrace(dmsg:wldmsg_0(user,List)).
+
+:- module_transparent(dmsg:dmsgln/1).
+:- dmsg:export(dmsg:dmsgln/1).
+:- system:import(dmsg:dmsgln/1).
+:- meta_predicate(dmsg:dmsgln(:)).
+
+
+
 univ_safe_2(A,B):- compound(A),compound_name_arity(A,F,0),!,F=..B.
 univ_safe_2(A,B):- A=..B.
 
@@ -384,13 +455,13 @@ hide_some_hiddens(S,M):-
    compound_name_arguments(M,F,ArgsO),!.
 
 
-pretty_and_hide(In, Info):- portray_vars:pretty_numbervars(In,M),hide_some_hiddens(M,Info),!.
+pretty_and_hide(In, Info):- notrace((portray_vars:pretty_numbervars(In,M),hide_some_hiddens(M,Info))),!.
 
-dmsg_pretty(In):- \+ \+  (pretty_and_hide(In, Info),dmsg(Info)).
+dmsg_pretty(In):- notrace( ignore( \+ \+   ( pretty_and_hide(In, Info),dmsg(Info)))).
 
-wdmsg_pretty(In):- \+ \+ (pretty_and_hide(In, Info),wdmsg(Info)).
+wdmsg_pretty(In):- \+ \+ notrace((pretty_and_hide(In, Info),wdmsg(Info))).
 
-wdmsg_pretty(F,In):- \+ \+ (pretty_and_hide(In, Info),wdmsg(F,Info)).
+wdmsg_pretty(F,In):- \+ \+ notrace((pretty_and_hide(In, Info),wdmsg(F,Info))).
 
 %= 	 	 
 
@@ -967,7 +1038,7 @@ if_color_debug(Goal,UnColor):- if_color_debug->Goal;UnColor.
 color_line(C,N):- 
  notrace((
   format('~N',[]),
-    forall(between(1,N,_),ansi_format([fg(C)],"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n",[])))).
+    forall(between(1,N,_),ansi_term:ansi_format([fg(C)],"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n",[])))).
 
 
 

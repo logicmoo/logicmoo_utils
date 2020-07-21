@@ -205,6 +205,37 @@
 :- set_module(class(library)).
 
 
+:- use_module(library(occurs)).
+:- use_module(library(gensym)).
+:- use_module(library(when)).
+
+
+:- use_module(library(backcomp)).
+:- use_module(library(debug)).
+:- use_module(library(occurs)).
+:- use_module(library(check)).
+:- use_module(library(edinburgh)).
+:- use_module(library(debug)).
+:- use_module(library(prolog_stack)).
+:- use_module(library(make)).
+
+
+:- use_module(library(gui_tracer)).
+:- use_module(library(system)).
+:- use_module(library(socket)).
+:- use_module(library(readutil)).
+:- abolish(system:time/1).
+:- use_module(library(statistics)).
+:- use_module(library(codesio)).
+:- use_module(library(charsio)).
+:- use_module(library(ssl)).
+:- use_module(library(prolog_codewalk)).
+:- use_module(library(prolog_source)).
+:- use_module(library(date)).
+:- use_module(library(editline)).
+:- use_module(library(listing)).
+
+
 % % % OFF :- system:use_module(library(hook_database)).
 % % % OFF :- system:use_module(library(logicmoo/no_repeats)).
 % % % OFF :- system:use_module(library(logicmoo/each_call)).
@@ -470,17 +501,15 @@ searchable_of_clause_1(H,T,[H|List]):-atomic(H),searchable_of_clause_1(T,List).
 searchable_of_clause_1(H,T,List):-searchable_of_clause_0(H,List1),searchable_of_clause_1(T,List2),append(List1,List2,List).
 
 :- dynamic(search_refs_use_recorded/0).
-
-%= 	 	 
-
-%% search_refs_use_recorded is semidet.
-%
-% Search Refs Use Recorded.
-%
-search_refs_use_recorded.
+	 
 
 
-%= 	 	 
+% load statistics to keep ifprolog from overriding time/1.
+:- abolish(system:time/1).
+:- abolish(time/1).
+:- abolish(ifprolog:time,1).
+:- use_module(library(statistics),[time/1]).
+	 	 
 
 %% searchable_terms( ?T) is semidet.
 %
@@ -489,29 +518,13 @@ search_refs_use_recorded.
 searchable_terms(T):-search_refs_use_recorded,!,current_key(Key),unmake_search_key(Key,T).
 searchable_terms(T):-unify_in_thread(main,searchable_terms_tl(T)).
 
-% load statistics to keep ifprolog from overriding time/1.
-:- abolish(system:time/1).
-:- abolish(time/1).
-:- use_module(xlisting:library(dialect/ifprolog),[current_global/1]).
-:- abolish(ifprolog:time/1).
-:- use_module(xlisting:library(dialect/ifprolog),[]).
-:- use_module(library(statistics),[time/1]).
-
-/*
-:- meta_predicate current_global_ifprolog(:).
-
-current_global_ifprolog(A:B) :-
-        atomic_list_concat([A, :, B], C)
-        nb_current(B, _).
-*/
-
-%= 	 	 
-
-%% searchable_terms_tl( ?T) is semidet.
+%% search_refs_use_recorded is semidet.
 %
-% Searchable Terms Thread Local.
+% Search Refs Use Recorded.
 %
-searchable_terms_tl(T):- ifprolog:current_global(Key),unmake_search_key(Key,T).
+search_refs_use_recorded.
+
+searchable_terms_tl(T):- nb_current(GName, _),(atomic_list_concat([_,Name],(':'), GName)-> T=Name ; T = GName).
 
 
 
@@ -529,7 +542,7 @@ make_search_key(E,Atomic):-E=..L,atomic_list_concat(['$search'|L],'%',Atomic).
 %
 % Unmake Search Key.
 %
-unmake_search_key(Atomic,E):-atomic_list_concat(['$search'|L],'%',Atomic),E=..L.
+unmake_search_key(Atomic,E):-atomic_list_concat(['$search'|L],'%',Atomic)->E=..L;(E=Atomic).
 
 
 %= 	 	 
@@ -558,7 +571,7 @@ get_search_ref0(Atomic,Results):- unify_in_thread(main,once(get_search_ref_tl(At
 %
 % Unify In Thread.
 %
-unify_in_thread(Thread,once(Goal)):- 
+unify_in_thread(Thread,once(Goal)):- !,
       message_queue_create(Id),
        call_cleanup((thread_signal(Thread,unify_in_thread_tl(Id,Goal)),thread_get_message(Id,Message),process_unify_in_thread(Message,Goal),!),
          message_queue_destroy(Id)).
@@ -1556,7 +1569,7 @@ make_headkey(M:F/_, M:F):-atom(F).
 make_headkey(F  /_, _:F):-atom(F).
 make_headkey(M:H,M:NK):-nonvar(M),make_headkey(H,NK),!.
 make_headkey(H,NK):-compound(H),functor(H,NK,_).
-make_headkey(H,NK):-copy_term_nat(H,NK),numbervars(NK),!.
+make_headkey(H,NK):-copy_term_nat(H,NK),numbervars(NK, 0, _,[ singletons(true)]).
 
 
 

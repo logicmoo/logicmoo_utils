@@ -34,6 +34,78 @@
           run_pending_inits/0]).
 
 
+:- use_module(library(logicmoo_utils_all)).
+
+:- system:use_module(library(apply)).
+:- system:use_module(library(assoc)).
+:- system:use_module(library(charsio)).
+:- system:use_module(library(codesio)).
+:- system:use_module(library(ctypes)).
+:- system:use_module(library(debug)).
+:- system:use_module(library(dialect)).
+:- system:use_module(library(doc_files)).
+:- system:use_module(library(doc_http)).
+:- system:use_module(library(edinburgh)).
+:- system:use_module(library(error)).
+:- system:use_module(library(filesex)).
+:- system:use_module(library(gensym)).
+:- system:use_module(library(http/html_head)).
+:- system:use_module(library(http/http_dispatch)).
+:- system:use_module(library(http/http_path)).
+:- system:use_module(library(http/mimetype)).
+:- system:use_module(library(jpl)).
+:- system:use_module(library(lazy_lists)).
+:- system:use_module(library(listing)).
+:- system:use_module(library(lists)).
+:- system:use_module(library(modules)).
+:- system:use_module(library(nb_rbtrees)).
+:- system:use_module(library(occurs)).
+:- system:use_module(library(operators)).
+:- system:use_module(library(option)).
+:- system:use_module(library(ordsets)).
+:- system:use_module(library(pairs)).
+:- system:use_module(library(pldoc/doc_html)).
+:- system:use_module(library(pldoc/doc_process)).
+:- system:use_module(library(pldoc/doc_search)).
+:- system:use_module(library(pldoc/doc_util)).
+:- system:use_module(library(pldoc/man_index)).
+:- system:use_module(library(pprint)).
+:- system:use_module(library(predicate_options)).
+:- system:use_module(library(process)).
+:- system:use_module(library(prolog_clause)).
+:- system:use_module(library(prolog_code)).
+:- system:use_module(library(prolog_codewalk)).
+:- system:use_module(library(prolog_config)).
+:- system:use_module(library(prolog_source)).
+:- system:use_module(library(prolog_stack)).
+:- system:use_module(library(prolog_xref)).
+:- system:use_module(library(pure_input)).
+:- system:use_module(library(quintus)).
+:- system:use_module(library(readutil)).
+:- system:use_module(library(sgml)).
+:- system:use_module(library(shell)).
+:- system:use_module(library(shlib)).
+:- system:use_module(library(socket)).
+:- system:use_module(library(solution_sequences)).
+:- system:use_module(library(sort)).
+:- system:use_module(library(ssl)).
+:- system:use_module(library(system)).
+:- system:use_module(library(time)).
+:- system:use_module(library(uri)).
+:- system:use_module(library(varnumbers)).
+:- system:use_module(library(when)).
+:- system:use_module(library(writef)).
+:- system:use_module(library(wfs),[call_residual_program/2,call_delays/2,delays_residual_program/2,answer_residual/2]).
+
+:- if( \+ current_predicate(each_call_cleanup/3)).
+:- use_module(library(each_call_cleanup)).
+:- endif.
+
+:- abolish(system:time,1).
+:- system:use_module(library(statistics)).
+:- system:use_module(library(make)).
+
+
 %:- use_module(library(logicmoo_utils_all)).
 :- create_prolog_flag(dmsg_level,filter,[type(term),keep(true)]).
 % ==============================================
@@ -290,7 +362,7 @@ maybe_one(Goal,Else):- catch(call(Goal),_,fail)*-> true ; Else.
 at_phase(Goal, When):- is_list(When), !, maplist(at_phase(Goal), When).
 at_phase(MGoal, When):- strip_module(MGoal,M,Goal),   
   (\+ compound(Goal); \+ functor(Goal,at_current_Y,_)),
-  add_history(MGoal),
+  % add_history(MGoal),
   source_location(S,L),!,at_phase(at_current_Y(cuz(S:L),M:Goal), When).
 at_phase(Goal, When):- When == now, !, ignore(try_pending_init(When,Goal)).
 at_phase(Goal, When):-
@@ -743,7 +815,7 @@ if_debugging(Topic,Goal):- debugging(Topic)->call(Goal);true.
 :- module_transparent(all_source_file_predicates_are_exported/0).
 all_source_file_predicates_are_exported:- current_prolog_flag(xref,true),!.
 all_source_file_predicates_are_exported:-
- source_location(S,_), prolog_load_context(module,LC),
+ prolog_load_context(source,S), prolog_load_context(module,LC),
  all_source_file_predicates_are_exported(S,LC),!.
 all_source_file_predicates_are_exported:-
  prolog_load_context(module,LC),'$current_typein_module'(TIM),

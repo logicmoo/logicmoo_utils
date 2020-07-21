@@ -94,6 +94,8 @@
          only_3rd(1,*,*,*).
 
 :- set_module(class(library)).
+:- use_module(library(system)).
+
 
 :- module_transparent
       convert_to_dynamic/1,

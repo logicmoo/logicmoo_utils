@@ -7,6 +7,42 @@
   simpler_textname/2,simpler_textname/3]).
 :- set_module(class(library)).
 :- use_module(util_varnames,[get_var_name/2]).
+
+:- use_module(library(occurs)).
+:- use_module(library(gensym)).
+:- use_module(library(when)).
+
+:- use_module(library(occurs)).
+:- use_module(library(gensym)).
+:- use_module(library(when)).
+
+
+:- use_module(library(backcomp)).
+:- use_module(library(codesio)).
+:- use_module(library(charsio)).
+:- use_module(library(debug)).
+:- use_module(library(check)).
+
+
+:- use_module(library(edinburgh)).
+:- use_module(library(debug)).
+:- use_module(library(prolog_stack)).
+:- use_module(library(make)).
+
+
+:- use_module(library(gui_tracer)).
+:- use_module(library(system)).
+:- use_module(library(socket)).
+:- use_module(library(readutil)).
+:- abolish(system:time/1).
+:- use_module(library(statistics)).
+:- use_module(library(ssl)).
+:- use_module(library(prolog_codewalk)).
+:- use_module(library(prolog_source)).
+:- use_module(library(date)).
+:- use_module(library(editline)).
+:- use_module(library(listing)).
+
 /*  Logicmoo Debug Tools
 % ===================================================================
 % File 'logicmoo_util_varnames.pl'

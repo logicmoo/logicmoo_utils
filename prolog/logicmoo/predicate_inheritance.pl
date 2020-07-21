@@ -15,7 +15,11 @@
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_structs.pl
 :- module(predicate_inheritance,
           [
+          %  /*ex*/predicate_property/2,
 check_mfa/4,
+with_no_retry_undefined/1,
+user_exception_undefined_predicate/5,
+undefined_predicate_exception/4,
 %skip_mfa/4,
 create_predicate_inheritance/4,
 now_inherit_above/4,
@@ -37,6 +41,8 @@ do_import/4,
 :- set_module(class(library)).
 % % % OFF :- system:reexport(library(must_sanity)).
 % % % OFF :- system:reexport(library(logicmoo/no_loops)).
+
+:- create_prolog_flag(retry_undefined, none,[type(term),keep(true)]).
 
 :- use_module(library(logicmoo/no_loops),[is_parent_goal/1,is_parent_goal/2]).
 
@@ -96,17 +102,17 @@ make_as_dynamic/4
          
 )).
 
-:- thread_local(was_prolog_flag/1).
-:- current_prolog_flag(retry_undefined,Was)->asserta(was_prolog_flag(retry_undefined,Was));asserta(was_prolog_flag(retry_undefined,none)).% WAS OFF  :- system:use_module(library(loop_check)).% WAS OFF  :- system:use_module(library(bugger)).
+:- thread_local(ru_l:was_prolog_flag/1).
+:- current_prolog_flag(retry_undefined,Was)->asserta(ru_l:was_prolog_flag(retry_undefined,Was));asserta(ru_l:was_prolog_flag(retry_undefined,none)).
+% WAS OFF  :- system:use_module(library(loop_check)).% WAS OFF  :- system:use_module(library(bugger)).
 % % % OFF :- system:use_module(library(hook_database)).
 
-:- create_prolog_flag(retry_undefined, none,[type(term),keep(false)]).
 
 :- module_transparent((	
    uses_predicate/2,
    uses_undefined_hook/0,				
    uses_predicate/5,
-   retry_undefined/3,
+   chk_retry_undefined/3,
    
    install_retry_undefined/2,
    
@@ -161,13 +167,15 @@ contains_goalf(catch(_,_,V0),V):- same_goalf(V0,V).
 same_goalf(V,V).
 */
 
-% make sure we ignore calls to predicate_property/2  (or thus '$define_predicate'/1)
-uses_predicate(_DEF,_,_,_,_,Error):- 
-   prolog_current_frame(F), (is_parent_goal(F,'$define_predicate'(_));
-   (is_parent_goal(F,_:'assert_u'(_)));is_parent_goal(F,'$syspreds':property_predicate(_,_))),!,
-   error = Error.
+is_in_define:- prolog_current_frame(F), 
+ (is_parent_goal(F,'$define_predicate'(_));
+  is_parent_goal(F,_:'assert_u'(_));
+  is_parent_goal(check:check);
+  is_parent_goal(F,'$syspreds':property_predicate(_,_))),!.
 
-uses_predicate(_Was,_CM,_M,_F,_A,Error):- is_parent_goal(check:check),!,Error=error.
+% make sure we ignore calls to predicate_property/2  (or thus '$define_predicate'/1)
+uses_predicate(_DEF,_,_,_,_,Error):- is_in_define,!,is_in_define, error = Error.
+
 uses_predicate(_Was,_CM,_M,_F,_A,Error):- is_parent_goal(check:check),!,Error=error.
 uses_predicate(_Was,_CM,_M,_F,_A,Error):- show_success(is_parent_goal('$define_predicate')),!,Error=error.
 
@@ -199,23 +207,24 @@ uses_predicate(E,_,_,_,_,Error):- E=error, !,Error=error.
 uses_predicate(fail,_,_,_,_,_):- !,fail.
 uses_predicate(break,_,_,_,_,Error):- !,dumpST_dbreak,Error=error.
 
+uses_predicate(Was,CM,M,F,A,Action):-  uses_predicate2(Was,CM,M,F,A,Action).
 
-uses_predicate(_DEF,_,System, _,_, error):- module_property(System,class(system)),!.
-uses_predicate(_DEF,_,System, _,_, error):- module_property(System,class(library)),!.
+uses_predicate2(_DEF,_,System, _,_, error):- module_property(System,class(system)),!.
+uses_predicate2(_DEF,_,System, _,_, error):- module_property(System,class(library)),!.
 
-uses_predicate(Setting,SM,M,F,A,Act):- Setting\== (kb_shared), SM\==user, M\==baseKB,
+uses_predicate2(Setting,SM,M,F,A,Act):- Setting\== (kb_shared), SM\==user, M\==baseKB,
      dmsg(uses_predicate(Setting,SM,M,F,A,Act)),fail.
 
-uses_predicate(kb_shared,System, M, F,A, retry):-   
+uses_predicate2(kb_shared,System, M, F,A, retry):-   
    show_failure(uses_undefined_hook(M)),
    create_predicate_inheritance(kb_shared(M:F/A),M,F,A),
    nop(System:import(M:F/A)),!.
 
-% uses_predicate(true,_, M,F,A, Retry):-  retry_undefined(M,F,A),!,Retry=retry.
+% uses_predicate(true,_, M,F,A, Retry):-  chk_retry_undefined(M,F,A),!,Retry=retry.
 
-uses_predicate(_,_, M,F,A, Retry):-  retry_undefined(M,F,A),!,Retry=retry.
+uses_predicate2(_,_, M,F,A, Retry):-  chk_retry_undefined(M,F,A),!,Retry=retry.
 
-uses_predicate(DEF,_, M, F,A, Retry):-  call(DEF, M:F/A),!,Retry=retry.
+uses_predicate2(DEF,_, M, F,A, Retry):-  call(DEF, M:F/A),!,Retry=retry.
 
 :- if(\+ current_predicate(autoload_library_index/4)).
 in_autoload_library_index(F,A,_PredMt,File):- '$in_library'(F,A,File).
@@ -223,23 +232,28 @@ in_autoload_library_index(F,A,_PredMt,File):- '$in_library'(F,A,File).
 in_autoload_library_index(F,A,PredMt,File):- autoload_library_index(F,A,PredMt,File).
 :- endif.
 
-:- meta_predicate with_no_retry_undefined(:).
+:- module_transparent(with_no_retry_undefined/1).
+/*with_no_retry_undefined(Goal):- setup_call_cleanup(current_prolog_flag(retry_undefined, Was),
+                                     locally(set_prolog_flag(runtime_debug,0),
+                                      (set_prolog_flag(retry_undefined, none),Goal)),
+                                     set_prolog_flag(retry_undefined, Was)),!.
+*/
 with_no_retry_undefined(Goal):- locally(set_prolog_flag(retry_undefined, none),
                                      locally(set_prolog_flag(runtime_debug,0),Goal)).
 
 
 % Every module has it''s own
-retry_undefined(CallerMt,'$pldoc',4):- multifile(CallerMt:'$pldoc'/4),discontiguous(CallerMt:'$pldoc'/4),dynamic(CallerMt:'$pldoc'/4),!.
+chk_retry_undefined(CallerMt,'$pldoc',4):- multifile(CallerMt:'$pldoc'/4),discontiguous(CallerMt:'$pldoc'/4),dynamic(CallerMt:'$pldoc'/4),!.
 % System-like Autoloads (TODO: confirm these can be removed)
-retry_undefined(CallerMt,debug,1):- CallerMt:use_module(CallerMt:library(debug)),!.
-retry_undefined(CallerMt,debugging,1):- CallerMt:use_module(CallerMt:library(debug)),!.
-retry_undefined(CallerMt,member,2):- CallerMt:use_module(CallerMt:library(lists)),!.
-retry_undefined(CallerMt,directory_file_path,3):- CallerMt:use_module(CallerMt:library(filesex)),!.
+chk_retry_undefined(CallerMt,debug,1):- CallerMt:use_module(CallerMt:library(debug)),!.
+chk_retry_undefined(CallerMt,debugging,1):- CallerMt:use_module(CallerMt:library(debug)),!.
+chk_retry_undefined(CallerMt,member,2):- CallerMt:use_module(CallerMt:library(lists)),!.
+chk_retry_undefined(CallerMt,directory_file_path,3):- CallerMt:use_module(CallerMt:library(filesex)),!.
 % 3 very special Mts
 % Module defines the type
-% retry_undefined(baseKB,F,A):- make_as_dynamic(retry_undefined(baseKB),baseKB,F,A),!.
-retry_undefined(lmcache,F,A):- volatile(lmcache:F/A),make_as_dynamic(retry_undefined(lmcache),lmcache,F,A),!.
-retry_undefined(t_l,F,A):- thread_local(t_l:F/A),!,make_as_dynamic(retry_undefined(t_l),t_l,F,A),!.
+% chk_retry_undefined(baseKB,F,A):- make_as_dynamic(chk_retry_undefined(baseKB),baseKB,F,A),!.
+chk_retry_undefined(lmcache,F,A):- volatile(lmcache:F/A),make_as_dynamic(chk_retry_undefined(lmcache),lmcache,F,A),!.
+chk_retry_undefined(t_l,F,A):- thread_local(t_l:F/A),!,make_as_dynamic(chk_retry_undefined(t_l),t_l,F,A),!.
 
 
 :- if(false).
@@ -282,7 +296,7 @@ retry_undefined_falsed_out(CallerMt,F,A):- fail,fail,fail,fail,fail,fail,fail,fa
        use_module(CallerMt:File),!.
 
 /*
-retry_undefined(CallerMt,F,A):-
+chk_retry_undefined(CallerMt,F,A):-
       in_autoload_library_index(F,A,PredMt,File),
       ((current_module(PredMt),current_predicate(PredMt:F/A))
        -> add_import_module(CallerMt,PredMt,start) ;
@@ -294,8 +308,8 @@ retry_undefined_falsed_out(CallerMt,F,A):- fail,fail,fail,fail,fail,fail,fail,fa
 
 
 
-%retry_undefined(PredMt:must/1) % UNDO % :- add_import_module(PredMt,logicmoo_util_catch,start),!.
-%retry_undefined(PredMt:debugm/2) % UNDO % :- add_import_module(PredMt,logicmoo_util_dmsg,start),!.
+%chk_retry_undefined(PredMt:must/1) % UNDO % :- add_import_module(PredMt,logicmoo_util_catch,start),!.
+%chk_retry_undefined(PredMt:debugm/2) % UNDO % :- add_import_module(PredMt,logicmoo_util_dmsg,start),!.
 
 :- endif.
 
@@ -307,15 +321,6 @@ uses_undefined_hook(CM):- clause_b(genlMt(CM,_)),!.
 % uses_undefined_hook(CM):- is_pfc_module(CM),!.
 uses_undefined_hook(baseKB).
 %uses_undefined_hook(user).
-
-
-user_exception_undefined_predicate(CM,M,F,A,ActionO):- 
-  \+ prolog_load_context(reloading,true),
-  current_prolog_flag(retry_undefined, Was), Was \== (false), Was \== none,
-  get_retry_undefined_hook(M,Setting),!, Setting\==error,    
-   CM:setup_call_cleanup(set_prolog_flag(retry_undefined, (false)),
-                      (uses_predicate(Setting,CM,M,F,A, ActionO), ActionO \== error),
-                      set_prolog_flag(retry_undefined, Was)),!.
 
 
 
@@ -403,7 +408,7 @@ never_move(is_pfc_file,_):- dumpST,break.
 :- export(system:do_inherit_above/2).
 :- thread_local(t_l:exact_kb/1).
 system:do_inherit_above(Mt,_):- t_l:exact_kb(Mt),!,fail.
-system:do_inherit_above(user,G):- !,baseKB:G.
+system:do_inherit_above(user,G):- !, fail, baseKB:call(G).
 
 system:do_inherit_above(Mt,QueryIn):- 
    functor(QueryIn,F,A),\+ never_move(F,A),
@@ -493,9 +498,9 @@ decl_as(Types,M:[G1]):-!,decl_as(Types,M:G1),!.
 decl_as(Types,M:[G1|G2]):-!,decl_as(Types,M:G1),!,decl_as(Types,M:G2),!.
 decl_as(Types,M:F):-atom(F),!,decl_as(Types,M,F,_).
 decl_as(Types,F):-atom(F),!,decl_as(Types,_,F,_).
-decl_as(Types,M:F//Am2):-!,A is Am2+2, decl_as(Types,M,F,A).
+decl_as(Types,M:'//'(F,Am2)):-!,A is Am2+2, decl_as(Types,M,F,A).
 decl_as(Types,M:F/A):-!,decl_as(Types,M,F,A).
-decl_as(Types,F//Am2):-!,A is Am2+2, decl_as(Types,_,F,A).
+decl_as(Types,'//'(F,Am2)):-!,A is Am2+2, decl_as(Types,_,F,A).
 decl_as(Types,F/A):-!,decl_as(Types,_,F,A).
 decl_as(Types,M:Goal):-compound(Goal),!,functor(Goal,F,A),decl_as(Types,M,F,A).
 decl_as(Types,Goal):-compound(Goal),!,functor(Goal,F,A),decl_as(Types,_,F,A).
@@ -513,7 +518,7 @@ decl_as_rev(MFA,[G1|G2]):-!,decl_as_rev(MFA,G1),!,decl_as_rev(MFA,G2),!.
 decl_as_rev(MFA,M:(G1,G2)):-!,decl_as_rev(MFA,M:G1),!,decl_as_rev(MFA,M:G2),!.
 decl_as_rev(MFA,M:[G1]):-!,decl_as_rev(MFA,M:G1),!.
 decl_as_rev(MFA,M:[G1|G2]):-!,decl_as_rev(MFA,M:G1),!,decl_as_rev(MFA,M:G2),!.
-
+                                                    
 decl_as_rev(M:F/A,_OM:Pred):- check_mfa(Pred,M,F,A),
   must(call(Pred,M,F,A)),!.
 
@@ -532,12 +537,12 @@ decl_as_rev(M:F/A,Pred):- check_mfa(Pred,M,F,A),
 
 
 % skip_mfa(Why,M, genlMt, 2):- baseKB\=M,dumpST,dmsg(skip_mfa(Why,M, genlMt, 2)),!,break.
-check_mfa(_Why,M,F,A):-sanity(atom(F)),sanity(integer(A)),sanity(current_module(M)).
+check_mfa(_Why,M,F,A):-sanity(atom(F)),sanity(integer(A)),sanity(current_module(M)->true;wdmsg(new_module(M))).
 
 
 
 % kb_global(SPEC):- SPEC=(_:_), !, decl_as(decl_kb_global,SPEC), context_module(M),!,( \+ mtHybrid(M) -> M:import(SPEC); true).
-kb_global(SPEC):- must(decl_as(decl_kb_global,SPEC)),!.
+kb_global(SPEC):- with_no_retry_undefined( must(decl_as(decl_kb_global,SPEC))),!.
 
 
 
@@ -619,8 +624,8 @@ do_decl_kb_global_2(M,F,A,_PI):-
 
 
 
-kb_local(SPEC):- decl_as(decl_kb_local,SPEC),!.
-kb_shared(SPEC):- decl_as(decl_kb_shared,SPEC),!.
+kb_local(SPEC):-  with_no_retry_undefined(decl_as(decl_kb_local,SPEC)),!.
+kb_shared(SPEC):- with_no_retry_undefined(decl_as(decl_kb_shared,SPEC)),!.
 
 decl_kb_shared(M,F,A):- lmcache:already_decl(kb_global,R,F,A), nop(dmsg(warn(kb_local(already_decl(kb_global,R->M,F,A))))),!.
 decl_kb_shared(R,F,A):- lmcache:already_decl(kb_global,M,F,A),!,do_import(M,R,F,A).
@@ -646,7 +651,7 @@ decl_kb_type(Type,M,F,A):- trace_or_throw(bad_decl_kb_type(Type,M,F,A)).
 do_decl_kb_type(Type,Type,M,prologSingleValued,0):- 
   trace_or_throw(do_decl_kb_type(Type,Type,M,prologSingleValued,0)).
 
-do_decl_kb_type(Type,Type,M,F,A):-functor(PI,F,A),do_decl_kb_type_1(Type,M,F,A,PI),!.
+do_decl_kb_type(Type,Type,M,F,A):-functor(PI,F,A), with_no_retry_undefined(do_decl_kb_type_1(Type,M,F,A,PI)),!.
 
 do_decl_kb_type_1(Type,M,F,A,_):- lmcache:already_decl(Other,M,F,A),Other\=(Type),!. % ,dmsg(lmcache:already_decl(Other,M,F,A)).
 
@@ -689,7 +694,7 @@ expand_globals(P,Out):-
 
 expand_already_decl(P,F,A,Out):- lmcache:already_decl(kb_global,M,F,A),Out=':'(M,P),!.
 expand_already_decl(P,F,A,Out):- lmcache:already_decl(kb_shared,M,F,A),Out=':'(M,P),!.
-
+                                        
 
 :- fixup_exports.
 
@@ -699,24 +704,45 @@ expand_already_decl(P,F,A,Out):- lmcache:already_decl(kb_shared,M,F,A),Out=':'(M
 :- multifile(prolog:make_hook/2).
 :- dynamic(prolog:make_hook/2).
 
-prolog:make_hook(before, C):- current_prolog_flag(retry_undefined, WAS),asserta(lmcache:was_retry_undefined(WAS,C)),set_prolog_flag(retry_undefined, false),fail.
+prolog:make_hook(before, C):- current_prolog_flag(retry_undefined, WAS),
+  asserta(lmcache:was_retry_undefined(WAS,C)),set_prolog_flag(retry_undefined, none),fail.
+prolog:make_hook(after, C):- retract(lmcache:was_retry_undefined(WAS,C)),
+  set_prolog_flag(retry_undefined, WAS),fail.
 
-prolog:make_hook(after, C):- retract(lmcache:was_retry_undefined(WAS,C)),set_prolog_flag(retry_undefined, WAS),fail.
-
-:- multifile(user:exception/3).
-:- module_transparent(user:exception/3).
-:- dynamic(user:exception/3).
-/*
-user:exception(undefined_predicate, F/A, ActionO):- !, strip_module(F/A,CM,_), 
-  user_exception_undefined_predicate(CM,CM,F,A, ActionO).
-user:exception(undefined_predicate, M:F/A, ActionO):- !, strip_module(F/A,CM,_), 
-  user_exception_undefined_predicate(CM,M,F,A, ActionO).
-
-*/
+%:- meta_predicate( /*ex*/predicate_property(:,?)).
+% /*ex*/predicate_property(P,Prop):- with_no_retry_undefined(predicate_property(P,Prop)).
 
 %:- kb_shared(system:rtArgsVerbatum/1).
 %:- kb_shared(system:prologBuiltin/1).
 %baseKB:module(_X,_Y).
+
+
+
+undefined_predicate_exception(F/A,  CM,_,ActionO):- !, user_exception_undefined_predicate(CM,CM,F,A, ActionO).
+undefined_predicate_exception(M:F/A,CM,_, ActionO):-   user_exception_undefined_predicate(CM, M,F,A, ActionO).
+
+user_exception_undefined_predicate(CM,M,F,A,ActionO):- 
+   \+ prolog_load_context(reloading,true),
+  current_prolog_flag(retry_undefined, Was), Was \== none,
+  get_retry_undefined_hook(M,Setting), !, Setting \== error,     
+   CM:
+  setup_call_cleanup(set_prolog_flag(retry_undefined, none),
+                      (trace,uses_predicate(Setting,CM,M,F,A,ActionO),trace, ActionO \== error),
+                      set_prolog_flag(retry_undefined, Was)),!.
+
+:- multifile(user:exception/3).
+:- module_transparent(user:exception/3).
+:- dynamic(user:exception/3).
+
+% user_exception_undefined_predicate
+/*
+user:exception(undefined_predicate, MFA, Action):-  notrace,nodebug, 
+  current_prolog_flag(retry_undefined,Was), Was\==none,
+  strip_module(MFA, CM, FA),      trace, 
+  undefined_predicate_exception(MFA,CM,FA, Action),trace, !, Action\==error.
+*/
+
+:- retract( ru_l:was_prolog_flag(retry_undefined,Was)), set_prolog_flag(retry_undefined, Was).
 
 
 :- set_prolog_flag(predicate_inheritance,false).
@@ -733,6 +759,4 @@ system:term_expansion(In,P,Out,PO):- notrace( current_prolog_flag(predicate_inhe
    % checks if asserting
    notrace((nb_current('$term', Term),In == Term ; (Term=(Head:-_),In == Head))),
    expand_globals(In,Out),P=PO.
-
-
 

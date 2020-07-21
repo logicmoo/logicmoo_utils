@@ -181,7 +181,7 @@ could_safe_virtualize(File):- prolog_load_context(module,M), \+ clause_b(mtHybri
 % file late late joiners
 :- if( \+ prolog_load_context(reload,true)).
 
-:- source_location(File, Line)-> before_boot(((set_how_virtualize_file(false,File, Line)))).
+:- source_location(File, Line)-> (((set_how_virtualize_file(false,File, Line)))).
 
 :- doall((module_property(M,file(File)),
           \+ baseKB:how_virtualize_file(_,File, _),

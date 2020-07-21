@@ -146,6 +146,8 @@
 
           ]).
 
+
+
 % % % OFF :- system:use_module((dmsg)).
 % % % OFF :- system:use_module(library(must_sanity)).
 
@@ -311,6 +313,37 @@ hide_non_user_console:-current_input(In),stream_property(In, close_on_exec(true)
 :- set_module(class(library)).
 
 
+:- use_module(library(occurs)).
+:- use_module(library(gensym)).
+:- use_module(library(when)).
+
+
+:- use_module(library(backcomp)).
+:- use_module(library(debug)).
+:- use_module(library(occurs)).
+:- use_module(library(check)).
+:- use_module(library(edinburgh)).
+:- use_module(library(debug)).
+:- use_module(library(prolog_stack)).
+:- use_module(library(make)).
+
+
+:- use_module(library(gui_tracer)).
+:- use_module(library(system)).
+:- use_module(library(socket)).
+:- use_module(library(readutil)).
+:- abolish(system:time/1).
+:- use_module(library(statistics)).
+:- use_module(library(codesio)).
+:- use_module(library(charsio)).
+:- use_module(library(ssl)).
+:- use_module(library(prolog_codewalk)).
+:- use_module(library(prolog_source)).
+:- use_module(library(date)).
+:- use_module(library(editline)).
+:- use_module(library(listing)).
+
+
 /** <module> logicmoo_util_catch - catch-like bocks
 
    Tracer modes:
@@ -385,9 +418,9 @@ with_dmsg_to_main(Goal):-
    locally_tl(thread_local_error_stream(Err),Goal).
 
 with_error_to_main(Goal):-
-  get_main_error_stream(Err),current_error_stream(ErrWas),Err==ErrWas,!,Goal.
+  get_main_error_stream(Err),current_error_stream_ucatch(ErrWas),Err==ErrWas,!,Goal.
 with_error_to_main(Goal):- 
-  get_main_error_stream(Err),current_error_stream(ErrWas),
+  get_main_error_stream(Err),current_error_stream_ucatch(ErrWas),
    locally_tl(thread_local_error_stream(Err),
    scce_orig(set_stream(Err,alias(user_error)),Goal,set_stream(ErrWas,alias(user_error)))).
 
@@ -589,7 +622,7 @@ ddmsg_call(D):- ( (ddmsg(ddmsg_call(D)),call(D),ddmsg(ddmsg_exit(D))) *-> true ;
 %
 doall_and_fail(Call):- time_call(once(doall(Call))),fail.
 
-quietly_must(G):- /*quietly*/(must(G)).
+quietly_must(G):- quietly(must(G)).
 
 
 :- module_transparent((if_defined/1,if_defined/2)).
@@ -796,9 +829,13 @@ current_why(mfl4(VarNameZ,M,F,L)):- notrace(current_mfl4(VarNameZ,M,F,L)).
 current_mfl4(VarNameZ,M,F,L):- current_mfl(M,F,L),ignore(varnames_load_context(VarNameZ)).
 
 current_mfl(M,F,L):- 
-  current_source_file(F:L),!,
- (source_module(M),clause_b(mtHybrid(M))->true;clause(defaultAssertMt(M),B),call(B)),
+ current_source_file(F:L),!,
+ calc_source_module(M),
   ignore((var(L),L=module(M))).
+
+calc_source_module(M):- source_module(M),clause_b(mtHybrid(M)),!.
+calc_source_module(M):- clause_b(defaultAssertMt(M)),!.
+calc_source_module(M):- source_module(M).
 
 :- thread_local(t_l:current_why_source/1).
 

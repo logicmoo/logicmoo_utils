@@ -143,6 +143,40 @@
 :- set_module(class(library)).
 % % % OFF :- system:use_module(library(dialect)).
 
+:- use_module(library(occurs)).
+:- use_module(library(gensym)).
+:- use_module(library(when)).
+
+:- use_module(library(occurs)).
+:- use_module(library(gensym)).
+:- use_module(library(when)).
+
+
+:- use_module(library(backcomp)).
+:- use_module(library(codesio)).
+:- use_module(library(charsio)).
+:- use_module(library(debug)).
+:- use_module(library(check)).
+
+
+:- use_module(library(edinburgh)).
+:- use_module(library(debug)).
+:- use_module(library(prolog_stack)).
+:- use_module(library(make)).
+
+
+:- use_module(library(gui_tracer)).
+:- use_module(library(system)).
+:- use_module(library(socket)).
+:- use_module(library(readutil)).
+:- abolish(system:time/1).
+:- use_module(library(statistics)).
+:- use_module(library(ssl)).
+:- use_module(library(prolog_codewalk)).
+:- use_module(library(prolog_source)).
+:- use_module(library(date)).
+:- use_module(library(editline)).
+:- use_module(library(listing)).
 
 :- ensure_loaded(library(logicmoo/no_repeats)).
 
@@ -497,7 +531,7 @@ current_dirs(DO):- no_repeats(DO,(current_dirs0(D),(atom_concat(DO,'/',D)->true;
 current_dirs0(D):- t_l:search_first_dir(D).
 current_dirs0(D):- prolog_load_context(directory,D).
 current_dirs0(D):- working_directory(D,D).
-current_dirs0(D):- current_stream(_,read,Y), stream_property(Y,file_name(FN)), file_directory_name(FN,D).
+current_dirs0(D):- quintus:current_stream(_,read,Y), stream_property(Y,file_name(FN)), file_directory_name(FN,D).
 current_dirs0(D):- stream_property(_,file_name(FN)), file_directory_name(FN,D).
 
 %current_dirs0(D):- expand_file_name('*/',X),member(E,X),absolute_file_name(E,D),exists_directory(D).

@@ -63,6 +63,24 @@
 
 :- set_module(class(library)).
 
+
+:- use_module(library(gui_tracer)).
+:- use_module(library(system)).
+:- use_module(library(socket)).
+:- use_module(library(readutil)).
+:- abolish(system:time/1).
+:- use_module(library(statistics)).
+:- use_module(library(codesio)).
+:- use_module(library(charsio)).
+:- use_module(library(gensym)).
+:- use_module(library(when)).
+:- use_module(library(ssl)).
+:- use_module(library(prolog_codewalk)).
+:- use_module(library(prolog_source)).
+:- use_module(library(date)).
+:- use_module(library(editline)).
+:- use_module(library(listing)).
+
 :- meta_predicate each_single(2,*).
 :- meta_predicate translate_file_stream(3,*,*,*,*).
 :- meta_predicate translate_file0(3,*,*,*,*),translate_file(3,*,*).

@@ -97,7 +97,7 @@
             %hook_message_hook/0,
             ifThen/2,
             if_interactive/1,
-            if_interactive0/1,
+            if_interactive/2,
             if_prolog/2,
             on_x_cont/1,
             ignore_each/1,
@@ -244,7 +244,7 @@
         hidetrace(:),
         ifThen(0, 0),
         if_interactive(0),
-        if_interactive0(0),
+        if_interactive(0,0),
         if_prolog(?, 0),
         on_x_cont(0),
         beenCaught(0),
@@ -441,6 +441,26 @@
 
 % % % % OFF :- system:use_module('logicmoo_util_rtrace').
 :- set_module(class(library)).
+
+:- use_module(library(backcomp)).
+:- use_module(library(debug)).
+:- use_module(library(occurs)).
+:- use_module(library(check)).
+:- use_module(library(edinburgh)).
+:- use_module(library(gui_tracer)).
+:- use_module(library(debug)).
+:- pce:export(pce:get/3).
+:- pce:export(pce:send/2).
+:- pce_host:import(pce:get/3).
+:- pce_host:import(pce:send/2).
+:- thread_util:import(editline:el_wrap/0).
+:- gui_tracer:import(edinburgh:debug/0).
+:- pce_portray:import(prolog_listing:portray_clause/1).
+:- ifprolog:import(date:day_of_the_week/2).
+:- ifprolog:import(date:day_of_the_year/2).
+
+
+
 
 not_debugging:- \+ tracing, \+ current_prolog_flag(debug,true).
 
@@ -732,19 +752,44 @@ test_for_release_problems(File):-
 %
 % If Interactive.
 %
-if_interactive(Goal):-ignore(if_interactive0(Goal)),!.
+if_interactive(Goal):-if_interactive(Goal,true),!.
 
-if_interactive0(Goal):- 
-   thread_self(main),
-   current_input(In),
-   stream_property(In,input),
-   stream_property(In,tty(true)),
-   read_pending_input(In,_,_),!,
-   dmsg("~n(waiting ... ~n",[]),!,
-   wait_for_input([In],RL,10),!,
-   ( RL ==[] -> dmsg("...moving on)~n",[]) ; (dmsg("... starting goal)~n",[]),Goal)),
-   !.
+if_interactive(Goal,Else):- 
+  thread_self(main),
+  current_input(In),
+  stream_property(In,input),
+  stream_property(In,tty(true)),
+  dumpST,
+  read_pending_codes(In,_,_),
+  WantTrace=call(true),
+  between(1,10,N),
+  (N == 10 -> (dmsg("~n(NOT INTERACTIVE (~q))~n",[Else]),!,(WantTrace,call(Else))) ;
+  ( dmsg(
+"===================================================================
 
+ Waiting... IF_INTERACTIVE ...
+
+(g)o:
+~q.
+
+(s)kip   (d)ump  (t)race  (b)reak.
+
+(c)ontinue non-interactively:
+
+~q.
+===================================================================",[Goal,Else]),
+    notrace(with_tty_raw((wait_for_input([In],RL,2.0),RL \== [],get_single_char(C1),char_type(C1,to_upper(C))))),
+    writeln([C]),
+ (  C = 'g' -> (dmsg("(... starting goal)~n",[]), !, (WantTrace,call(Goal)));
+    C = 's' -> (dmsg("(... skipping goal)~n",[]), !);
+    C = 'c' -> (dmsg("(... continuing as inf not interactive)~n",[]),!,(WantTrace,call(Else)));
+    C = 'b' -> (dmsg("(... breaking)~n",[]),break,fail);
+    C = 'd' -> (dmsg("(... dump )~n",[]),dumpST,fail);
+    C = 't' -> (dmsg("(... trace )~n",[]),nb_setarg(1,WantTrace,trace),fail);
+    true -> fail))).
+
+if_interactive(_Goal,Else):- 
+   (dmsg("~n(NOT INTERACTIVE (~q))~n",[Else]),!,call(Else)).
 
 
 :- create_prolog_flag(bugger_debug,filter,[type(term),keep(true)]).

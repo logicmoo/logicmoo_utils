@@ -115,6 +115,8 @@ compound_name_args_safe/3,
 compound_name_arity_safe/3
           ]).
 
+:- set_module(class(library)).
+
 :-op(700,xfx,('univ_safe')).
 :- system:use_module(library(logicmoo_startup)).
 

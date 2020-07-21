@@ -74,6 +74,7 @@ Thread.
 :- system:reexport(library(debug),[debug/3]).
 :- use_module(library(must_sanity)).
  
+:- use_module(library(occurs)).
 
 % % % OFF :- system:use_module(library(must_sanity)).
 % % % OFF :- system:use_module(library(logicmoo/misc_terms)).

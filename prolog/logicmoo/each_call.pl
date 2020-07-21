@@ -48,6 +48,8 @@ Call Setup Goal Cleanup *Each* Iteration
 
 */
 
+:- set_module(class(library)).
+
 :- meta_predicate
   redo_call_cleanup(0,0,0),
   call_then_cut(0),

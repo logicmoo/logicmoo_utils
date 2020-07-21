@@ -34,6 +34,8 @@
 :- module_transparent(nortrace/0).
 :- system:use_module(library(logicmoo_startup)).
 
+:- prolog_load_context(directory,Dir),add_file_search_path_safe(library,Dir).
+
 
 
 :-thread_local(t_l:rtracing/0).
