@@ -53,7 +53,7 @@
 :- system:use_module(library(http/http_dispatch)).
 :- system:use_module(library(http/http_path)).
 :- system:use_module(library(http/mimetype)).
-:- system:use_module(library(jpl)).
+%:- system:use_module(library(jpl)).
 :- system:use_module(library(lazy_lists)).
 :- system:use_module(library(listing)).
 :- system:use_module(library(lists)).
