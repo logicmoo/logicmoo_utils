@@ -1081,20 +1081,45 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
 :- endif.
 
 :- use_module(library(prolog_pack)).
-my_pack_upgrade(Pack):- 
+my_pack_upgrade(Pack) :-
+  prolog_pack:(
+    pack_info(Pack, _, directory(Dir)),
+    directory_file_path(Dir, '.git', GitDir),
+    exists_directory(GitDir),
+    !,
+    print_message(informational, pack(git_fetch(Dir))),
+    git([fetch], [ directory(Dir) ]),
+    git_describe(V0, [ directory(Dir) ]),
+    git_describe(V1, [ directory(Dir), commit('origin/master') ]),
+    (   V0 == V1
+    ->  print_message(informational, pack(up_to_date(Pack)))
+    ;   nop(confirm(upgrade(Pack, V0, V1), yes, [])),
+        git([merge, 'origin/master'], [ directory(Dir) ]),
+        pack_rebuild(Pack)
+    )).
+my_pack_upgrade(Pack) :-
  prolog_pack:(
-   pack_info(Pack, _, download(URL)),
+    once(pack_info(Pack, _, version(VersionAtom))),
+    atom_version(VersionAtom, Version),
+    pack_info(Pack, _, download(URL)),
     (   wildcard_pattern(URL)
     ->  true
     ;   github_url(URL, _User, _Repo)
     ),
     !,
+    available_download_versions(URL, [Latest-LatestURL|_Versions]),
+    (   Latest @> Version
+    ->  nop(confirm(upgrade(Pack, Version, Latest), yes, [])),
         pack_install(Pack,
                      [ url(LatestURL),
                        upgrade(true),
                        pack(Pack)
-                     ])).
-my_pack_upgrade(_Pack).    
+                     ])
+    ;   print_message(informational, pack(up_to_date(Pack)))
+    )).
+my_pack_upgrade(Pack) :-
+    print_message(warning, pack(no_upgrade_info(Pack))).
+
 my_pack_upgrade :- my_pack_upgrade(pfc), my_pack_upgrade(logicmoo_utils), my_pack_upgrade(dictoo).
 
 %=======================================
