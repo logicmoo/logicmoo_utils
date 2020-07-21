@@ -44,7 +44,7 @@
 
 :- set_module(class(library)).
 % % % OFF :- system:use_module(library(apply)).
-% % % OFF :- system:reexport(library(logicmoo/util_strings)).
+% % % OFF :- system:use_module(library(logicmoo/util_strings)).
 % % % OFF :- system:use_module(library(logicmoo_utils_all)).
 % % % OFF :- system:use_module((ucatch)).
 % % % OFF :- system:use_module(library(logicmoo/no_loops)).
@@ -62,6 +62,16 @@
 
 
 
+:- use_module(library(logicmoo_startup)).
+:- use_module(library(logicmoo_common)).
+:- use_module(library(debuggery/first)).
+:- use_module(library(logicmoo/util_strings)).
+:- use_module(library(debuggery/dmsg)).
+:- use_module(library(debuggery/rtrace)).
+:- use_module(library(debuggery/bugger)).
+:- use_module(library(debuggery/dumpst)).
+:- use_module(library(debuggery/ucatch)).
+:- use_module(library(debuggery/frames)).
 
 
 :- set_prolog_flag(backtrace_depth,      200).
