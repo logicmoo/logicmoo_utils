@@ -1080,22 +1080,9 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
 
 :- endif.
 
-:- use_module(library(apply)).
-:- use_module(library(error)).
-:- use_module(library(process)).
-:- use_module(library(option)).
-:- use_module(library(readutil)).
-:- use_module(library(lists)).
-:- use_module(library(filesex)).
-:- use_module(library(xpath)).
-:- use_module(library(settings)).
-:- use_module(library(uri)).
-:- use_module(library(http/http_open)).
-:- use_module(library(http/json)).
-:- use_module(library(http/http_client), []).   % plugin for POST support
-:- use_module(library(prolog_config)).
 :- use_module(library(prolog_pack)).
 my_pack_upgrade(Pack):- 
+ prolog_pack:(
    pack_info(Pack, _, download(URL)),
     (   wildcard_pattern(URL)
     ->  true
@@ -1106,7 +1093,7 @@ my_pack_upgrade(Pack):-
                      [ url(LatestURL),
                        upgrade(true),
                        pack(Pack)
-                     ]).
+                     ])).
 my_pack_upgrade(_Pack).    
 my_pack_upgrade :- my_pack_upgrade(pfc), my_pack_upgrade(logicmoo_utils), my_pack_upgrade(dictoo).
 
