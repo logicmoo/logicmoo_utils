@@ -340,7 +340,7 @@ hide_non_user_console:-current_input(In),stream_property(In, close_on_exec(true)
 :- use_module(library(prolog_codewalk)).
 :- use_module(library(prolog_source)).
 :- use_module(library(date)).
-:- use_module(library(editline)).
+%:- use_module(library(editline)).
 :- use_module(library(listing)).
 
 

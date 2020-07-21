@@ -40,7 +40,7 @@
 :- use_module(library(prolog_codewalk)).
 :- use_module(library(prolog_source)).
 :- use_module(library(date)).
-:- use_module(library(editline)).
+%:- use_module(library(editline)).
 :- use_module(library(listing)).
 
 /*  Logicmoo Debug Tools
