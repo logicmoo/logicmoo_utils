@@ -25,46 +25,6 @@
 
 
 :- system:reexport(library(logicmoo_startup)).
-:- system:reexport(library(logicmoo/predicate_inheritance)).
-
-:- system:reexport(library(debuggery/first)).
-:- system:reexport(library(logicmoo/util_strings)).
-:- system:reexport(library(debuggery/dmsg)).
-:- system:reexport(library(debuggery/rtrace)).
-:- system:reexport(library(debuggery/bugger)).
-:- system:reexport(library(debuggery/dumpst)).
-:- system:reexport(library(debuggery/ucatch)).
-:- system:reexport(library(debuggery/frames)).
-
-:- system:reexport(library(logicmoo/call_from_module)).
-:- system:reexport(library(hook_database)).
-:- system:reexport(library(must_sanity)).
-:- system:reexport(library(logicmoo/filesystem)).
-
-:- system:reexport(library(logicmoo/misc_terms)).
-:- system:reexport(library(logicmoo/lockable_vars)).
-:- system:reexport(library(logicmoo/portray_vars)).
-:- system:reexport(library(logicmoo/util_varnames)).
-
-:- system:reexport(library(logicmoo/each_call)).
-:- system:reexport(library(logicmoo/redo_locally)).
-:- system:reexport(library(logicmoo/no_loops)).
-:- system:reexport(library(logicmoo/no_repeats)).
-:- system:reexport(library(logicmoo/subclause_expansion)).
-:- system:reexport(library(xlisting)).
-
-
-:- system:reexport(library(logicmoo/virtualize_source)).
-:- system:reexport(library(file_scope)).
-:- system:reexport(library(logicmoo/script_files)).
-%:- system:reexport(library(logicmoo/retry_undefined)).
-
-
-
-:- system:reexport(library(logicmoo/clause_attvars)).
-:- system:reexport(library(logicmoo/with_no_x)).
-:- system:reexport(library(logicmoo/filestreams)).
-:- system:reexport(library(logicmoo/filesystem)).
 /*
 :- system:reexport(library(logicmoo/util_dlist)).
 :- system:reexport(library(logicmoo/attvar_reader)).
