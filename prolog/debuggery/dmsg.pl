@@ -1841,7 +1841,7 @@ cls:- ignore(catch(system:shell(cls,0),_,fail)).
 :- system:use_module(library(pairs)).
 :- system:use_module(library(option)).
 %:- list_autoload.
-:- autoload_all.
+%:- autoload_all.
 %:- list_autoload.
 %:- ensure_loaded(logicmoo_util_varnames).
 %:- ensure_loaded(logicmoo_util_catch).

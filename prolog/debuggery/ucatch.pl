@@ -328,7 +328,7 @@ hide_non_user_console:-current_input(In),stream_property(In, close_on_exec(true)
 :- use_module(library(make)).
 
 
-:- use_module(library(gui_tracer)).
+% :- use_module(library(gui_tracer)).
 :- use_module(library(system)).
 :- use_module(library(socket)).
 :- use_module(library(readutil)).

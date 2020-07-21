@@ -64,7 +64,7 @@
 :- set_module(class(library)).
 
 
-:- use_module(library(gui_tracer)).
+% :- use_module(library(gui_tracer)).
 :- use_module(library(system)).
 :- use_module(library(socket)).
 :- use_module(library(readutil)).

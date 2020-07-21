@@ -447,17 +447,19 @@
 :- use_module(library(occurs)).
 :- use_module(library(check)).
 :- use_module(library(edinburgh)).
-:- use_module(library(gui_tracer)).
+%:- use_module(library(gui_tracer)).
 :- use_module(library(debug)).
+/*
 :- pce:export(pce:get/3).
 :- pce:export(pce:send/2).
 :- pce_host:import(pce:get/3).
 :- pce_host:import(pce:send/2).
 :- gui_tracer:import(edinburgh:debug/0).
 :- pce_portray:import(prolog_listing:portray_clause/1).
+:- use_module(library(date)).
 :- ifprolog:import(date:day_of_the_week/2).
 :- ifprolog:import(date:day_of_the_year/2).
-
+*/
 
 
 
