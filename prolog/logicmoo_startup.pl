@@ -1121,7 +1121,8 @@ my_pack_upgrade(Pack) :-
     print_message(warning, pack(no_upgrade_info(Pack))).
 
 my_pack_upgrade :- my_pack_upgrade(pfc), my_pack_upgrade(logicmoo_utils), my_pack_upgrade(dictoo).
-
+:- export(my_pack_upgrade).
+:- system:import(my_pack_upgrade).
 %=======================================
 %= REGISTER FOR INIT EVENTS
 %=======================================
