@@ -1095,7 +1095,7 @@ my_pack_upgrade(Pack):-
                        pack(Pack)
                      ]).
 my_pack_upgrade(_Pack).    
-my_pack_upgrade :- my_pack_upgrade(pfc),pack_upgrade(logicmoo_utils),pack_upgrade(dictoo).
+my_pack_upgrade :- my_pack_upgrade(pfc), my_pack_upgrade(logicmoo_utils), my_pack_upgrade(dictoo).
 
 %=======================================
 %= REGISTER FOR INIT EVENTS
