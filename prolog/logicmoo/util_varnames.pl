@@ -112,7 +112,7 @@
 :- multifile
         prolog:make_hook/2.
 :- meta_predicate
-       ain00(:),
+       ain00(*),
         call_not_not(0),
         call_return_tf(0, ?),
         contains_singletons(*),
@@ -123,7 +123,7 @@
         dcall_when(2, ?, ?),
         snumbervars4(*, ?, ?, ?),
         snumbervars5(*, ?, ?, ?),
-        try_save_vars(:),
+        try_save_vars(*),
         all_different_vals(2,*),
         all_disjoint_in_sets(2,*,*),
         init_varname_stores(?),

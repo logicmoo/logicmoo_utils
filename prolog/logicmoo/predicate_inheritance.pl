@@ -397,7 +397,7 @@ never_move(spft,_).
 never_move(mpred_prop,_).
 never_move(meta_argtypes,_).
 never_move(pt,_).
-never_move(bt,_).
+never_move(bct,_).
 never_move(tc,_).
 never_move(proven_tru,_).
 never_move(is_pfc_file,_):- dumpST,break.
@@ -408,7 +408,7 @@ never_move(is_pfc_file,_):- dumpST,break.
 :- export(system:do_inherit_above/2).
 :- thread_local(t_l:exact_kb/1).
 system:do_inherit_above(Mt,_):- t_l:exact_kb(Mt),!,fail.
-system:do_inherit_above(user,G):- !, fail, baseKB:call(G).
+%system:do_inherit_above(user,G):- !, fail, baseKB:call(G).
 
 system:do_inherit_above(Mt,QueryIn):- 
    functor(QueryIn,F,A),\+ never_move(F,A),
@@ -746,7 +746,7 @@ user:exception(undefined_predicate, MFA, Action):-  notrace,nodebug,
 
 
 :- set_prolog_flag(predicate_inheritance,false).
-
+/*
 :- multifile(system:goal_expansion/4).
 :- dynamic(system:goal_expansion/4).
 :- module_transparent(system:goal_expansion/4).
@@ -759,4 +759,4 @@ system:term_expansion(In,P,Out,PO):- notrace( current_prolog_flag(predicate_inhe
    % checks if asserting
    notrace((nb_current('$term', Term),In == Term ; (Term=(Head:-_),In == Head))),
    expand_globals(In,Out),P=PO.
-
+*/

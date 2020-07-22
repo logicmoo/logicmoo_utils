@@ -23,13 +23,13 @@
     ]).
 
 :- meta_predicate
-        must(0),
-        must_once(0),
-        must_det(0),
+        must(*),
+        must_once(*),
+        must_det(*),
         nop(*),
-        sanity(0),
-        must_or_rtrace(0),
-        scce_orig(0,0,0).
+        sanity(*),
+        must_or_rtrace(*),
+        scce_orig(*,*,*).
 
 :- set_module(class(library)).
 % % % OFF :- system:use_module(library(logicmoo_utils_all)).

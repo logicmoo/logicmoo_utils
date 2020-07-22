@@ -357,7 +357,7 @@ virtualize_ereq_source :- prolog_load_context(module,M), member(M,['pfc_lib','mp
 virtualize_ereq_source.
 
 bad_functor_check(O):-var(O).
-bad_functor_check(:):- !,dumpST,dtrace.
+bad_functor_check(':'):- !,dumpST,dtrace.
 %bad_functor_check(/):- !,dumpST,dtrace.
 %bad_functor_check(//):- !,dumpST,dtrace.
 

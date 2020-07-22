@@ -103,6 +103,7 @@
       current_predicate_module/2,
       call_from_module/2,
       with_source_module/2,
+      with_source_module/3,
       dynamic_if_missing/1,
       dynamic_multifile/1,
       dynamic_transparent/1,
@@ -123,7 +124,7 @@
 % % % OFF :- system:reexport(library(hook_database)).
 
 
-:- meta_predicate(with_no_mpred_expansions(:)).
+:- meta_predicate(with_no_mpred_expansions(*)).
 %% with_no_mpred_expansions( :Goal) is det.
 %
 % Using No Managed Predicate Expansions.
@@ -260,7 +261,7 @@ module_sanity_check(NewModule):-
 %
 % Call Using Source Module.
 %
-:- meta_predicate with_source_module(+,:).
+:- meta_predicate with_source_module(+,*).
 with_source_module(NewModule,Goal):-  
   nop(module_sanity_check(NewModule)),
    '$current_source_module'(OldModule),

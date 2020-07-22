@@ -575,13 +575,13 @@ fav_debug:-
 
 
 bt:-
-   use_module(library(prolog_stack)),
+  use_module(library(prolog_stack)),
   dumpST9,
  prolog_stack:export(prolog_stack:get_prolog_backtrace_lc/3),
  use_module(library(prolog_stack),[print_prolog_backtrace/2,get_prolog_backtrace_lc/3]),
-  stream_property(S,file_no(1)),
   prolog_stack:call(call,get_prolog_backtrace_lc,8000, Stack, [goal_depth(600)]),
-  print_prolog_backtrace(S, Stack).
+  stream_property(S,file_no(1)), print_prolog_backtrace(S, Stack),
+  ignore((current_output(Out), \+ stream_property(Out,file_no(1)), print_prolog_backtrace(Out, Stack))).
 
 
 

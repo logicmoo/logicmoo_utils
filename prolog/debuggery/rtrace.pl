@@ -54,7 +54,7 @@ call_call(G):-call(G).
    on_f_rtrace(0),  
    
    rtrace_break(0),
-   quietly(0),
+   quietly(*),
    ftrace(0).
 
 %! on_f_rtrace( :Goal) is det.

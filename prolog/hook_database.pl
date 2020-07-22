@@ -59,23 +59,23 @@
           ]).
 
 :- set_module(class(library)).
-:- meta_predicate clause_asserted_i(:).
+:- meta_predicate clause_asserted_i(*).
 
 :- meta_predicate
-        ain(:),
-        ain0(:),
-        pain(:),
-        paina(:),
-        painz(:),
-        aina(:),
-        ainz(:),
-        ainz_clause(:),
-        ainz_clause(:, ?),
+        ain(*),
+        ain0(*),
+        pain(*),
+        paina(*),
+        painz(*),
+        aina(*),
+        ainz(*),
+        ainz_clause(*),
+        ainz_clause(*, ?),
         expand_to_hb(?, ?, ?),
-        assert_if_new(:),
-        asserta_if_new(:),
-        asserta_new(:),
-        assertz_if_new(:),
+        assert_if_new(*),
+        asserta_if_new(*),
+        asserta_new(*),
+        assertz_if_new(*),
         call_provider(*),
         clause_asserted(*),
         clause_asserted(*, ?),
@@ -85,11 +85,11 @@
         find_and_call(*),
         find_and_call(+, +, ?),
         module_of(+,+,?),
-        callable_module(:,-),
+        callable_module(*,-),
         find_module(+, ?),
-        mpred_mop(+, 1, ?),
-        mpred_op_prolog(?, :),
-        mpred_op_prolog0(1,?),
+        mpred_mop(+, *, ?),
+        mpred_op_prolog(?, *),
+        mpred_op_prolog0(*, *),
         my_module_sensitive_code(?).
 
 :- module_transparent
@@ -182,7 +182,7 @@
 
 baseKB:first_std_provider(_,_,mpred_op_prolog).
 
-:- meta_predicate clause_safe(:, ?).
+:- meta_predicate clause_safe(*, ?).
 :- module_transparent clause_safe/2.
 :- export(clause_safe/2).
 
@@ -198,10 +198,6 @@ baseKB:first_std_provider(_,_,mpred_op_prolog).
 my_module_sensitive_code(_E):- source_context_module(CM),writeln(source_context_module=CM).
 
 
-% clause_safe(M:H,B):-!,predicate_property(M:H,number_of_clauses(_)),system:clause(H,B).
-% clause_safe(H,B):-predicate_property(_:H,number_of_clauses(_)),system:clause(H,B).
-
-%= 	 	 
 
 %% clause_safe( ?H, ?B) is semidet.
 %
@@ -209,7 +205,7 @@ my_module_sensitive_code(_E):- source_context_module(CM),writeln(source_context_
 %
 clause_safe(H,B):-predicate_property(H,number_of_clauses(C)),C>0,system:clause(H,B).
 
-:- meta_predicate(if_flag_true(:,:)).
+:- meta_predicate(if_flag_true(+,:)).
 if_flag_true(TF,Goal):-
   (current_prolog_flag(TF,F) -> 
     (F\=(false) -> find_and_call(Goal); true);
@@ -329,7 +325,7 @@ ain0(N):-quietly(clause_asserted(N))->true;mpred_op_prolog(assert,N).
 
 :- export(mpred_op_prolog/2).
 :- module_transparent(mpred_op_prolog/2).
-:- meta_predicate mpred_op_prolog(?,:).
+:- meta_predicate mpred_op_prolog(?,*).
 
 %= 	 	 
 
@@ -338,11 +334,11 @@ ain0(N):-quietly(clause_asserted(N))->true;mpred_op_prolog(assert,N).
 % Managed Predicate Oper. Prolog.
 %
 mpred_op_prolog(ain0,N):- !,(quietly(clause_asserted(N))->true;mpred_op_prolog0(assert,N)).
-mpred_op_prolog(paina,N):-!,(quietly(clause_asserted(N))->true;mpred_op_prolog0(system:asserta,N)).
-mpred_op_prolog(painz,N):-!,(quietly(clause_asserted(N))->true;mpred_op_prolog0(system:assertz,N)).
+mpred_op_prolog(paina,N):-!,(quietly(clause_asserted(N))->true;mpred_op_prolog0(asserta,N)).
+mpred_op_prolog(painz,N):-!,(quietly(clause_asserted(N))->true;mpred_op_prolog0(assertz,N)).
 mpred_op_prolog(pain,N):- !,(quietly(clause_asserted(N))->true;mpred_op_prolog0(assert,N)).
-mpred_op_prolog(aina,N):- !,(clause_asserted(N)->true;mpred_op_prolog0(system:asserta,N)).
-mpred_op_prolog(ainz,N):- !,(clause_asserted(N)->true;mpred_op_prolog0(system:assertz,N)).
+mpred_op_prolog(aina,N):- !,(clause_asserted(N)->true;mpred_op_prolog0(asserta,N)).
+mpred_op_prolog(ainz,N):- !,(clause_asserted(N)->true;mpred_op_prolog0(assertz,N)).
 mpred_op_prolog(ain,N):-  !,(clause_asserted(N)->true;mpred_op_prolog0(assert,N)).
 % mpred_op_prolog(OP,M:Term):- unnumbervars(Term,Unumbered),Term \=@= Unumbered,!,dtrace,mpred_mop(M,OP,Unumbered).
 mpred_op_prolog(OP,M:Term):-  dtrace,!,mpred_mop(M, OP,Term).
@@ -365,7 +361,7 @@ mpred_op_prolog0(OP,MTerm):- call(OP,MTerm).
 :- module_transparent((aina/1,ain/1,ainz/1,ain0/1,ainz_clause/1,ainz_clause/2,clause_asserted/2,expand_to_hb/3,clause_asserted/1,eraseall/2)).
 :- module_transparent((asserta_new/1,asserta_if_new/1,assertz_new/1,assertz_if_new/1,assert_if_new/1)). % ,assertz_if_new_clause/1,assertz_if_new_clause/2,clause_asserted/2,expand_to_hb/2,clause_asserted/1,eraseall/2)).
 
-:- meta_predicate paina(:),pain(:),painz(:),ain0(:),ainz_clause(:),ainz_clause(:,?).
+:- meta_predicate paina(*),pain(*),painz(*),ain0(*),ainz_clause(*),ainz_clause(*,?).
 :- meta_predicate clause_asserted(*,?),expand_to_hb(?,?,?),clause_asserted(*),eraseall(+,+).
 
 % aina(NEW):-ignore((system:retract(NEW),fail)),system:asserta(NEW).
@@ -429,14 +425,14 @@ assert_setting(M:P):-functor(P,_,A),dupe_term(P,DP),setarg(A,DP,_),system:retrac
 :- meta_predicate assert_setting_if_missing(:).
 assert_setting_if_missing(M:P):-functor(P,_,A),dupe_term(P,DP),setarg(A,DP,_),(system:clause(M:DP,_)->true;system:asserta(M:P)).
 
-:- meta_predicate assert_if_new(:).
+:- meta_predicate assert_if_new(*).
 
 %% assert_if_new( ?X) is semidet.
 %
 % Assert If New.
 %
 assert_if_new(X):-mpred_op_prolog(pain,X).
-:- meta_predicate asserta_if_new(:).
+:- meta_predicate asserta_if_new(*).
 
 %= 	 	 
 
@@ -445,7 +441,7 @@ assert_if_new(X):-mpred_op_prolog(pain,X).
 % Asserta If New.
 %
 asserta_if_new(X):-mpred_op_prolog(paina,X).
-:- meta_predicate assertz_if_new(:).
+:- meta_predicate assertz_if_new(*).
 
 %= 	 	 
 
@@ -455,7 +451,7 @@ asserta_if_new(X):-mpred_op_prolog(paina,X).
 %
 assertz_if_new(X):-mpred_op_prolog(painz,X).
 
-:- meta_predicate asserta_new(:).
+:- meta_predicate asserta_new(*).
 
 %= 	 	 
 
@@ -463,8 +459,8 @@ assertz_if_new(X):-mpred_op_prolog(painz,X).
 %
 % Asserta New.
 %
+:- meta_predicate asserta_new(*).
 asserta_new(X):-mpred_op_prolog(paina,X).
-:- meta_predicate asserta_new(:).
 
 %= 	 	 
 
@@ -628,7 +624,7 @@ clause_asserted(H,B):-clause_asserted(H,B,_).
 %
 clause_asserted(H,B,R):- notrace((copy_term(v(H,B),HB),clause(H,B,R),variant(v(H,B),HB))).
 
-:- meta_predicate(clause_asserted1(:,?,?)).
+:- meta_predicate(clause_asserted1( :,?,?)).
 clause_asserted1(M:H,B,R):-
    functor(H,F,A),functor(HH,F,A),
    freeze(BB,(HH:BB=@=H:B)),
@@ -758,9 +754,8 @@ ereq(C):- find_and_call(C).
 dbreq(C):- ereq(C).
 
 
-:-meta_predicate(clause_true(?)).
 
-
+:- module_transparent(predicate_property_safe/2).
 predicate_property_safe(P,PP):- quietly(predicate_property(P,PP)).
 
 %% clause_b( ?C) is semidet.
@@ -770,6 +765,7 @@ predicate_property_safe(P,PP):- quietly(predicate_property(P,PP)).
 
 pfc_with_quiet_vars_lock(G):- call(G).
 
+:- meta_predicate(clause_b(*)).
 clause_b(M:Goal):- !, pfc_with_quiet_vars_lock((M:clause(Goal,B))),M:call(B).
 clause_b(Goal):- pfc_with_quiet_vars_lock((clause(Goal,B),call(B))*->true;clause_b(baseKB:Goal)).
 
@@ -796,6 +792,8 @@ clause_b(Goal):- pfc_with_quiet_vars_lock((clause(Goal,B),call(B))*->true;clause
 %
 % Clause True.
 %
+:- meta_predicate(clause_true(*)).
+:- module_transparent(clause_true/1).
 clause_true(G):- !, clause_b(G).
 
 clause_true(M:G):-!,pfc_with_quiet_vars_lock((system:clause(M:G,true)*->true;(current_module_ordered(M2),system:clause(M2:G,true)))).
