@@ -83,15 +83,19 @@ redo_call_cleanup(Setup,Goal,Cleanup):-
    assertion(each_call_cleanup:unshared_vars(Setup,Goal,Cleanup)),
    trusted_redo_call_cleanup(Setup,Goal,Cleanup).
 
+
 trusted_redo_call_cleanup(Setup,Goal,Cleanup):- 
    \+ \+ '$sig_atomic'(Setup),
    catch( 
      ((Goal, deterministic(DET)),
        '$sig_atomic'(Cleanup),
-         (DET == true -> !
+         (notrace(DET == true) -> !
           ; (true;('$sig_atomic'(Setup),fail)))), 
       E, 
       ('$sig_atomic'(Cleanup),throw(E))). 
+
+:- '$hide'(trusted_redo_call_cleanup(_,_,_)).
+
 
 %! each_call_catcher_cleanup(:Setup, :Goal, +Catcher, :Cleanup).
 %

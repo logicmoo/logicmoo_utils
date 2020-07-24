@@ -75,28 +75,45 @@
 old_set_predicate_attribute(M:F/A, Name, Val):- functor(P,F,A), !, old_set_predicate_attribute(M:P, Name, Val).
 %old_set_predicate_attribute(MA, system, Val):- !, old_set_predicate_attribute(MA, iso, Val).
 old_set_predicate_attribute(MA, Name, Val) :-
-    catch('$set_predicate_attribute'(MA, Name, Val),error(E, _), nop(print_message(error, error(E, context(Name/1, _))))).
+    catch('$set_predicate_attribute'(MA, Name, Val),error(E, _), (print_message(error, error(E, context(Name/1, _))))).
 
 
 old_get_predicate_attribute(M:F/A, Name, Val):- functor(P,F,A), !, old_get_predicate_attribute(M:P, Name, Val).
 %old_get_predicate_attribute(MA, system, Val):- !, old_get_predicate_attribute(MA, iso, Val).
 old_get_predicate_attribute(MA, Name, Val) :-
-    catch('$get_predicate_attribute'(MA, Name, Val),error(E, _), nop(print_message(error, error(E, context(Name/1, _))))).
+    catch('$get_predicate_attribute'(MA, Name, Val),error(E, _), (print_message(error, error(E, context(Name/1, _))))).
 
 :- meta_predicate('$with_unlocked_pred_local'(:,0)).
-'$with_unlocked_pred_local'(MP,Goal):- strip_module(MP,M,P),Pred=M:P,
+'$with_unlocked_pred_local'(_,Goal):- !, current_prolog_flag(access_level,Was),
+  setup_call_cleanup(set_prolog_flag(access_level,system),Goal,set_prolog_flag(access_level,Was)).
+/*'$with_unlocked_pred_local'(MP,Goal):- strip_module(MP,M,P),Pred=M:P,
    (predicate_property(Pred,foreign)-> true ;
   (
  ('old_get_predicate_attribute'(Pred, system, OnOff)->true;throw('old_get_predicate_attribute'(Pred, system, OnOff))),
  (==(OnOff,0) -> Goal ;
  setup_call_cleanup('old_set_predicate_attribute'(Pred, system, 0),
    catch(Goal,E,throw(E)),'old_set_predicate_attribute'(Pred, system, 1))))).
-                       
+                       */
+
 :- meta_predicate(totally_hide(:)).
-totally_hide(MP):- strip_module(MP,M,P),Pred=M:P,
+totally_hide(M:F/A):- cfunctor(P,F,A),!,totally_hide(M:P).
+totally_hide(MP):- strip_module(MP,CM,P),
+   (predicate_property(MP,imported_from(M));M=CM),
+   Pred=M:P,!,
    % (current_prolog_flag(runtime_debug,N), N>2) -> unhide(Pred) ; 
   '$with_unlocked_pred_local'(Pred,
-   (('$hide'(Pred),'old_set_predicate_attribute'(Pred, trace, false),'old_set_predicate_attribute'(Pred, hide_childs, true)))).
+   (('$hide'(Pred),'old_set_predicate_attribute'(Pred, trace, 0),
+   'old_set_predicate_attribute'(Pred, iso, 1),
+   'old_set_predicate_attribute'(Pred, hide_childs, 1)))).
+
+set_pred_attrs(M:F/A,List):- cfunctor(P,F,A),!,set_pred_attrs(M:P,List).
+set_pred_attrs(MP,N=V):- !, strip_module(MP,CM,P),
+  (predicate_property(MP,imported_from(M));M=CM),
+   Pred=M:P,!,
+   '$with_unlocked_pred_local'(Pred,old_set_predicate_attribute(Pred,N,V)).
+set_pred_attrs(MP,List):- maplist(set_pred_attrs(MP),List).
+
+:- 'set_pred_attrs'(catch(_,_,_),[trace=0,hide_childs=0]).
 
 :- thread_local(tlbugger:ifHideTrace/0).% WAS OFF  :- system:reexport(library(logicmoo/util_varnames)).
 % % % OFF :- system:use_module(library(lists)).

@@ -56,7 +56,6 @@
 :- use_module(library(occurs)).
 :- use_module(library(check)).
 :- use_module(library(edinburgh)).
-:- use_module(library(debug)).
 :- use_module(library(prolog_stack)).
 :- use_module(library(make)).
 
@@ -91,7 +90,7 @@
           dumpST9/0,dumpST9/1,dumpST9/2.
 
 
-:- ensure_loaded(library(debug)).
+%:- ensure_loaded(library(debug)).
 % % % OFF :- system:use_module((dmsg)).% WAS OFF  :- system:use_module(library(logicmoo_util_strings)).
 
 
@@ -464,7 +463,7 @@ simplify_goal_printed([E|OList],O):- \+ is_list(OList),
 simplify_goal_printed(I,O):- once(dumpst_hook:simple_rewrite(I,O)), I \== O.
 
 simplify_goal_printed([F|A],[FS|AS]):- !,simplify_goal_printed(F,FS),simplify_goal_printed(A,AS).
-simplify_goal_printed(G,GS):- univ_safe_2(G,[F|A]),maplist(simplify_goal_printed,[F|A],AA),univ_safe_2(GS,AA).
+simplify_goal_printed(G,GS):- univ_safe_2(G,[F|A]),maplist(simplify_goal_printed,A,AA),univ_safe_2(GS,[F|AA]).
 
 
 :-create_prolog_flag(dmsg_len,99,[keep(true)]).
@@ -647,7 +646,7 @@ dumptrace1(G):-
 ggtrace:-
   leash(+all),
   visible(+all),
-  debug,
+  % debug,
   maybe_leash(+exception).
 
 %= 	 	 

@@ -138,9 +138,9 @@ add_pack_path(Rel):-
 %:- add_pack_path(packs_sys).
 :- endif.
 
-:- if( \+ exists_source(library(logicmoo_hyhtn))).
+%:- if( \+ exists_source(library(logicmoo_hyhtn))).
 %:- add_pack_path(packs_xtra).
-:- endif.
+%:- endif.
 
 %:- ignore(add_pack_path(packs_usr)).
 %:- add_pack_path(packs_web).
@@ -556,7 +556,7 @@ fav_debug:-
  set_prolog_flag(backtrace, true),
  set_prolog_flag(backtrace_goal_depth, 2000),
  set_prolog_flag(backtrace_show_lines, true),
- set_prolog_flag(debug,true),
+ %set_prolog_flag(debug,true),
  set_prolog_flag(debug_on_error,true),
  set_prolog_flag(debugger_show_context,true),
  set_prolog_flag(debugger_write_options,[quoted(true), portray(true), max_depth(10), attributes(write)]),
@@ -968,9 +968,12 @@ make_historial(O,A):-
 :- multifile prolog:history/2.
 
 add_history0(_):- notrace(app_argv('--nohistory')),!.
-add_history0(A):- forall(retract('$history':'$history'(_,A)),true),
-                  prolog:history(user_input,add(A)),
-                  prolog:history(current_input,add(A)).
+add_history0(A):- current_input(S),
+                  forall(retract('$history':'$history'(Where,A)),'$history'(Where,A)),                  
+                  prolog:history(S,add(A)),!,
+                  %prolog:history(user_input,add(A)),
+                  %prolog:history(current_input,add(A)).
+                  !.
 
 
 nb_linkval_current(N,V):-duplicate_term(V,VV),V=VV,nb_linkval(N,VV),nb_current(N,V).

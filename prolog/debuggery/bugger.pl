@@ -448,7 +448,7 @@
 :- use_module(library(check)).
 :- use_module(library(edinburgh)).
 %:- use_module(library(gui_tracer)).
-:- use_module(library(debug)).
+%:- use_module(library(debug)).
 /*
 :- pce:export(pce:get/3).
 :- pce:export(pce:send/2).
