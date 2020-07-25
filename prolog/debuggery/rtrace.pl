@@ -167,7 +167,7 @@ user:prolog_exception_hook(error(_, _),_, _, _) :- leash(+all),fail.
 
 user:prolog_exception_hook(error(_, _),_, _, _) :- fail, 
    notrace((  reset_tracer ->
-     maybe_leash ->
+     should_maybe_leash ->
      t_l:rtracing ->
      leash(+all),
      fail)).

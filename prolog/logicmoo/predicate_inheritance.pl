@@ -457,8 +457,8 @@ make_as_dynamic(Reason,M,F,A):- dmsg(make_as_dynamic(Reason,M,F,A)),!,make_as_dy
 
 :- multifile(user:message_hook/3).
 :- dynamic(user:message_hook/3).
-user:message_hook(import_private(Module, Private),_,_):- Module==system,!, nop(dmsg(import_private(Module, Private))).
-user:message_hook(import_private(Module, Private),_,_):- current_prolog_flag(runtime_message_hook, true), dmsg(import_private(Module, Private)).
+%user:message_hook(import_private(Module, Private),_,_):- Module==system,!, nop(dmsg(import_private(Module, Private))).
+%user:message_hook(import_private(Module, Private),_,_):- current_prolog_flag(runtime_message_hook, true), dmsg(import_private(Module, Private)).
 
 make_as_dynamic_realy(Reason,M,F,A):- 
  must_det_l((
@@ -537,7 +537,7 @@ decl_as_rev(M:F/A,Pred):- check_mfa(Pred,M,F,A),
 
 
 % skip_mfa(Why,M, genlMt, 2):- baseKB\=M,dumpST,dmsg(skip_mfa(Why,M, genlMt, 2)),!,break.
-check_mfa(_Why,M,F,A):-sanity(atom(F)),sanity(integer(A)),sanity(current_module(M)->true;wdmsg(new_module(M))).
+check_mfa(_Why,M,F,A):-sanity(atom(F)),sanity(integer(A)),sanity(current_module(M)->true;dmsg(new_module(M))).
 
 
 

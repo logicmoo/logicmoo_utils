@@ -18,7 +18,6 @@
           use_xlisting/0,
           use_xlisting/1,
           get_print_mode/1,               
-          pi_to_head_l/2,
           xlisting_1/1,
             bad_pred/1,
             blob_info/3,            
@@ -1585,22 +1584,6 @@ pp_listing(Pred):- functor_safe(Pred,F,A),functor_safe(FA,F,A),findall(NV,predic
 
 
 
-
-%= 	 	 
-
-%% pi_to_head_l( ?Head, ?HeadPI) is semidet.
-%
-% Predicate Indicator Converted To Head (list Version).
-%
-pi_to_head_l(I,O):-var(I),!,trace_or_throw(var_pi_to_head_l(I,O)).
-pi_to_head_l(M:PI, M:Head) :- !,
-	pi_to_head_l(PI, Head).
-pi_to_head_l(Name/Arity, Head) :- !,
-	functor(Head, Name, Arity).
-pi_to_head_l(Name//DCGArity, Term) :-
-	Arity is DCGArity+2,
-	functor(Term, Name, Arity).
-pi_to_head_l(Head, Head).
 
 
 

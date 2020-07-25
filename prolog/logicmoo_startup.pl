@@ -36,6 +36,7 @@
 
 :- use_module(library(logicmoo_utils_all)).
 
+:- if(false).
 :- system:use_module(library(apply)).
 :- system:use_module(library(assoc)).
 :- system:use_module(library(charsio)).
@@ -104,10 +105,11 @@
 :- abolish(system:time,1).
 :- system:use_module(library(statistics)).
 :- system:use_module(library(make)).
+:- endif.
 
 
 %:- use_module(library(logicmoo_utils_all)).
-:- create_prolog_flag(dmsg_level,filter,[type(term),keep(true)]).
+:- create_prolog_flag(dmsg_level,[never,error,warning,info,filter,always],[type(term),keep(true)]).
 % ==============================================
 % Add Pack Directories
 % ==============================================
@@ -608,7 +610,7 @@ is_loads_file(_:SFile,File):-!,is_loads_file(SFile,File).
 %
 :- meta_predicate(if_file_exists(:)).
 if_file_exists(M:Call):- arg(1,Call,MMFile),strip_module(MMFile,_,File),
- (exists_source(File)-> must(M:Call);wdmsg(not_installing(M,Call))),!.
+ (exists_source(File)-> must(M:Call);dmsg(warning,not_installing(M,Call))),!.
 
 
 
@@ -635,7 +637,7 @@ load_library_system(M,File):- before_boot(gripe_time(40,(if_file_exists(ensure_l
 %
 % If Defined.
 %
-iff_defined(Goal):- iff_defined(Goal,((print_message(warning,warn_undefined(Goal))),!,fail)).
+iff_defined(Goal):- iff_defined(Goal,(rtrace,(print_message(warning,warn_undefined(Goal))),!,fail)).
 
 %% iff_defined( ?Goal, :GoalElse) is semidet.
 %
@@ -662,7 +664,7 @@ teamspoon_pack(Pack):-
   pack_property(Pack,home(Home)),once(sub_string(Home, _, _, _, 'github.com/TeamSPoon')).
 
 logicmoo_update:-  call((user:use_module(library(prolog_pack)))),
-    forall(teamspoon_pack(Pack),wdmsg(maybe_pack_upgrade(Pack))).
+    forall(teamspoon_pack(Pack),dmsg(warning,maybe_pack_upgrade(Pack))).
 /*
 pack_upgrade_wrong:- call((user:use_module(library(prolog_pack)),use_module(library(predicate_streams)), 
   call(call,
@@ -952,6 +954,8 @@ init_logicmoo :- ensure_loaded(library(logicmoo_repl)),init_why(during_booting,i
 
 % invert_varname(NV):-  ignore(((NV=(N=V), V='$VAR'(N)))).
 
+:- use_module(library(prolog_history)).
+
 add_history(O):- 
    ignore_not_not((nonvar(O),make_historial(O,A),add_history0(A))),!.
 
@@ -965,15 +969,17 @@ make_historial(O,A):-
     prolog_load_context(variable_names, Bindings),
     format(string(A), '~W', [O, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]).
 
-:- multifile prolog:history/2.
+%:- multifile prolog:history/2.
 
 add_history0(_):- notrace(app_argv('--nohistory')),!.
 add_history0(A):- current_input(S),
-                  forall(retract('$history':'$history'(Where,A)),'$history'(Where,A)),                  
-                  prolog:history(S,add(A)),!,
-                  %prolog:history(user_input,add(A)),
-                  %prolog:history(current_input,add(A)).
-                  !.
+   forall(retract('$history':'$history'(_,A)),true),
+                  prolog:history(S,add(A)),
+                  ignore((
+                     stream_property(UI,file_no(0)),
+                     ( \+ same_streams(S,UI)),
+                        ignore(retract('$history':'$history'(_,A))), 
+                        prolog:history(user_input,add(A)))),!.
 
 
 nb_linkval_current(N,V):-duplicate_term(V,VV),V=VV,nb_linkval(N,VV),nb_current(N,V).
@@ -1010,7 +1016,7 @@ fixup_exports:-
    all_source_file_predicates_are_exported,
    all_source_file_predicates_are_transparent.
 
-fixup_exports_system:-   (prolog_load_context(source,SF)-> system:reexport(SF) ; true).
+fixup_exports_system:-   (prolog_load_context(source,SF)-> reexport(SF) ; true).
 
 :- fixup_exports.
 
@@ -1077,7 +1083,7 @@ logicmoo_base_port(Base):- app_argv1(One),\+ is_list(One),
 % basically only run if is in 'user'
 user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File),prolog_load_context(file,File),
   prolog_load_context(module,SourceModule), '$current_typein_module'(TypeIn),
-  wdmsg(File : '?='(SourceModule , TypeIn)),
+  dmsg(info,File : '?='(SourceModule , TypeIn)),
   SourceModule == TypeIn,
   run_pending_inits, fail.
 
@@ -1099,7 +1105,7 @@ my_pack_upgrade(Pack) :-
     ;   nop(confirm(upgrade(Pack, V0, V1), yes, [])),
         git([merge, 'origin/master'], [ directory(Dir) ]),
         pack_rebuild(Pack)
-    )).
+    )).                                
 my_pack_upgrade(Pack) :-
  prolog_pack:(
     once(pack_info(Pack, _, version(VersionAtom))),
@@ -1145,7 +1151,9 @@ my_pack_upgrade :- my_pack_upgrade(pfc), my_pack_upgrade(logicmoo_utils), my_pac
 :- system:reexport(library(debuggery/bugger)).
 :- system:reexport(library(debuggery/dumpst)).
 :- system:reexport(library(debuggery/ucatch)).
-:- system:reexport(library(debuggery/frames)).
+:- system:reexport(library(debuggery/frames)).                                
+
+:- system:reexport(library(xlisting)).
 
 :- system:reexport(library(logicmoo/call_from_module)).
 :- system:reexport(library(hook_database)).
@@ -1155,14 +1163,13 @@ my_pack_upgrade :- my_pack_upgrade(pfc), my_pack_upgrade(logicmoo_utils), my_pac
 :- system:reexport(library(logicmoo/misc_terms)).
 :- system:reexport(library(logicmoo/lockable_vars)).
 :- system:reexport(library(logicmoo/portray_vars)).
-:- system:reexport(library(logicmoo/util_varnames)).
+:- system:reexport(library(logicmoo/util_varnames)).     
 
 :- system:reexport(library(logicmoo/each_call)).
 :- system:reexport(library(logicmoo/redo_locally)).
 :- system:reexport(library(logicmoo/no_loops)).
 :- system:reexport(library(logicmoo/no_repeats)).
 :- system:reexport(library(logicmoo/subclause_expansion)).
-:- system:reexport(library(xlisting)).
 
 
 :- system:reexport(library(logicmoo/virtualize_source)).

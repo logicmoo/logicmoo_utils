@@ -1,8 +1,7 @@
 
 :- module(xlisting_lm,[xlisting/1]).
-:- system:reexport(library(logicmoo_common)).
-
-:- system:reexport(library(xlisting/xlisting_console)).
+:- reexport(library(logicmoo_common)).
+:- reexport(library(xlisting/xlisting_console)).
 
 /*
 :- system:reexport(library(xlisting/xlisting_web.pfc)).

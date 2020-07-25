@@ -125,7 +125,7 @@ system_expanded_attvars(M:goal,P,I,O):- var(P),
    current_prolog_flag(read_attvars,true), 
    \+ current_prolog_flag(xref,true), 
    system_expanded_attvars(I,O),
-   wdmsg(goal_xform(I --> O)).
+   dmsg(goal_xform(I --> O)).
 
 system_expanded_attvars(M:term,P,I,CO):- nonvar(P), compound(I), I\= (:-(_)),
    \+ lmcache:never_use_attvar_expander(M),
@@ -137,7 +137,7 @@ system_expanded_attvars(M:term,P,I,CO):- nonvar(P), compound(I), I\= (:-(_)),
    (prolog_load_context(source,LC1)-> (\+ lmcache:never_use_attvar_expander(LC1)) ; true),
    system_expanded_attvars(I,O),
    clausify_attributes(O,CO),
-   wdmsg(term_xform(I --> CO)),
+   dmsg(term_xform(I --> CO)),
    % update what we just read 
    b_setval('$term',CO).
 

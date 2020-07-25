@@ -1,6 +1,6 @@
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_first.pl
 :- module(first,
-          [ 
+          [ pi_to_head_l/2,
             safe_numbervars/1,
             safe_numbervars/2,
             put_variable_names/1,
@@ -135,8 +135,26 @@ getenv_safe(Name,ValueO,Default):-
    (getenv(Name,RV)->Value=RV;Value=Default),
     (number(Default)->( \+ number(Value) -> atom_number(Value,ValueO); Value=ValueO);(Value=ValueO)).
 
-qdmsg(M):-compound(M),functor(M,F,_),!,debug(logicmoo(F),'~q',[M]).
+qdmsg(_):- current_prolog_flag(dmsg_level,never),!.
+qdmsg(M):-compound(M),cfunctor(M,F,_),!,debug(logicmoo(F),'~q',[M]).
 qdmsg(M):-debug(logicmoo(M),'QMSG: ~q',[M]).
+
+
+
+%% pi_to_head_l( ?Head, ?HeadPI) is semidet.
+%
+% Predicate Indicator Converted To Head (list Version).
+%
+pi_to_head_l(I,O):-var(I),!,I=O.
+pi_to_head_l(I,O):-var(I),!,trace_or_throw(var_pi_to_head_l(I,O)).
+pi_to_head_l(M:PI, M:Head) :- !,
+	pi_to_head_l(PI, Head).
+pi_to_head_l(Name/Arity, Head) :- !,
+	must(cfunctor(Head, Name, Arity)).
+pi_to_head_l(Name//DCGArity, Term) :-
+	Arity is DCGArity+2,
+	must(cfunctor(Term, Name, Arity)).
+pi_to_head_l(Head, Head).
 
 :- meta_predicate
 

@@ -1538,6 +1538,8 @@ A value 0 means that the corresponding quality is totally unimportant, and 3 tha
 */
 compute_q_value(N,N):- number(N),!.
 compute_q_value(false,0).
+compute_q_value(fail,0).
+compute_q_value(never,0).
 compute_q_value(neutral,1).
 compute_q_value(true,2).
 compute_q_value(quality,3).
@@ -1562,8 +1564,9 @@ unsafe_speedups      speed up that are possibily
 */
 flag_call(FlagHowValue):-zotrace(flag_call0(FlagHowValue)).
 flag_call0(Flag = Quality):- compute_q_value(Quality,Value),!, set_prolog_flag(Flag,Value).
+%flag_call0(Flag == Quality):- compute_q_value(Quality,Value),!, current_prolog_flag(Flag,Current),Current==Value.
 flag_call0(FlagHowValue):- univ_safe_2(FlagHowValue,[How,Flag,Value]),
-    compute_q_value(Flag,QVal),compute_q_value(Value,VValue),!,call(How,QVal,VValue).
+    current_prolog_flag(Flag,QVal),compute_q_value(Value,VValue),!,call(How,QVal,VValue).
 
 
 

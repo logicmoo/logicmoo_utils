@@ -1095,7 +1095,7 @@ same_streams(TErr,Err):- stream_property(TErr,file_no(A)),stream_property(Err,fi
 %
 % Wdmsg.
 %
-wdmsg(X):- dzotrace(((current_prolog_flag(dmsg_level,never)->true;(show_source_location),
+wdmsg(X):- dzotrace((((current_prolog_flag(debug_level,0);current_prolog_flag(dmsg_level,never))->true;(show_source_location),
  with_all_dmsg(dmsg(X))))),!.
 
 %% wdmsg( ?F, ?X) is semidet.
@@ -1188,6 +1188,8 @@ dmsg0(V):-dzotrace(locally(local_override(no_kif_var_coroutines,true),ignore(wit
 % (debug)message Primary Helper Primary Helper.
 %
 dmsg00(V):-cyclic_term(V),!,writeln(cyclic_term),flush_output,writeln(V),!.
+dmsg00(call(Code)):- !, with_output_to(string(S),catch((notrace(Code)->TF=true;TF=failed),TF,true)), 
+  (TF=true->dmsg(S);(format(string(S2),'~Ndmsg(call(Code)) of ~q~n~q: ~s ~n',[Code,TF,S]),wdmsg(S2),!,fail)).
 dmsg00(V):- catch(dumpst:simplify_goal_printed(V,VV),_,fail),!,dmsg000(VV),!.
 dmsg00(V):- dmsg000(V),!.
 
@@ -1364,6 +1366,7 @@ debugm(X):-notrace((debugm(X,X))).
 %
 % Debugm.
 %
+debugm(_,_):-notrace(current_prolog_flag(dmsg_level,never)),!.
 debugm(Why,Msg):- notrace((dmsg(debugm(Why,Msg)),!,debugm0(Why,Msg))).
 debugm0(Why,Msg):- 
    /*\+ debugging(mpred),*/

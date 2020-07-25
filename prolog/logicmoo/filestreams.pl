@@ -400,7 +400,7 @@ thread_httpd:accept_hook(Goal, Options) :-
         memberchk(tcp_socket(Socket), Options),
         tcp_accept(Socket, Client, Peer),
 	debug(http(connection), 'New HTTPS connection from ~p', [Peer]),
-	http_enough_workers(Queue, accept, Peer),
+	thread_httpd:http_enough_workers(Queue, accept, Peer),
 	thread_send_message(Queue, ssl_client(SSL, Client, Goal, Peer)).
 
 

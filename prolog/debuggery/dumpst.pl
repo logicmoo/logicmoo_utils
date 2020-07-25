@@ -147,7 +147,7 @@ dumpST0(Frame,MaxDepth):- ignore(MaxDepth=5000),Term = dumpST(MaxDepth),
 %
 % Dump S True Stucture.
 %
-dumpST:- zotrace((prolog_current_frame(Frame),b_setval('$dump_frame',Frame),dumpST1)).
+dumpST:- zotrace(with_all_dmsg((prolog_current_frame(Frame),b_setval('$dump_frame',Frame),dumpST1))).
 
 
 :- thread_local(tlbugger:no_slow_io/0).
@@ -731,6 +731,7 @@ user:message_hook(Term, Kind, Lines):- current_prolog_flag(runtime_message_hook,
  tlbugger:rtracing,
  \+ \+ 
  catch(((
+ rtrace,
  (Kind= warning;Kind= error), 
  Term\=syntax_error(_), 
  backtrace(40), \+ baseKB:no_buggery, \+ tlbugger:no_buggery_tl,

@@ -781,7 +781,7 @@ if_interactive(Goal,Else):-
 ===================================================================",[Goal,Else]),
     notrace(with_tty_raw((wait_for_input([In],RL,2.0),RL \== [],get_single_char(C1),char_type(C1,to_upper(C))))),
     writeln([C]),
- (  C = 'g' -> (dmsg("(... starting goal)~n",[]), !, (WantTrace,call(Goal)));
+ (  C = 'g' -> (wdmsg("(... starting goal)~n",[]), !, (WantTrace,call(Goal)));
     C = 's' -> (dmsg("(... skipping goal)~n",[]), !);
     C = 'c' -> (dmsg("(... continuing as inf not interactive)~n",[]),!,(WantTrace,call(Else)));
     C = 'b' -> (dmsg("(... breaking)~n",[]),break,fail);
@@ -794,8 +794,8 @@ if_interactive(_Goal,Else):-
 
 
 :- create_prolog_flag(bugger_debug,filter,[type(term),keep(true)]).
-:- create_prolog_flag(dmsg_level,filter,[type(term),keep(true)]).
-:- create_prolog_flag(dmsg_color,true,[type(boolean),keep(false)]).
+:- create_prolog_flag(dmsg_level,[never,error,warning,info,filter,always],[type(term),keep(true)]).
+:- create_prolog_flag(dmsg_color,true,[type(boolean),keep(true)]).
 
 % :- mpred_trace_nochilds(system:catch/3).
 
@@ -827,7 +827,7 @@ set_prolog_flag(N,V):- current_prolog_flag(N,VV),!,
 */
 
 
-:- set_prolog_flag(dmsg_level,filter).
+%:- set_prolog_flag(dmsg_level,filter).
 % :- set_prolog_flag(dmsg_color,false).
 
 :- dynamic(double_quotes_was/1).
