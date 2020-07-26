@@ -47,7 +47,7 @@
 :- meta_predicate user:attvar_variant(0,0).
 :- use_module(library(option),[dict_options/2,option/2]).
 
-:- set_prolog_flag(access_level,system).
+%:- set_prolog_flag(access_level,system).
 %:- set_prolog_flag(gc,false).
 
 % use_module(library(multivar)),call(multivar(X)),trace,X=2.
