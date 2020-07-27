@@ -42,7 +42,7 @@
             call_or_list/1,
             call_skipping_n_clauses/2,
             caller_module/1,
-            caller_module/2,
+            caller_module2/2,
             callsc/1,
 
           % all_source_file_predicates_are_transparent/0,
@@ -340,7 +340,7 @@
         call_or_list/1,
         call_skipping_n_clauses/2,
         caller_module/1,
-        caller_module/2,
+        caller_module2/2,
         debugFmt/1,
         debugFmtList/1,
         debugFmtList0/2,
@@ -2665,7 +2665,7 @@ prolog_current_frame_or_parent(Frame,Each):- Each=Frame;
 %
 % Caller Module.
 %
-caller_module(Module):-caller_module(Module,v(function_expansion,func,user,'$toplevel','$apply','$expand')).
+caller_module(Module):-caller_module2(Module,v(function_expansion,func,user,'$toplevel','$apply','$expand')).
 
 
 
@@ -2674,7 +2674,7 @@ caller_module(Module):-caller_module(Module,v(function_expansion,func,user,'$top
 % Hook To [t_l:caller_module/2] For Module Logicmoo_util_bugger.
 % Caller Module.
 %
-caller_module(Module,Skipped):- module_stack(Module,_), \+ arg(_,Skipped,Module).
+caller_module2(Module,Skipped):- module_stack(Module,_), \+ arg(_,Skipped,Module).
 
 :- module_transparent(module_stack(-,-)).
 

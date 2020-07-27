@@ -159,21 +159,21 @@ maybe_delete_import_module(From,To):- ignore(system:delete_import_module(From,To
 maybe_delete_import_module(From,To):- writeln_safely(ignore(system:delete_import_module(From,To))).
 
 
-:- multifile(baseKB:is_global_module/1).
-:- dynamic(baseKB:is_global_module/1).
-:- baseKB:export(baseKB:is_global_module/1).
-:- system:import(baseKB:is_global_module/1).
+:- multifile(baseKB:is_declared_global_module/1).
+:- dynamic(baseKB:is_declared_global_module/1).
+:- baseKB:export(baseKB:is_declared_global_module/1).
+:- system:import(baseKB:is_declared_global_module/1).
 
-baseKB:is_global_module(baseKB).
-baseKB:is_global_module(eggdrop).
-baseKB:is_global_module(parser_all).
-baseKB:is_global_module(parser_chat80).
-baseKB:is_global_module(mu).
-baseKB:is_global_module(parser_e2c).
-baseKB:is_global_module(lmconf).
-baseKB:is_global_module(clpfd).
-%baseKB:is_global_module(user).
-%baseKB:is_global_module(system).
+baseKB:is_declared_global_module(baseKB).
+baseKB:is_declared_global_module(eggdrop).
+baseKB:is_declared_global_module(parser_all).
+baseKB:is_declared_global_module(parser_chat80).
+baseKB:is_declared_global_module(mu).
+baseKB:is_declared_global_module(parser_e2c).
+baseKB:is_declared_global_module(lmconf).
+baseKB:is_declared_global_module(clpfd).
+%baseKB:is_declared_global_module(user).
+%baseKB:is_declared_global_module(system).
 
 :- multifile(baseKB:is_promiscuous_module/1).
 :- dynamic(baseKB:is_promiscuous_module/1).
@@ -181,16 +181,16 @@ baseKB:is_global_module(clpfd).
 :- system:import(baseKB:is_promiscuous_module/1).
 
 
-global_module(M):- baseKB:is_global_module(M),!.
-global_module(M):- 
-     \+ (baseKB:is_promiscuous_module(M), \+ baseKB:is_global_module(M)),
+is_global_module(M):- baseKB:is_declared_global_module(M),!.
+is_global_module(M):- 
+     \+ (baseKB:is_promiscuous_module(M), \+ baseKB:is_declared_global_module(M)),
      assertz(baseKB:is_promiscuous_module(M)).
 
 promiscuous_module(M):- baseKB:is_promiscuous_module(M),!.
 promiscuous_module(M):- 
      assertz(baseKB:is_promiscuous_module(M)),
      ignore((M\==system,M:use_module(library(clpfd),except([sum/3])))), 
-     \+ (baseKB:is_global_module(G), \+ maybe_add_import_module(M,G,end)),
+     \+ (baseKB:is_declared_global_module(G), \+ maybe_add_import_module(M,G,end)),
      !.
 
 :- export(promiscuous_module/1).
@@ -209,7 +209,7 @@ fix_baseKB_imports_now:-
   % \+ ((import_module(baseKB,X),X\==system), \+ ignore(delete_import_module(baseKB,X))),
   % \+ (current_module(M), \+ ignore(( \+ import_module(M,baseKB), \+ ignore(delete_import_module(M,baseKB))))),
    \+ (baseKB:is_promiscuous_module(MM), 
-     \+ ignore( \+ ( baseKB:is_global_module(G), \+ maybe_add_import_module(MM,G,end)))).
+     \+ ignore( \+ ( baseKB:is_declared_global_module(G), \+ maybe_add_import_module(MM,G,end)))).
 
 
 :- initialization(fix_baseKB_imports,now).

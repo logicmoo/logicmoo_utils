@@ -458,4 +458,4 @@ ignore_must(Goal):- how_must(fail, Goal).
 %:- totally_hide('$toplevel':residue_vars(_,_)).
 :- totally_hide('$toplevel':save_debug).
 :- totally_hide('$toplevel':no_lco).
-:- ignore(rtrace(non_user_console)).
+% :- ignore(rtrace(non_user_console)).
