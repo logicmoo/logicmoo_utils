@@ -1311,7 +1311,7 @@ real_list_undefined(Options) :-
 
 
 :- export(mmake/0).
-
+:- system:import(mmake).
 %= 	 	 
 
 %% mmake is semidet.

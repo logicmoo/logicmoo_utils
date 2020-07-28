@@ -13,8 +13,11 @@
 */
 % File:  $PACKDIR/subclause_expansion/prolog/script_files.pl
 :- module(script_files, [
+          this_script_begin/0,
+          this_script_ends/0,
           process_this_script_now/0,
           process_script_file/1,
+          process_script_file/2,
           process_stream/1,
           visit_script_term/1]).
 
@@ -72,7 +75,7 @@
 
 % % % OFF :- system:use_module('../file_scope').
 :- module_transparent(process_this_script_now/0).
-:- module_transparent(process_this_script/0).
+:- module_transparent(this_script_begin/0).
 :- module_transparent(process_stream/1).
 :- module_transparent(process_this_stream/1).
 :- module_transparent(process_script_file/1).
@@ -83,36 +86,44 @@
 :- thread_local(t_l:block_comment_mode/1).
 :- thread_local(t_l:echo_mode/1).
 
-
+is_echo_mode(Mode):- t_l:echo_mode(Cur),!,Mode=Cur.
+is_echo_mode(skip(_)).
 
 till_eof(In) :-
         repeat,
             (   at_end_of_stream(In)
             ->  !
             ;   (read_pending_codes(In, Chars, []),
-                (t_l:echo_mode(echo_file) ->
+                (is_echo_mode(echo_file) ->
                   echo_format('~s',[Chars]);
                   true),
                 fail)
             ).
 
 
-%% process_this_script is det.
+%! this_script_begin is det.
 %
 % Process This Script.
 %
 % Echoing the file
 %
 % Same as
-%  :- process_this_script_with(compile_normally, echo_file).
+%  :- process_this_script_with([compile_normally, echo_file]).
 %
-process_this_script:- 
+this_script_begin:- 
    assert_until_eof(t_l:echo_mode(echo_file)),
    process_this_script_now.
 
+%! this_script_ends is det.
+%
+% Resume normal Prolog file handling
+%
+this_script_ends:- prolog_load_context(stream,S) -> 
+   asserta(t_l:quit_processing_stream(S));
+   assertion(prolog_load_context(stream,_)).
 
 
-%% process_this_script_with(:Pred1) is det.
+%! process_this_script_with(:Pred1) is det.
 %
 % Process This Script with :Pred1
 %
@@ -137,8 +148,9 @@ process_this_script:-
 %  
 %
 process_this_script_with(Pred1):- 
-   process_this_script_with(Pred1, skip(_)).
-   
+   (atom(Pred1)->assertion(current_predicate(Pred1/1));true),
+   assert_until_eof(t_l:each_file_term(Pred1)),
+   process_this_script_now.   
 
 %% process_this_script_with(:Pred1,+Echo) is det.
 %
@@ -146,10 +158,9 @@ process_this_script_with(Pred1):-
 %
 %  Echo may be file, skip(_) or skip(items)
 %
-process_this_script_with(Pred1,Echo):- 
-   (atom(Pred1)->assertion(current_predicate(Pred1/1));true),
-   assert_until_eof(t_l:each_file_term(Pred1)),
+process_this_script_with(Pred1, Echo):- 
    assert_until_eof(t_l:echo_mode(Echo)),
+   process_this_script_with(Pred1),
    process_this_script_now.
 
 
@@ -161,20 +172,25 @@ process_this_script_with(Pred1,Echo):-
 %  :- process_this_script_with(compile_normally, skip(_)).
 %
 
-process_this_script_now:- current_prolog_flag(xref,true),!.
-process_this_script_now:- prolog_load_context(stream,S) -> process_this_stream(S) ; assertion(prolog_load_context(stream,_)).
+process_this_script_now:- 
+  prolog_load_context(stream,S) -> process_this_stream(S) ; assertion(prolog_load_context(stream,_)).
+
 
 process_this_stream(S):- 
   repeat,
   once(process_stream(S)),
-  at_end_of_stream(S).
+  done_processing_stream(S),
+  retractall(t_l:quit_processing_stream(S)).
+
+done_processing_stream(S):- t_l:quit_processing_stream(S),!.
+done_processing_stream(S):- at_end_of_stream(S).
 
 % in_space_cmt(Goal):- call_cleanup(prepend_each_line(' % ',Goal),echo_format('~N',[])).
 in_space_cmt(Goal):- setup_call_cleanup(echo_format('~N /*~n',[]),Goal,echo_format('~N*/~n',[])).
 
 
 till_eol(S):- read_line_to_string(S,String),
-  (t_l:echo_mode(skip(_))->true ; (echo_format('~N~s~n',[String]))).
+  (is_echo_mode(skip(_))->true ; (echo_format('~N~s~n',[String]))).
 
   
 
@@ -190,7 +206,7 @@ process_stream(S):- peek_code(S,W),char_type(W,white),\+ char_type(W,end_of_line
 
 process_stream(S):- must((read_term(S,T,[variable_names(Vs)]),put_variable_names( Vs))),
   call(b_setval,'$variable_names',Vs), b_setval('$term',T), 
-  (t_l:echo_mode(skip(items)) -> true ; write_stream_item(user_error,T)),!,
+  (is_echo_mode(skip(items)) -> true ; write_stream_item(user_error,T)),!,
   flush_output(user_error),
   must(visit_script_term(T)),!,
   echo_format('~N',[]),!.
@@ -207,8 +223,8 @@ process_stream_peeked213(S,"%"):- !,till_eol(S).
 
 
 echo_format(_Fmt,_Args):- flush_output, t_l:block_comment_mode(Was),Was==invisible,!.
-echo_format(Fmt,Args):- t_l:block_comment_mode(_),t_l:echo_mode(echo_file),!,format(Fmt,Args),flush_output.
-echo_format(Fmt,Args):- t_l:echo_mode(echo_file),!,format(Fmt,Args),flush_output.
+echo_format(Fmt,Args):- t_l:block_comment_mode(_),is_echo_mode(echo_file),!,format(Fmt,Args),flush_output.
+echo_format(Fmt,Args):- is_echo_mode(echo_file),!,format(Fmt,Args),flush_output.
 echo_format(_Fmt,_Args).
 
 
@@ -220,7 +236,8 @@ write_stream_item(Out,T):-
 
 
 process_script_file(File):- process_script_file(File,visit_script_term).
-process_script_file(File,Process):- open(File,read,Stream),locally_tl(each_file_term(Process),process_this_stream(Stream)),!.
+process_script_file(File,Process):- open(File,read,Stream),
+ locally(tl:each_file_term(Process), process_this_stream(Stream)),!.
 
 expand_script_directive(include(G),Pos,process_script_file(G),Pos).
 expand_script_directive(In,Pos,Out,PosOut):- expand_goal(In,Pos,Out,PosOut).
@@ -351,5 +368,5 @@ maybe_dynamic(M,H):- M:dynamic(M:H).
 
 
 
-:- fixup_exports.
+% :- fixup_exports.
 

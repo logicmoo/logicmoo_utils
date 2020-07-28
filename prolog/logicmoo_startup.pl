@@ -34,8 +34,6 @@
           run_pending_inits/0]).
 
 
-:- use_module(library(logicmoo_utils_all)).
-
 :- if(false).
 :- system:use_module(library(apply)).
 :- system:use_module(library(assoc)).
@@ -97,11 +95,6 @@
 :- system:use_module(library(when)).
 :- system:use_module(library(writef)).
 :- system:use_module(library(wfs),[call_residual_program/2,call_delays/2,delays_residual_program/2,answer_residual/2]).
-
-:- if( \+ current_predicate(each_call_cleanup/3)).
-:- use_module(library(each_call_cleanup)).
-:- endif.
-
 :- abolish(system:time,1).
 :- system:use_module(library(statistics)).
 :- system:use_module(library(make)).
@@ -110,19 +103,28 @@
 
 %:- use_module(library(logicmoo_utils_all)).
 :- create_prolog_flag(dmsg_level,[never,error,warning,info,filter,always],[type(term),keep(true)]).
+
+
+:- if( \+ current_predicate(each_call_cleanup/3)).
+:- use_module(library(each_call_cleanup)).
+:- endif.
+
 % ==============================================
 % Add Pack Directories
 % ==============================================
-:- use_module(library(prolog_pack)).
 :- multifile(user:file_search_path/2).
 :-   dynamic(user:file_search_path/2).
 
+:- use_module(library(prolog_pack)).
+
 dir_from(Rel,Y):-
     ((getenv('LOGICMOO_WS',Dir);
+      working_directory(Dir,Dir);
       prolog_load_context(directory,Dir);
-      'w:/opt/logicmoo_workspace/'=Dir;      
-      '~/logicmoo_workspace'=Dir;
-      '/opt/logicmoo_workspace/'=Dir;
+      getenv('CD',Dir);
+      %'w:/opt/logicmoo_workspace/'=Dir;      
+      %'~/logicmoo_workspace'=Dir;
+      %'/opt/logicmoo_workspace/'=Dir;
       fail)),
     absolute_file_name(Rel,Y,[relative_to(Dir),file_type(directory),file_errors(fail)]),
     exists_directory(Y),!.
@@ -167,10 +169,12 @@ add_pack_path(Rel):-
 :- set_prolog_flag(runtime_speed,1).
 
 :- endif.
-*/
 
 :- set_prolog_flag(lm_no_autoload,false).
 :- set_prolog_flag(lm_pfc_lean,false).
+
+
+*/
 
 
 /*
@@ -229,6 +233,56 @@ update_packs:-
    initialization(attach_packs,now).
 
 % :- update_packs.
+:- use_module(library(prolog_pack)).
+:- export(pack_upgrade_soft/1).
+pack_upgrade_soft(Which) :- which_pack(Which,Pack)-> Which\==Pack,!, pack_upgrade_soft(Pack).
+pack_upgrade_soft(Pack) :-
+  prolog_pack:(
+    (pack_info(Pack, _, directory(Dir));pack_property(Pack, directory(Dir))),
+    directory_file_path(Dir, '.git', GitDir),
+    exists_directory(GitDir),
+    !,
+    print_message(informational, pack(git_fetch(Dir))),
+    git([fetch], [ directory(Dir) ]),
+    git_describe(V0, [ directory(Dir) ]),
+    git_describe(V1, [ directory(Dir), commit('origin/master') ]),
+    (   V0 == V1
+    ->  print_message(informational, pack(up_to_date(Pack)))
+    ;   nop(confirm(upgrade(Pack, V0, V1), yes, [])),
+        git([merge, 'origin/master'], [ directory(Dir) ]),
+        pack_rebuild(Pack)
+    )).             
+pack_upgrade_soft(Pack) :-
+ prolog_pack:(
+    once(pack_info(Pack, _, version(VersionAtom))),
+    atom_version(VersionAtom, Version),
+    pack_info(Pack, _, download(URL)),
+    (   wildcard_pattern(URL)
+    ->  true
+    ;   github_url(URL, _User, _Repo)
+    ),
+    !,
+    available_download_versions(URL, [Latest-LatestURL|_Versions]),
+    (   Latest @> Version
+    ->  nop(confirm(upgrade(Pack, Version, Latest), yes, [])),
+        pack_install(Pack,
+                     [ url(LatestURL),
+                       upgrade(true),
+                       pack(Pack)
+                     ])
+    ;   print_message(informational, pack(up_to_date(Pack)))
+    )).
+
+
+pack_upgrade_soft(Pack) :-
+    print_message(warning, pack(no_upgrade_info(Pack))).
+
+
+:- export(pack_upgrade_soft/0).
+pack_upgrade_soft :- pack_upgrade_soft(pfc), pack_upgrade_soft(logicmoo_utils), pack_upgrade_soft(dictoo).
+:- system:import(pack_upgrade_soft/0).
+
+
 
 % :- pack_list_installed.
 
@@ -672,10 +726,10 @@ pack_upgrade_wrong:- call((user:use_module(library(prolog_pack)),use_module(libr
     forall(call(call,prolog_pack:current_pack,Pack),maybe_pack_upgrade(Pack)))).
 */
 maybe_pack_upgrade(Pack):- pack_property(Pack, directory(PackDir)),\+ access_file(PackDir,write),!.
-maybe_pack_upgrade(Pack):- pack_soft_upgrade(Pack).
+maybe_pack_upgrade(Pack):- pack_upgrade_soft(Pack).
 
 
-%!  pack_soft_upgrade(+Pack) is semidet.
+%!  pack_upgrade_soft(+Pack) is semidet.
 %
 %   Try to upgrade the package Pack.
 %
@@ -687,52 +741,6 @@ which_pack(Pack,Pack):- prolog_pack:pack_info(Pack, _, _).
 which_pack(Lib,Pack):-  pack_property(Pack,library(Lib)).
 which_pack(Home,Pack):- pack_property(Pack,home(Home)).
 
-:- export(pack_soft_upgrade/1).
-pack_soft_upgrade(Which) :- which_pack(Which,Pack)-> Which\==Pack,!, pack_soft_upgrade(Pack).
-pack_soft_upgrade(Pack) :-
-   prolog_pack:(
- 
-    (pack_info(Pack, _, directory(Dir));pack_property(Pack, directory(Dir))),
-    directory_file_path(Dir, '.git', GitDir),
-    exists_directory(GitDir),
-    !,
-
-    print_message(informational, pack(git_fetch(Dir))),
-    git([fetch], [ directory(Dir) ]),
-    git_describe(V0, [ directory(Dir) ]),
-    git_describe(V1, [ directory(Dir), commit('origin/master') ]),
-    (   V0 == V1
-    ->  print_message(informational, pack(up_to_date(Pack)))
-    ;   confirm(upgrade(Pack, V0, V1), yes, []),
-        git([merge, 'origin/master'], [ directory(Dir) ]),
-        pack_rebuild(Pack)
-    )).                             
-
-pack_soft_upgrade(Pack) :-  fail,
-   prolog_pack:(
-
-    once(pack_info(Pack, _, version(VersionAtom))),
-    atom_version(VersionAtom, Version),
-    pack_info(Pack, _, download(URL)),
-    (   wildcard_pattern(URL)
-    ->  true
-    ;   github_url(URL, _User, _Repo)
-    ),
-    !,
-    available_download_versions(URL, [Latest-LatestURL|_Versions]),
-    (   Latest @> Version
-    ->  confirm(upgrade(Pack, Version, Latest), yes, []),
-        pack_install(Pack,
-                     [ url(LatestURL),
-                       upgrade(true),
-                       pack(Pack)
-                     ])
-    ;   print_message(informational, pack(up_to_date(Pack)))
-    )).
-
-
-pack_soft_upgrade(Pack) :-
-    print_message(warning, pack(no_upgrade_info(Pack))).
 
 
 
@@ -1089,58 +1097,9 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
 
 :- endif.
 
-:- use_module(library(prolog_pack)).
-my_pack_upgrade(Pack) :-
-  prolog_pack:(
-    pack_info(Pack, _, directory(Dir)),
-    directory_file_path(Dir, '.git', GitDir),
-    exists_directory(GitDir),
-    !,
-    print_message(informational, pack(git_fetch(Dir))),
-    git([fetch], [ directory(Dir) ]),
-    git_describe(V0, [ directory(Dir) ]),
-    git_describe(V1, [ directory(Dir), commit('origin/master') ]),
-    (   V0 == V1
-    ->  print_message(informational, pack(up_to_date(Pack)))
-    ;   nop(confirm(upgrade(Pack, V0, V1), yes, [])),
-        git([merge, 'origin/master'], [ directory(Dir) ]),
-        pack_rebuild(Pack)
-    )).                                
-my_pack_upgrade(Pack) :-
- prolog_pack:(
-    once(pack_info(Pack, _, version(VersionAtom))),
-    atom_version(VersionAtom, Version),
-    pack_info(Pack, _, download(URL)),
-    (   wildcard_pattern(URL)
-    ->  true
-    ;   github_url(URL, _User, _Repo)
-    ),
-    !,
-    available_download_versions(URL, [Latest-LatestURL|_Versions]),
-    (   Latest @> Version
-    ->  nop(confirm(upgrade(Pack, Version, Latest), yes, [])),
-        pack_install(Pack,
-                     [ url(LatestURL),
-                       upgrade(true),
-                       pack(Pack)
-                     ])
-    ;   print_message(informational, pack(up_to_date(Pack)))
-    )).
-my_pack_upgrade(Pack) :-
-    print_message(warning, pack(no_upgrade_info(Pack))).
-
-my_pack_upgrade :- my_pack_upgrade(pfc), my_pack_upgrade(logicmoo_utils), my_pack_upgrade(dictoo).
-:- export(my_pack_upgrade/0).
-:- system:import(my_pack_upgrade/0).
-%=======================================
-%= REGISTER FOR INIT EVENTS
 %=======================================
 
-%= Register a hook after restore
-:- initialization(init_why(during_boot,restore),restore).
-
-%= Register a hook
-:- initialization(init_why(after_boot,program),program).
+%=======================================
 
 :- system:reexport(library(logicmoo/predicate_inheritance)).
 
@@ -1174,7 +1133,7 @@ my_pack_upgrade :- my_pack_upgrade(pfc), my_pack_upgrade(logicmoo_utils), my_pac
 
 :- system:reexport(library(logicmoo/virtualize_source)).
 :- system:reexport(library(file_scope)).
-:- system:reexport(library(logicmoo/script_files)).
+:- system:reexport(library(script_files)).
 %:- system:reexport(library(logicmoo/retry_undefined)).
 
 
@@ -1184,7 +1143,18 @@ my_pack_upgrade :- my_pack_upgrade(pfc), my_pack_upgrade(logicmoo_utils), my_pac
 :- system:reexport(library(logicmoo/filestreams)).
 :- system:reexport(library(logicmoo/filesystem)).
 
+%=======================================
+%= REGISTER FOR INIT EVENTS
+%=======================================
+
+%= Register a hook after restore
+:- initialization(init_why(during_boot,restore),restore).
+
+%= Register a hook
+:- initialization(init_why(after_boot,program),program).
+
 %= Register a hook
 %:- initialization(init_why(runtime,main),main).
+
 
 

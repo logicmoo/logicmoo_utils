@@ -825,7 +825,7 @@ portray_clause_w_vars(Out,Msg,Vs,Options):- fail, if_defined_local(serialize_att
 portray_clause_w_vars(Out,Msg,Vs,Options):- \+ \+ portray_clause_w_vars2(Out,Msg,Vs,Options).
  
 portray_clause_w_vars2(Out,Msg,Vs,Options):- free_of_attrs_dmsg(Msg+Vs),!, portray_clause_w_vars5(Out,Msg,Vs,Options).
-portray_clause_w_vars2(Out,Msg,Vs,Options):-
+portray_clause_w_vars2(Out,Msg,Vs,Options):-   
    term_attvars(Msg,AttVars),
    copy_term(Msg+AttVars,Msg+AttVars,Goals),
    portray_append_goals(Msg,Goals,GMsg),
@@ -836,6 +836,7 @@ portray_clause_w_vars5(Out,Msg,Vs,Options):-
   portray_clause_w_vars55(Out,CMsg,CVs,COptions),!.
 portray_clause_w_vars55(Out,Msg,Vs,Options):-
  \+ \+ (( 
+ (var(Vs)-> prolog_load_context(variable_names,Vs);true),
  prolog_listing:do_portray_clause(Out,Msg,
   [variable_names(Vs),numbervars(true),
       attributes(ignore),

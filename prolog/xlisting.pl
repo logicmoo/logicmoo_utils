@@ -1,4 +1,3 @@
-
 :- module(xlisting_lm,[xlisting/1]).
 :- reexport(library(logicmoo_common)).
 :- reexport(library(xlisting/xlisting_console)).
