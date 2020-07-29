@@ -66,6 +66,7 @@ in_thread_and_join/1,
 in_thread_and_join/2,
 is_proof/1,
 is_true/1,
+is_src_true/1,
 lastMember2/2,
 list_retain/3,
 list_to_conjuncts/2,
@@ -157,6 +158,7 @@ compound_name_arity_safe/3
         flatten_dedupe/2,
         flatten_set/2,       
         is_proof/1,
+        is_src_true/1,
         is_true/1,
         lastMember2/2,
         list_to_conjuncts/2,
@@ -225,15 +227,18 @@ lastMember2(E,[H|List]):-lastMember2(E,List);E=H.
 
 %= 	 	 
 
-%% is_true( ?B) is semidet.
+is_true(B):- is_src_true(B).
+
+%% is_src_true( ?B) is semidet.
 %
 % If Is A True.
 %
-is_true(B):-is_ftVar(B),!,fail.
-is_true(true):-!.
-is_true({B}):-is_true(B),!.
-is_true(props(_,NIL)):- NIL==[].
-is_true(B):-is_proof(B).
+:- module_transparent is_src_true/1.
+is_src_true(B):-var(B),!,fail.
+is_src_true(true):-!.
+is_src_true({B}):- !, is_src_true(B).
+is_src_true(props(_,NIL)):- NIL==[].
+is_src_true(B):-is_proof(B).
 
 
 %= 	 	 

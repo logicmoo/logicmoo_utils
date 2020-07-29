@@ -85,14 +85,13 @@ redo_call_cleanup(Setup,Goal,Cleanup):-
 
 
 trusted_redo_call_cleanup(Setup,Goal,Cleanup):- 
-   \+ \+ '$sig_atomic'(Setup),
-   catch( 
-     ((Goal, deterministic(DET)),
-       '$sig_atomic'(Cleanup),
-         (notrace(DET == true) -> !
-          ; (true;('$sig_atomic'(Setup),fail)))), 
-      E, 
-      ('$sig_atomic'(Cleanup),throw(E))). 
+   HdnCleanup = mquietly(Cleanup),   
+   setup_call_cleanup(Setup, 
+     ((Goal,deterministic(DET)),
+        (notrace(DET == true) -> ! ; 
+           ((HdnCleanup,notrace(nb_setarg(1,HdnCleanup,true)));
+            (Setup,notrace(nb_setarg(1,HdnCleanup,Cleanup)),notrace(fail))))),
+        HdnCleanup).
 
 :- '$hide'(trusted_redo_call_cleanup(_,_,_)).
 

@@ -16,12 +16,10 @@
 % ===================================================================
 */
 
-:- module(logicmoo_utils_all,[]).
-:- discontiguous(logicmoo_utils_all:'$exported_op'/3).
-:- logicmoo_utils_all:use_module(library(logicmoo_utils)).
-:- logicmoo_utils_all:reexport(library(logicmoo_utils)).
 :- module(logicmoo_utils_all_legacy,[]).
-
+%:- discontiguous(logicmoo_utils_all:'$exported_op'/3).
+%:- logicmoo_utils_all:use_module(library(logicmoo_utils)).
+%:- logicmoo_utils_all:reexport(library(logicmoo_utils)).
 :- reexport(library(logicmoo_common)).
 
 

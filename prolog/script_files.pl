@@ -15,7 +15,7 @@
 :- module(script_files, [
           this_script_begin/0,
           this_script_ends/0,
-          process_this_script_now/0,
+          process_script_file/0,
           process_script_file/1,
           process_script_file/2,
           process_stream/1,
@@ -63,7 +63,7 @@
 %:- use_module(library(editline)).
 :- use_module(library(listing)).
 
-% :- meta_predicate(process_this_script_now()).
+% :- meta_predicate(process_script_file()).
 % :- meta_predicate(process_stream(+)).
 :- meta_predicate(visit_script_term(*)).
 :- meta_predicate(visit_if(0)).
@@ -74,7 +74,7 @@
 
 
 % % % OFF :- system:use_module('../file_scope').
-:- module_transparent(process_this_script_now/0).
+:- module_transparent(process_script_file/0).
 :- module_transparent(this_script_begin/0).
 :- module_transparent(process_stream/1).
 :- module_transparent(process_this_stream/1).
@@ -83,6 +83,7 @@
 :- module_transparent(in_space_cmt/1).
 
 :- thread_local(t_l:each_file_term/1).
+:- thread_local(t_l:quit_processing_stream/1).
 :- thread_local(t_l:block_comment_mode/1).
 :- thread_local(t_l:echo_mode/1).
 
@@ -108,11 +109,11 @@ till_eof(In) :-
 % Echoing the file
 %
 % Same as
-%  :- process_this_script_with([compile_normally, echo_file]).
+%  :- process_this_script_with(compile_normally, echo_file).
 %
 this_script_begin:- 
    assert_until_eof(t_l:echo_mode(echo_file)),
-   process_this_script_now.
+   process_script_file.
 
 %! this_script_ends is det.
 %
@@ -150,7 +151,7 @@ this_script_ends:- prolog_load_context(stream,S) ->
 process_this_script_with(Pred1):- 
    (atom(Pred1)->assertion(current_predicate(Pred1/1));true),
    assert_until_eof(t_l:each_file_term(Pred1)),
-   process_this_script_now.   
+   process_script_file.   
 
 %% process_this_script_with(:Pred1,+Echo) is det.
 %
@@ -161,18 +162,17 @@ process_this_script_with(Pred1):-
 process_this_script_with(Pred1, Echo):- 
    assert_until_eof(t_l:echo_mode(Echo)),
    process_this_script_with(Pred1),
-   process_this_script_now.
+   process_script_file.
 
 
-%% process_this_script_now() is det.
+%! process_script_file is det.
 %
 % Process This Script with :Pred1 echo Echo
 %
 % Same as
-%  :- process_this_script_with(compile_normally, skip(_)).
+%  `:- process_this_script_with(compile_normally, skip(_)).`
 %
-
-process_this_script_now:- 
+process_script_file:- 
   prolog_load_context(stream,S) -> process_this_stream(S) ; assertion(prolog_load_context(stream,_)).
 
 

@@ -29,6 +29,7 @@
           app_argv1/1,
           app_argv_ok/1,
           app_argv_off/1,
+          pack_upgrade_soft/1,
           is_startup_script/1,
           init_why/2,
           run_pending_inits/0]).
@@ -106,7 +107,7 @@
 
 
 :- if( \+ current_predicate(each_call_cleanup/3)).
-:- use_module(library(each_call_cleanup)).
+% :- use_module(library(each_call_cleanup)).
 :- endif.
 
 % ==============================================
@@ -206,86 +207,6 @@ setup_hist0:-  '$toplevel':setup_history.
 :- setup_hist0.
 :- endif.
    
-% :- initialization(attach_packs,now).
-
-update_packs:- !.
-update_packs:-    
-   use_module(library(prolog_pack)),
-   (pack_property(prologmud_samples,version(Version));
-    pack_property(pfc,version(Version))),!,
-   use_module(library(git)),
-   forall(
-   (pack_property(Pack,version(Version)), pack_property(Pack,directory(Dir)),
-      directory_file_path(Dir, '.git', GitDir),
-      %(exists_file(GitDir);exists_directory(GitDir)),
-       access_file(GitDir,read),
-       access_file(GitDir,write)),
-     ( print_message(informational, pack(git_fetch(Dir))),
-     git([fetch], [ directory(Dir) ]),
-     git_describe(V0, [ directory(Dir) ]),
-     git_describe(V1, [ directory(Dir), commit('origin/master') ]),
-     (   V0 == V1
-     ->  print_message(informational, pack(up_to_date(Pack)))
-     ;   true,
-         git([merge, 'origin/master'], [ directory(Dir) ]),
-         pack_rebuild(Pack)
-     ))),
-   initialization(attach_packs,now).
-
-% :- update_packs.
-:- use_module(library(prolog_pack)).
-:- export(pack_upgrade_soft/1).
-pack_upgrade_soft(Which) :- which_pack(Which,Pack)-> Which\==Pack,!, pack_upgrade_soft(Pack).
-pack_upgrade_soft(Pack) :-
-  prolog_pack:(
-    (pack_info(Pack, _, directory(Dir));pack_property(Pack, directory(Dir))),
-    directory_file_path(Dir, '.git', GitDir),
-    exists_directory(GitDir),
-    !,
-    print_message(informational, pack(git_fetch(Dir))),
-    git([fetch], [ directory(Dir) ]),
-    git_describe(V0, [ directory(Dir) ]),
-    git_describe(V1, [ directory(Dir), commit('origin/master') ]),
-    (   V0 == V1
-    ->  print_message(informational, pack(up_to_date(Pack)))
-    ;   nop(confirm(upgrade(Pack, V0, V1), yes, [])),
-        git([merge, 'origin/master'], [ directory(Dir) ]),
-        pack_rebuild(Pack)
-    )).             
-pack_upgrade_soft(Pack) :-
- prolog_pack:(
-    once(pack_info(Pack, _, version(VersionAtom))),
-    atom_version(VersionAtom, Version),
-    pack_info(Pack, _, download(URL)),
-    (   wildcard_pattern(URL)
-    ->  true
-    ;   github_url(URL, _User, _Repo)
-    ),
-    !,
-    available_download_versions(URL, [Latest-LatestURL|_Versions]),
-    (   Latest @> Version
-    ->  nop(confirm(upgrade(Pack, Version, Latest), yes, [])),
-        pack_install(Pack,
-                     [ url(LatestURL),
-                       upgrade(true),
-                       pack(Pack)
-                     ])
-    ;   print_message(informational, pack(up_to_date(Pack)))
-    )).
-
-
-pack_upgrade_soft(Pack) :-
-    print_message(warning, pack(no_upgrade_info(Pack))).
-
-
-:- export(pack_upgrade_soft/0).
-pack_upgrade_soft :- pack_upgrade_soft(pfc), pack_upgrade_soft(logicmoo_utils), pack_upgrade_soft(dictoo).
-:- system:import(pack_upgrade_soft/0).
-
-
-
-% :- pack_list_installed.
-
 
 % :- predicate_inheritance:kb_global(plunit:loading_unit/4).
 
@@ -711,37 +632,6 @@ iff_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
 
 :- meta_predicate(ignore_not_not(0)).
 
-:- export(logicmoo_update/0).
-
-teamspoon_pack(Pack):-
-  call((user:use_module(library(prolog_pack)))),
-  pack_property(Pack,home(Home)),once(sub_string(Home, _, _, _, 'github.com/TeamSPoon')).
-
-logicmoo_update:-  call((user:use_module(library(prolog_pack)))),
-    forall(teamspoon_pack(Pack),dmsg(warning,maybe_pack_upgrade(Pack))).
-/*
-pack_upgrade_wrong:- call((user:use_module(library(prolog_pack)),use_module(library(predicate_streams)), 
-  call(call,
-   with_input_from_predicate(({}/[X]>>(repeat,X='YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY')))),
-    forall(call(call,prolog_pack:current_pack,Pack),maybe_pack_upgrade(Pack)))).
-*/
-maybe_pack_upgrade(Pack):- pack_property(Pack, directory(PackDir)),\+ access_file(PackDir,write),!.
-maybe_pack_upgrade(Pack):- pack_upgrade_soft(Pack).
-
-
-%!  pack_upgrade_soft(+Pack) is semidet.
-%
-%   Try to upgrade the package Pack.
-%
-%   @tbd    Update dependencies when updating a pack from git?
-
-which_pack(Pack,Pack):- pack_property(Pack,_),!.
-which_pack(Dir,Pack):-  prolog_pack:pack_info(Pack, _, directory(Dir)).
-which_pack(Pack,Pack):- prolog_pack:pack_info(Pack, _, _).
-which_pack(Lib,Pack):-  pack_property(Pack,library(Lib)).
-which_pack(Home,Pack):- pack_property(Pack,home(Home)).
-
-
 
 
 
@@ -1070,6 +960,120 @@ logicmoo_base_port(Base):- app_argv1(One),\+ is_list(One),
 
 
 
+% :- initialization(attach_packs,now).
+
+% ==============================================
+% Updates for Packs
+% ==============================================
+:- export(logicmoo_update/0).
+
+teamspoon_pack(Pack):-
+  call((user:use_module(library(prolog_pack)))),
+  pack_property(Pack,home(Home)),once(sub_string(Home, _, _, _, 'github.com/TeamSPoon')).
+
+logicmoo_update:-  call((user:use_module(library(prolog_pack)))),
+    forall(teamspoon_pack(Pack),dmsg(warning,maybe_pack_upgrade(Pack))).
+/*
+pack_upgrade_wrong:- call((user:use_module(library(prolog_pack)),use_module(library(predicate_streams)), 
+  call(call,
+   with_input_from_predicate(({}/[X]>>(repeat,X='YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY')))),
+    forall(call(call,prolog_pack:current_pack,Pack),maybe_pack_upgrade(Pack)))).
+*/
+maybe_pack_upgrade(Pack):- pack_property(Pack, directory(PackDir)),\+ access_file(PackDir,write),!.
+maybe_pack_upgrade(Pack):- pack_upgrade_soft(Pack).
+
+
+%!  pack_upgrade_soft(+Pack) is semidet.
+%
+%   Try to upgrade the package Pack.
+%
+%   @tbd    Update dependencies when updating a pack from git?
+
+which_pack(Pack,Pack):- pack_property(Pack,_),!.
+which_pack(Dir,Pack):-  prolog_pack:pack_info(Pack, _, directory(Dir)).
+which_pack(Pack,Pack):- prolog_pack:pack_info(Pack, _, _).
+which_pack(Lib,Pack):-  pack_property(Pack,library(Lib)).
+which_pack(Home,Pack):- pack_property(Pack,home(Home)).
+
+
+update_packs:- !.
+update_packs:-    
+   use_module(library(prolog_pack)),
+   (pack_property(prologmud_samples,version(Version));
+    pack_property(pfc,version(Version))),!,
+   use_module(library(git)),
+   forall(
+   (pack_property(Pack,version(Version)), pack_property(Pack,directory(Dir)),
+      directory_file_path(Dir, '.git', GitDir),
+      %(exists_file(GitDir);exists_directory(GitDir)),
+       access_file(GitDir,read),
+       access_file(GitDir,write)),
+     ( print_message(informational, pack(git_fetch(Dir))),
+     git([fetch], [ directory(Dir) ]),
+     git_describe(V0, [ directory(Dir) ]),
+     git_describe(V1, [ directory(Dir), commit('origin/master') ]),
+     (   V0 == V1
+     ->  print_message(informational, pack(up_to_date(Pack)))
+     ;   true,
+         git([merge, 'origin/master'], [ directory(Dir) ]),
+         pack_rebuild(Pack)
+     ))),
+   initialization(attach_packs,now).
+
+% :- update_packs.
+:- use_module(library(prolog_pack)).
+:- export(pack_upgrade_soft/1).
+pack_upgrade_soft(Which) :- which_pack(Which,Pack)-> Which\==Pack,!, pack_upgrade_soft(Pack).
+pack_upgrade_soft(Pack) :-
+  prolog_pack:(
+    (pack_info(Pack, _, directory(Dir));pack_property(Pack, directory(Dir))),
+    directory_file_path(Dir, '.git', GitDir),
+    exists_directory(GitDir),
+    !,
+    print_message(informational, pack(git_fetch(Dir))),
+    git([fetch], [ directory(Dir) ]),
+    git_describe(V0, [ directory(Dir) ]),
+    git_describe(V1, [ directory(Dir), commit('origin/master') ]),
+    (   V0 == V1
+    ->  print_message(informational, pack(up_to_date(Pack)))
+    ;   nop(confirm(upgrade(Pack, V0, V1), yes, [])),
+        git([merge, 'origin/master'], [ directory(Dir) ]),
+        pack_rebuild(Pack)
+    )).             
+pack_upgrade_soft(Pack) :-
+ prolog_pack:(
+    once(pack_info(Pack, _, version(VersionAtom))),
+    atom_version(VersionAtom, Version),
+    pack_info(Pack, _, download(URL)),
+    (   wildcard_pattern(URL)
+    ->  true
+    ;   github_url(URL, _User, _Repo)
+    ),
+    !,
+    available_download_versions(URL, [Latest-LatestURL|_Versions]),
+    (   Latest @> Version
+    ->  nop(confirm(upgrade(Pack, Version, Latest), yes, [])),
+        pack_install(Pack,
+                     [ url(LatestURL),
+                       upgrade(true),
+                       pack(Pack)
+                     ])
+    ;   print_message(informational, pack(up_to_date(Pack)))
+    )).
+
+
+pack_upgrade_soft(Pack) :-
+    print_message(warning, pack(no_upgrade_info(Pack))).
+
+
+:- export(pack_upgrade_soft/0).
+pack_upgrade_soft :- pack_upgrade_soft(pfc), pack_upgrade_soft(logicmoo_utils), pack_upgrade_soft(dictoo).
+:- system:import(pack_upgrade_soft/0).
+
+
+
+% :- pack_list_installed.
+
 
 
 
@@ -1080,22 +1084,6 @@ logicmoo_base_port(Base):- app_argv1(One),\+ is_list(One),
 
 % ( GFE = Girl-Friend Experience )
 
-
-:- fixup_exports.
-
-
-:- if(false). 
-:- multifile(user:term_expansion/2).
-:- dynamic(user:term_expansion/2).
-
-% basically only run if is in 'user'
-user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File),prolog_load_context(file,File),
-  prolog_load_context(module,SourceModule), '$current_typein_module'(TypeIn),
-  dmsg(info,File : '?='(SourceModule , TypeIn)),
-  SourceModule == TypeIn,
-  run_pending_inits, fail.
-
-:- endif.
 
 %=======================================
 
@@ -1157,4 +1145,19 @@ user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File
 %:- initialization(init_why(runtime,main),main).
 
 
+:- fixup_exports.
+
+
+:- if(false). 
+:- multifile(user:term_expansion/2).
+:- dynamic(user:term_expansion/2).
+
+% basically only run if is in 'user'
+user:term_expansion(EOF,_):- EOF == end_of_file, prolog_load_context(source,File),prolog_load_context(file,File),
+  prolog_load_context(module,SourceModule), '$current_typein_module'(TypeIn),
+  dmsg(info,File : '?='(SourceModule , TypeIn)),
+  SourceModule == TypeIn,
+  run_pending_inits, fail.
+
+:- endif.
 

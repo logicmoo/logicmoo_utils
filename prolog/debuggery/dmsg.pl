@@ -40,12 +40,13 @@
 
             univ_safe_2/2,
             cls/0,
-            dmsg0/1,dmsg0/2,dmsg00/1,
+            dmsg0/1,
+            dmsg00/1,
             dmsg1/1,
             dmsg2/1,
             dmsg3/1,
             dmsg4/1,
-            dmsg5/1,dmsg5/2,
+            dmsg5/1, % dmsg5/2,
             dmsg_hide/1,
             dmsg_hides_message/1,
             dmsg_show/1,
@@ -244,15 +245,14 @@ if_defined_local(G,Else):- current_predicate(_,G)->G;Else.
         defined_message_color/2,
         dfmt/1,
         dfmt/2,
-        dmsg/3,
+        dmsg/1,dmsg/2,dmsg/3,
         dmsg0/1,
-        dmsg0/2,
         dmsg1/1,
         dmsg2/1,
         dmsg3/1,
         dmsg4/1,
         dmsg5/1,
-        dmsg5/2,
+        %dmsg5/2,
         dmsg_hide/1,
         dmsg_hides_message/1,
         dmsg_show/1,
@@ -988,10 +988,10 @@ mesg_color(=(T,_),C):-nonvar(T),mesg_color(T,C).
 mesg_color(debug(T),C):-nonvar(T),mesg_color(T,C).
 mesg_color(_:T,C):-nonvar(T),!,mesg_color(T,C).
 mesg_color(:- T,C):-nonvar(T),!,mesg_color(T,C).
-mesg_color(H :- T, [bold|C]):-nonvar(T),!,mesg_color(H,C).
+mesg_color((H :- T), [bold|C]):-nonvar(T),!,mesg_color(H,C).
 mesg_color(T,C):-cfunctor(T,F,_),member(F,[color,ansi]),compound(T),arg(1,T,C),nonvar(C).
 mesg_color(T,C):-cfunctor(T,F,_),member(F,[succeed,must,mpred_op_prolog]),compound(T),arg(1,T,E),nonvar(E),!,mesg_color(E,C).
-mesg_color(T,C):-cfunctor(T,F,_),member(F,[fmt0,msg]),compound(T),arg(2,T,E),nonvar(E),!,mesg_color(E,C).
+mesg_color(T,C):-cfunctor(T,F,_),member(F,[fmt0,msg,format,fmt]),compound(T),arg(2,T,E),nonvar(E),!,mesg_color(E,C).
 mesg_color(T,C):-predef_functor_color(F,C),mesg_arg1(T,F).
 mesg_color(T,C):-nonvar(T),defined_message_color(F,C),matches_term(F,T),!.
 mesg_color(T,C):-cfunctor(T,F,_),!,functor_color(F,C),!.
@@ -1073,9 +1073,19 @@ dmsg(V):- dzotrace((locally(set_prolog_flag(retry_undefined,none), if_defined_lo
 
 %% dmsg( ?F, ?A) is det.
 %
-% (debug)message.
+% (debug)message Primary Helper.
 %
-dmsg(F,A):- locally(set_prolog_flag(retry_undefined, none),if_defined_local(dmsg0(F,A),logicmoo_util_catch:ddmsg(F,A))),!.
+dmsg(F,A):- transform_mesg(F,A,FA),!,dmsg(FA).
+
+transform_mesg(F,A,ansi(F,A)):- is_sgr_on_code(F),!.
+transform_mesg(warning,A,warning(A)).
+transform_mesg(error,A,error(A)).
+transform_mesg(info,A,info(A)).
+transform_mesg(information,A,A).
+transform_mesg(F,A,fmt0(F,A)).
+
+%dmsg(F,A):- 
+%              if_defined_local(dmsg0(F,A),logicmoo_util_catch:ddmsg(F,A))),!.
 
 with_output_to_main_error(G):- !,call(G).
 
@@ -1096,14 +1106,14 @@ same_streams(TErr,Err):- stream_property(TErr,file_no(A)),stream_property(Err,fi
 %
 % Wdmsg.
 %
-wdmsg(X):- dzotrace((((current_prolog_flag(debug_level,0);current_prolog_flag(dmsg_level,never))->true;(show_source_location),
- with_all_dmsg(dmsg(X))))),!.
+wdmsg(_):- current_prolog_flag(debug_level,0),current_prolog_flag(dmsg_level,never),!.
+wdmsg(X):- quietly(ignore(with_all_dmsg(dmsg(X)))),!.
 
 %% wdmsg( ?F, ?X) is semidet.
 %
 % Wdmsg.
 %
-wdmsg(_,_):- current_prolog_flag(dmsg_level,never),!.
+wdmsg(_,_):- current_prolog_flag(debug_level,0),current_prolog_flag(dmsg_level,never),!.
 wdmsg(F,X):- quietly(ignore(with_all_dmsg(dmsg(F,X)))),!.
 
 
@@ -1140,19 +1150,10 @@ wdmsgl(NAME,With,CNF):- call(With,NAME:-CNF),!.
 %
 % Dmsginfo.
 %
-dmsginfo(V):-dmsg(info(V)).
+dmsginfo(V):-dmsg(info,V).
 
 %= 	 	 
 
-%% dmsg0( ?F, ?A) is det.
-%
-% (debug)message Primary Helper.
-%
-dmsg0(_,_):- current_prolog_flag(dmsg_level,never),!.
-dmsg0(F,A):- is_sgr_on_code(F),!,dmsg(ansi(F,A)),!.
-dmsg0(F,A):- with_output_to_main_error(dmsg(fmt0(F,A))),!.
-
-%= 	 	 
 
 %% vdmsg( ?L, ?F) is det.
 %
@@ -1180,7 +1181,8 @@ dmsg(L,F,A):-loggerReFmt(L,LR),loggerFmtReal(LR,F,A).
 %
 % (debug)message Primary Helper.
 %
-dmsg0(V):-dzotrace(locally(local_override(no_kif_var_coroutines,true),ignore(with_output_to_main_error(dmsg00(V))))),!.
+dmsg0(V):-dzotrace(locally(local_override(no_kif_var_coroutines,true),
+   ignore(with_output_to_main_error(dmsg00(V))))),!.
 
 %= 	 	 
 
@@ -1233,7 +1235,7 @@ dmsg2(NC):- cyclic_term(NC),!,format_to_error('~N% ~q~n',[dmsg_cyclic_term_2]).
 dmsg2(NC):- var(NC),!,format_to_error('~N% DMSG VAR ~q~n',[NC]).
 dmsg2(skip_dmsg(_)):-!.
 %dmsg2(C):- \+ current_prolog_flag(dmsg_level,always), dmsg_hides_message(C),!.
-%dmsg2(trace_or_throw(V)):- dumpST(350),dmsg(warning,V),fail.
+%dmsg2(trace_or_throw(V)):- dumpST(350),dmsg(warning(V)),fail.
 %dmsg2(error(V)):- dumpST(250),dmsg(warning,V),fail.
 %dmsg2(warn(V)):- dumpST(150),dmsg(warning,V),fail.
 dmsg2(Msg):-dzotrace((tlbugger:no_slow_io,!,dmsg3(Msg))),!.
@@ -1280,7 +1282,7 @@ dmsg5(Msg):- to_stderror(in_cmt(fmt9(Msg))).
 %
 % Dmsg5.
 %
-dmsg5(Msg,Args):- dmsg5(fmt0(Msg,Args)).
+%dmsg5(Msg,Args):- dmsg5(fmt0(Msg,Args)).
 
 
 

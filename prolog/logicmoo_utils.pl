@@ -17,8 +17,9 @@
 */
 
 :- module(logicmoo_utils,[]).
-:- discontiguous(logicmoo_utils:'$exported_op'/3).
-:- logicmoo_utils:use_module(library(logicmoo_common)).
-:- system:reexport(library(logicmoo_common)).
+%:- discontiguous(logicmoo_utils:'$exported_op'/3).
+%:- logicmoo_utils:use_module(library(logicmoo_common)).
+:- reexport(library(logicmoo_common)).
+:- reexport(library(logicmoo_startup)).
 
 

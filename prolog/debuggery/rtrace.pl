@@ -76,7 +76,7 @@ on_x_rtrace(G):-on_x_debug(G).
 % If there If Is an exception in :Goal then rtrace.
 %
 on_x_debug(Goal):- 
- (( notrace( tracing; t_l:rtracing),!,maybe_leash(+exception))) 
+ ((( tracing; t_l:rtracing),!,maybe_leash(+exception))) 
   -> Goal
    ;
    (catchv(Goal,E,(ignore(debugCallWhy(on_x_debug(E,Goal),rtrace(Goal))),throw(E)))).
@@ -97,24 +97,44 @@ maybe_leash(Some):- notrace((should_maybe_leash->leash(Some);true)).
 should_maybe_leash:- notrace((\+ current_prolog_flag(runtime_must,keep_going), \+ non_user_console)).
 
 %non_user_console:- !,fail.
-%non_user_console:- thread_self(main),!,fail.
-non_user_console:- notrace(((\+ stream_property(current_input, tty(true))));stream_property(current_input,close_on_abort(true))).
+non_user_console:- notrace(non_user_console0).
+non_user_console0:- thread_self(main),!,fail.
+non_user_console0:- \+ stream_property(current_input, tty(true)),!.
+non_user_console0:- \+ stream_property(current_input,close_on_abort(false)).
 
-%! get_trace_reset( ?Reset) is det.
+%! get_trace_reset(-Reset) is det.
 %
-% Get Tracer.
-%                    
-get_trace_reset((notrace,set_prolog_flag(gui_tracer, GWas),
-     '$visible'(_, OldV),'$leash'(_, OldL),set_prolog_flag(debug,WasDebug),RestoreTrace)):- 
-     (tracing -> (notrace,RestoreTrace = trace) ; RestoreTrace = notrace),
-     current_prolog_flag(debug,WasDebug),
-     '$leash'(OldL, OldL),
-     '$visible'(OldV, OldV),
-     (current_prolog_flag(gui_tracer, GWas)->true;GWas=false),
-     RestoreTrace.
+% Get Tracer `Reset`.
+get_trace_reset(Reset):- 
+		 tracing, notrace, !,
+                 '$leash'(OldL, OldL),'$visible'(OldV, OldV),
+		 (current_prolog_flag(gui_tracer, GuiWas)->true;GuiWas=false),
+                 reset_macro(tAt(GuiWas,OldV,OldL,tracing),Reset),
+		 trace,!.
+get_trace_reset(Reset):- 
+                 '$leash'(OldL, OldL),'$visible'(OldV, OldV),
+                 current_prolog_flag(debug,WasDebug),
+		 (current_prolog_flag(gui_tracer, GuiWas)->true;GuiWas=false),
+                 reset_macro(tAt(GuiWas,OldV,OldL,WasDebug),Reset),!.
+
+reset_macro(tAt(false, 271, 271, false),tAt_normal).
+reset_macro(tAt(false, 319, 256, tracing),tAt_rtrace).
+reset_macro(tAt(false, 271, 319, false),tAt_quietly).
+reset_macro(X,X).
 
 :- totally_hide(get_trace_reset/1).
-:- totally_hide(get_trace_reset/1).
+tAt_normal:- tAt(false, 271, 271, false).
+tAt_rtrace:- tAt(false, 319, 256, tracing).
+tAt_quietly:- tAt(false, 271, 319, false).
+tAt(GuiWas,OldV,OldL,WasDebug):-
+  notrace, set_prolog_flag(gui_tracer,GuiWas),
+  '$leash'(_, OldL),'$visible'(_, OldV),
+   (WasDebug\==tracing->set_prolog_flag(debug,WasDebug) ;trace).
+  
+:- totally_hide(tAt/4).
+:- totally_hide(tAt_normal/0).
+:- totally_hide(tAt_rtrace/0).
+:- totally_hide(tAt_quietly/0).
 
 
 
@@ -122,7 +142,7 @@ get_trace_reset((notrace,set_prolog_flag(gui_tracer, GWas),
 %
 % Save Guitracer.
 %
-push_guitracer:-  notrace(ignore(((current_prolog_flag(gui_tracer, GWas);GWas=false),asserta(t_l:was_gui_tracer(GWas))))).
+push_guitracer:-  notrace(ignore(((current_prolog_flag(gui_tracer, GuiWas);GuiWas=false),asserta(t_l:was_gui_tracer(GuiWas))))).
 :- totally_hide(push_guitracer/0).
 
 
@@ -130,16 +150,15 @@ push_guitracer:-  notrace(ignore(((current_prolog_flag(gui_tracer, GWas);GWas=fa
 %
 % Restore Guitracer.
 %
-pop_guitracer:- notrace(ignore(((retract(t_l:was_gui_tracer(GWas)),set_prolog_flag(gui_tracer, GWas))))).
+pop_guitracer:- notrace(ignore(((retract(t_l:was_gui_tracer(GuiWas)),set_prolog_flag(gui_tracer, GuiWas))))).
 :- totally_hide(pop_guitracer/0).
-
 
 
 %! push_tracer is det.
 %
 % Push Tracer.
 %
-push_tracer:- get_trace_reset(Reset),notrace(asserta(t_l:tracer_reset(Reset))).
+push_tracer:- get_trace_reset(Reset)->asserta(t_l:tracer_reset(Reset)).
 :- totally_hide(push_tracer/0).
 
 %! pop_tracer is det.
@@ -153,7 +172,7 @@ pop_tracer:- notrace((retract(t_l:tracer_reset(Reset))))->Reset;notrace(true).
 %
 % Reset Tracer.
 %
-reset_tracer:- notrace,ignore((t_l:tracer_reset(Reset)->Reset;true)).
+reset_tracer:- ignore((t_l:tracer_reset(Reset)->Reset;true)).
 :- totally_hide(reset_tracer/0).
 
 
@@ -172,7 +191,7 @@ user:prolog_exception_hook(error(_, _),_, _, _) :- fail,
      leash(+all),
      fail)).
 
-%! quietly( :Goal) is det.
+%! quietly( :Goal) is nondet.
 %
 % Unlike notrace/1, it allows nondet tracing 
 %
@@ -182,14 +201,22 @@ user:prolog_exception_hook(error(_, _),_, _, _) :- fail,
 quietly1(Goal):- \+ tracing -> Goal ; scce_orig(notrace,Goal,trace).
 
 % version 2 
-quietly(Goal):- \+ tracing -> Goal ; (setup_call_cleanup(notrace,trusted_redo_call_cleanup(notrace,Goal,trace),trace)).
+quietly2(Goal):- \+ tracing -> Goal ; (setup_call_cleanup(notrace,scce_orig(notrace,Goal,trace),trace)).
 
 :- 'set_pred_attrs'(quietly(_),[trace=1,hide_childs=1]).
 
 % version 3 
 % quietly(Goal):- !, Goal.  % for overiding
-quietly3(Goal):- \+ tracing, !, Goal.
-quietly3(Goal):- notrace,(Goal*-> (deterministic(true) -> trace ; (trace;(notrace,fail))) ; (trace,!,notrace(fail))).
+quietly3(Goal):- \+ tracing -> Goal ; 
+ (notrace,
+  (((Goal,deterministic(YN))) *->
+     (YN == true -> trace ; (trace;(notrace,fail)));
+  (trace,!,notrace(fail)))).
+
+% version 4 
+quietly(Goal):- \+ tracing -> Goal ;
+  (get_trace_reset(W), scce_orig(notrace(visible(-all)),Goal,W)).
+
 
 % :- 'totally_hide'(rtrace:quietly/1).
 :- old_set_predicate_attribute(rtrace:quietly/1, hide_childs, true).
@@ -225,20 +252,19 @@ deterministically_must(G):- (call(call,G),deterministic(YN),true),
 % Start RTracer.
 %
 
-rtrace:- start_rtrace,trace.
+rtrace:- push_tracer,start_rtrace,trace.
 
 :- 'totally_hide'(rtrace/0).
 
-start_rtrace:- notrace(t_l:rtracing), !,  leash(-all), assert(t_l:rtracing), push_guitracer.
+% start_rtrace:- notrace((t_l:rtracing, !,  leash(-all), assert(t_l:rtracing), push_guitracer)).
 start_rtrace:-
+      nodebug,
       leash(-all),
-      visible(-all),
       assert(t_l:rtracing),
-     % set_prolog_flag(access_level,system),
       push_guitracer,
-      set_prolog_flag(gui_tracer,false),      
-      maybe_leash(+exception),
-      visible(+exception).
+      set_prolog_flag(gui_tracer,false),
+      visible(+all),
+      maybe_leash(+exception).
 
 :- 'totally_hide'(start_rtrace/0).
 
@@ -249,7 +275,7 @@ start_rtrace:-
 srtrace:- notrace, set_prolog_flag(access_level,system), rtrace.
 
 :- totally_hide(srtrace/0).
-
+:- system:import(srtrace/0).
 
 
 %! nortrace is det.
@@ -263,7 +289,7 @@ stop_rtrace:-
   maybe_leash(+exception),
   retractall(t_l:rtracing),
   !.
-
+                                         
 :- 'totally_hide'(stop_rtrace/0).
 :- system:import(stop_rtrace/0).
 
@@ -306,7 +332,7 @@ restore_leash_visible:- notrace((('$leash_visible'(OldL1,OldV1)->('$leash'(_, Ol
 
 
 
-%! rtrace( :Goal) is det.
+%! rtrace( :Goal) is nondet.
 %
 % Trace a goal non-interactively until the first exception on
 %  total failure
@@ -369,28 +395,17 @@ ERROR: Unhandled exception: good
 set_leash_vis(OldL,OldV):- '$leash'(_, OldL),'$visible'(_, OldV),!.
 :- totally_hide(set_leash_vis/2).
 
-next_rtrace:- (nortrace;(rtrace,trace,notrace(fail))).
-:- 'totally_hide'(next_rtrace/0).
-
-rtrace(Goal):- notrace(non_user_console),!,notrace,set_prolog_flag(debug,false),setup_call_cleanup((leash(-all),set_prolog_flag(gui_tracer,false),trace),Goal,notrace).
-rtrace(Goal):- push_tracer,notrace,!,setup_call_cleanup(rtrace,
-  (((Goal,deterministic(YN))*->(notrace(YN==true)->true;(reset_tracer;(rtrace,notrace(fail)))))),pop_tracer).
-/*
+restart_rtrace:-
+   notrace,leash(-all),
+   set_prolog_flag(gui_tracer,false),
+   visible(+all),
+   maybe_leash(+exception),
+   trace.
+:- 'totally_hide'(restart_rtrace/0).
+      
 rtrace(Goal):- 
-  % notrace(non_user_console -> leash(-all) ; true),     
- tracing -> (notrace,(rtrace0(Goal)*->trace;(trace,fail))) ; 
+  get_trace_reset(W),scce_orig(restart_rtrace,Goal,W).
 
- setup_call_cleanup(
-    current_prolog_flag(debug,WasDebug),
-    rtrace0(Goal),
-    (set_prolog_flag(debug,WasDebug),stop_rtrace)).
-
-rtrace0(Goal):-
- setup_call_cleanup(
-    (notrace,current_prolog_flag(debug,WasDebug),rtrace),
-    (trace,Goal,notrace,deterministic(YN), (YN == true -> !;next_rtrace)),
-    set_prolog_flag(debug,WasDebug)).
-*/
 %:- '$hide'(system:tracing/0).
 %:- '$hide'(system:notrace/1).
 %:- old_set_predicate_attribute(system:notrace/1, hide_childs, true).
@@ -404,7 +419,7 @@ rtrace0(Goal):-
 %:- old_set_predicate_attribute(rtrace:reset_rtrace0/1, hide_childs, false).
 
 
-%! rtrace_break( :Goal) is det.
+%! rtrace_break( :Goal) is nondet.
 %
 % Trace a goal non-interactively and break on first exception 
 % or on total failure
@@ -425,7 +440,7 @@ rtrace_break(Goal):- stop_rtrace,trace,debugCallWhy(rtrace_break(Goal),Goal).
 :- totally_hide(system:notrace/1).
 :- totally_hide(system:trace/0).
 
-%! ftrace( :Goal) is det.
+%! ftrace( :Goal) is nondet.
 %
 % Functor Trace.
 %
@@ -458,4 +473,4 @@ ignore_must(Goal):- how_must(fail, Goal).
 %:- totally_hide('$toplevel':residue_vars(_,_)).
 :- totally_hide('$toplevel':save_debug).
 :- totally_hide('$toplevel':no_lco).
-% :- ignore(rtrace(non_user_console)).
+%:- ignore(rtrace(non_user_console)).

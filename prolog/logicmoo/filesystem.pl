@@ -241,7 +241,7 @@ resolve_dir(Path,Dir):-
 add_file_search_path(Name,Path):-  must(resolve_dir(Path,Dir)),
    is_absolute_file_name(Dir), (( \+ user:file_search_path(Name,Dir)) ->asserta(user:file_search_path(Name,Dir));true).
    
-%%	add_library_search_path(+Dir, +Patterns:list(atom)) is det.
+%!     add_library_search_path(+Dir, +Patterns:list(atom)) is det.
 %
 %	Create an autoload index INDEX.pl for  Dir by scanning all files
 %	that match any of the file-patterns in Patterns. Typically, this

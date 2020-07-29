@@ -16,7 +16,7 @@
 % ===================================================================
 */
 
-:- module(logicmoo_common,[]).
+:- module(logicmoo_common,[add_library_search_path/2,locally/2]).
 
 :- set_module(class(library)).
 

@@ -193,13 +193,41 @@ X = 3.
 
 
 */
+%:- meta_predicate(mquietly(?)).
+:- module_transparent(mquietly/1).
+:- export(mquietly/1).
+%:- system:import(mquietly/1).
+mquietly(Var):- var(Var),!,break.
+%mquietly((G1,G2)):- !, call(G1),mquietly(G2).
+%mquietly((G1;G2)):- !, call(G1);mquietly(G2).
+%mquietly(M:(G1,G2)):- !, call(M:G1),mquietly(M:G2).
+%mquietly(M:(G1;G2)):- !, call(M:G1);mquietly(M:G2).
+mquietly(G):- call(G).
 
-scce_orig(Setup,Goal,Cleanup):-
+:- totally_hide(mquietly/1).
+:- totally_hide(mquietly/2).
+
+mquietly_if(false,_):- !.
+mquietly_if(_,G):- mquietly(G).
+
+
+
+scce_orig(Setup,Goal,Cleanup):- 
+   HdnCleanup = mquietly_if(true,Cleanup),   
+   setup_call_cleanup(Setup, 
+     ((Goal,deterministic(DET)),
+        (notrace(DET == true) -> ! ; 
+           ((Cleanup,notrace(nb_setarg(1,HdnCleanup,false)));
+              (Setup,notrace(nb_setarg(1,HdnCleanup, true)),notrace(fail))))),
+        HdnCleanup).
+
+
+scce_orig1(Setup,Goal,Cleanup):-
    \+ \+ '$sig_atomic'(Setup), 
    catch( 
-     ((Goal, xnotrace(deterministic(DET))),
+     ((Goal, notrace(deterministic(DET))),
        '$sig_atomic'(Cleanup),
-         (DET == true -> !
+         (notrace(DET == true) -> !
           ; (true;('$sig_atomic'(Setup),fail)))), 
       E, 
       ('$sig_atomic'(Cleanup),throw(E))). 
@@ -213,7 +241,7 @@ scce_orig0(Setup0,Goal,Cleanup0):-
      (notrace(DET == true) -> ! ; (true;(Setup,fail))).
       
 :- '$hide'(must_sanity:scce_orig/3).
-:- '$set_predicate_attribute'(must_sanity:scce_orig/3, hide_childs, false).
+:- '$set_predicate_attribute'(must_sanity:scce_orig/3, hide_childs, true).
 
 :- '$hide'(must_sanity:xnotrace/1).
 :- '$set_predicate_attribute'(must_sanity:xnotrace/1, hide_childs, true).
