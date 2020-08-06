@@ -69,7 +69,7 @@
 :- system:use_module(library(pldoc/doc_search)).
 :- system:use_module(library(pldoc/doc_util)).
 :- system:use_module(library(pldoc/man_index)).
-:- system:use_module(library(pprint)).
+%:- system:use_module(library(pprint)).
 :- system:use_module(library(predicate_options)).
 :- system:use_module(library(process)).
 :- system:use_module(library(prolog_clause)).
@@ -100,6 +100,9 @@
 :- system:use_module(library(statistics)).
 :- system:use_module(library(make)).
 :- endif.
+
+:- module_transparent(enotrace/1).
+enotrace(G):- call(G),!.
 
 
 %:- use_module(library(logicmoo_utils_all)).
@@ -293,13 +296,13 @@ erase_clause(H,B):-
 %   if Goal has a problem (like fails) 
 %         trace interactively.
 %
-% @NOTE quietly/1 is the nondet version of notrace/1.
+% @NOTE quietly/1 is the nondet version of enotrace/1.
 
 :- meta_predicate(at_current_Y(+, :)).
 at_current_Y(_S,Goal):- maybe_notrace(Goal).
 
 :- meta_predicate(maybe_notrace(0)).
-maybe_notrace(Goal):- tracing -> (debug,maybe_one(quietly(Goal), rtrace(Goal))) ; maybe_one(notrace(Goal),rtrace(Goal)).
+maybe_notrace(Goal):- tracing -> (debug,maybe_one(quietly(Goal), rtrace(Goal))) ; maybe_one(enotrace(Goal),rtrace(Goal)).
 
 :- meta_predicate(maybe_one(0,0)).
 maybe_one(Goal,Else):- catch(call(Goal),_,fail)*-> true ; Else.
@@ -762,7 +765,7 @@ all_source_file_predicates_are_exported(S,LC)
    \+ atom_concat(_,'__aux_',F),
   %(module_property(M,exports(List))-> \+ member(F/A,List); true),
   % M:public(M:F/A),
-  notrace(catch(maybe_export(M,M,F,A),_,fail)),
+  enotrace(catch(maybe_export(M,M,F,A),_,fail)),
   maybe_export(LC,M,F,A),
   (current_prolog_flag(logicmoo_import_to_system, BaseKB)-> maybe_export(BaseKB,M,F,A) ; true),
   maybe_export(system,M,F,A)))).
@@ -869,7 +872,7 @@ make_historial(O,A):-
 
 %:- multifile prolog:history/2.
 
-add_history0(_):- notrace(app_argv('--nohistory')),!.
+add_history0(_):- enotrace(app_argv('--nohistory')),!.
 add_history0(A):- current_input(S),
    forall(retract('$history':'$history'(_,A)),true),
                   prolog:history(S,add(A)),
@@ -902,7 +905,7 @@ user:expand_answer(Bindings, ExpandedBindings):-
 user:expand_query(Goal, _Expanded, Bindings, _ExpandedBindings):-        fail,
    ignore_not_not((once(( nb_linkval_current('$expand_query',Goal-Bindings),
     append(Bindings,[],Bindings),
-    % ignore_not_not(nortrace),ignore_not_not(notrace),
+    % ignore_not_not(nortrace),ignore_not_not(enotrace),
     format(atom(A), '~W', [Goal, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]),
     add_history0(A))))),
    fail.

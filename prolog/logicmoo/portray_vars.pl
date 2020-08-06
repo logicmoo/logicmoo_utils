@@ -56,14 +56,14 @@
 */
 
 % debug_var(_A,_Var):-!.
-debug_var(X,Y):- notrace(catch(debug_var0(X,Y),_,fail)) -> true ; rtrace(debug_var0(X,Y)).
+debug_var(X,Y):- enotrace(catch(debug_var0(X,Y),_,fail)) -> true ; rtrace(debug_var0(X,Y)).
 
-maybe_debug_var(X,Y):- notrace(maybe_debug_var0(X,Y)).
+maybe_debug_var(X,Y):- enotrace(maybe_debug_var0(X,Y)).
 maybe_debug_var0(_,Y):- nonvar(Y),!.
 maybe_debug_var0(X,_):- get_var_name(X,_),!.
 maybe_debug_var0(X,Y):- (catch(debug_var0(X,Y),_,fail)) -> true ; rtrace(debug_var0(X,Y)).
 
-debug_var(Sufix,X,Y):- notrace((flatten([X,Sufix],XS),debug_var(XS,Y))).
+debug_var(Sufix,X,Y):- enotrace((flatten([X,Sufix],XS),debug_var(XS,Y))).
 
 p_n_atom(Cmpd,UP):- sub_term(Atom,Cmpd),nonvar(Atom),\+ number(Atom), Atom\==[], catch(p_n_atom0(Atom,UP),_,fail),!.
 p_n_atom(Cmpd,UP):- term_to_atom(Cmpd,Atom),p_n_atom0(Atom,UP),!.
@@ -124,10 +124,10 @@ p_n_atom0(Atom,UP):- atom(Atom),!,
   reduce_atomLR(Atom,AtomR),
   name(AtomR,[C|Was]),to_upper(C,U),filter_var_chars([U|Was],CS),name(UP,CS).
 p_n_atom0(String,UP):- string(String),!,string_to_atom(String,Atom),!,p_n_atom0(Atom,UP).
-p_n_atom0([C|S],UP):- !,notrace(catch(atom_codes(Atom,[C|S]),_,fail)),!,p_n_atom0(Atom,UP).
+p_n_atom0([C|S],UP):- !,enotrace(catch(atom_codes(Atom,[C|S]),_,fail)),!,p_n_atom0(Atom,UP).
 
 debug_var0(_,NonVar):-nonvar(NonVar),!.
-debug_var0([C|S],Var):- notrace(catch(atom_codes(Atom,[C|S]),_,fail)),!,debug_var0(Atom,Var).
+debug_var0([C|S],Var):- enotrace(catch(atom_codes(Atom,[C|S]),_,fail)),!,debug_var0(Atom,Var).
 debug_var0([AtomI|Rest],Var):-!,maplist(p_n_atom,[AtomI|Rest],UPS),atomic_list_concat(UPS,NAME),debug_var0(NAME,Var),!.
 debug_var0(Atom,Var):- p_n_atom(Atom,UP),  
   check_varname(UP),
@@ -151,9 +151,9 @@ check_varname(UP):- name(UP,[C|_]),(char_type(C,digit)->throw(check_varname(UP))
 
 resolve_char_codes('','_').
 resolve_char_codes('pf','%').
-%resolve_char_codes(C48,C):- notrace(catch((name(C48,[99|Codes]),number_codes(N,Codes),name(C,[N])),_,fail)),!,fail.
-resolve_char_codes(C48,_):- notrace(catch((name(C48,[99|Codes]),number_codes(_,Codes)),_,fail)),!,fail.
-resolve_char_codes(D1,N):- atom_concat('d',N,D1),notrace(catch(atom_number(N,_),_,fail)),!.
+%resolve_char_codes(C48,C):- enotrace(catch((name(C48,[99|Codes]),number_codes(N,Codes),name(C,[N])),_,fail)),!,fail.
+resolve_char_codes(C48,_):- enotrace(catch((name(C48,[99|Codes]),number_codes(_,Codes)),_,fail)),!,fail.
+resolve_char_codes(D1,N):- atom_concat('d',N,D1),enotrace(catch(atom_number(N,_),_,fail)),!.
 resolve_char_codes(C,CC):- atom_concat(C,'-',CC).
 
 into_symbol_name(Atom,UPPER):- atomic(Atom),atomic_list_concat([Pkg|HC],'_',Atom),!,into_symbol_name([Pkg|HC],UPPER).
@@ -163,7 +163,7 @@ into_symbol_name(HC,UPPER):- maplist(resolve_char_codes,HC,RHC),atomics_to_strin
 % *PACKAGE* becomes xx_package_xx
 % %MAKE-PACKAGE becomes pf_make_package
 
-prologcase_name(I,O):-notrace(prologcase_name0(I,O)),assertion(O\=='').
+prologcase_name(I,O):-enotrace(prologcase_name0(I,O)),assertion(O\=='').
 
 prologcase_name0(String,Nonvar):-nonvar(Nonvar),!,prologcase_name(String,ProposedName),!,ProposedName==Nonvar.
 prologcase_name0(String,ProposedName):- 

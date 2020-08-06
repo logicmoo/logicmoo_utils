@@ -202,7 +202,7 @@ atom_to_qname(URL,Q:NAME):-is_url(URL),!,must(url_to_qname(URL,Q,NAME)),!.
 atom_to_qname(P,NS:A):-p2q(P,NS,A),!.
 atom_to_qname(MUD:O,OO):-MUD==mud,nonvar(O),!,atom_to_qname(O,OO).
 atom_to_qname(A,_):-not(atom(A)),!,fail.
-atom_to_qname(URL,NS:Name):-concat_atom([NS,Name],':',URL),!,must(rdf_current_prefix(NS,_)).
+atom_to_qname(URL,NS:Name):-concat_atom_safe([NS,Name],':',URL),!,must(rdf_current_prefix(NS,_)).
 atom_to_qname(TProlog,URI):-must(atom_to_qname_search(TProlog,URI)),!.
 
 atom_to_qname_search(P,QNAME):-www_form_encode(P,PO),!,atom_to_qname_search_0(PO,QN),!,must(QNAME=QN).

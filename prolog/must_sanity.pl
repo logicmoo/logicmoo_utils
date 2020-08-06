@@ -216,9 +216,10 @@ scce_orig(Setup,Goal,Cleanup):-
    HdnCleanup = mquietly_if(true,Cleanup),   
    setup_call_cleanup(Setup, 
      ((Goal,deterministic(DET)),
-        (notrace(DET == true) -> ! ; 
-           ((Cleanup,notrace(nb_setarg(1,HdnCleanup,false)));
-              (Setup,notrace(nb_setarg(1,HdnCleanup, true)),notrace(fail))))),
+        (notrace(DET == true) 
+          -> ! 
+          ;((Cleanup,notrace(nb_setarg(1,HdnCleanup,false)))
+             ;(Setup,notrace(nb_setarg(1,HdnCleanup, true)),notrace(fail))))),
         HdnCleanup).
 
 

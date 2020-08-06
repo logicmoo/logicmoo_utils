@@ -354,7 +354,7 @@ list_to_atomics_list0([E|EnglishF],[A|EnglishA]):-
 list_to_atomics_list0([],[]):-!.
 */
 
-maplist_atom_string(M,O):- catch(notrace(maplist(any_to_string,M,O)),_,fail).
+maplist_atom_string(M,O):- catch(enotrace(maplist(any_to_string,M,O)),_,fail).
 
 text_to_uq_atom(A,InOut):- (atom_concat('"',R,A),atom_concat(Sub,'"',R))->Sub=InOut;A=InOut.
 
@@ -393,7 +393,7 @@ convert_to_s_string(I,O):- convert_to_sel_string(fail,=,sl,I,O).
 
 */
 
-convert_to_sel_string(_,_,_,I,O):- notrace(is_ftVar(I)),!,O=I.
+convert_to_sel_string(_,_,_,I,O):- enotrace(is_ftVar(I)),!,O=I.
 convert_to_sel_string(S,a,L,I,O):- !, quietly(must((convert_to_atoms_list(I,M),must_maplist(any_to_atom,M,MM),to_sel_string(S,a,L,MM,O)))),!.
 convert_to_sel_string(S,s,L,I,O):- !, quietly(must((convert_to_string_list(I,M),must_maplist(any_to_string,M,MM),to_sel_string(S,s,L,MM,O)))),!.
 convert_to_sel_string(S,E,L,I,O):- quietly((convert_to_atoms_list(I,SL),must_maplist(E,SL,M),to_sel_string(S,E,L,M,O))),!.
@@ -776,7 +776,7 @@ to_titlecase(CX,Y):- sub_string(CX,1,_,0,Z),string_lower(Z,L), name(CX,[S|_]),ch
 %
 % Text Converted To String Safely Paying Attention To Corner Cases.
 %
-text_to_string_safe(Expr,Forms):-notrace(on_x_fail(text_to_string(Expr,Forms))).
+text_to_string_safe(Expr,Forms):-enotrace(on_x_fail(text_to_string(Expr,Forms))).
 
 
 
@@ -945,7 +945,7 @@ ctype_switcher(white).
 % Breaked Codes.
 %
 breaked_codes(S,C0):- nonvar(S),on_x_fail(write_to_codes(S,C)),!,C=C0.
-breaked_codes(S,C):- notrace(catch(number_codes(S,C),_,
+breaked_codes(S,C):- enotrace(catch(number_codes(S,C),_,
   (string_codes(S,C)->true;
     (atom_codes(S,C)->true;
        string_equal_ci(S,C))))).
@@ -1653,7 +1653,7 @@ divide_list(L,L0,LT):-append(L0,LT,L).
 % String Equal Ci.
 % 
 string_equal_ci(L0,L1):- 
- notrace((to_word_list(L0,WL0),WL0\==[],to_word_list(L1,WL1)->WL1\==[],!,
+ enotrace((to_word_list(L0,WL0),WL0\==[],to_word_list(L1,WL1)->WL1\==[],!,
    string_equal_ci0(WL0,WL1))),!.
     % (string_equal_ci0(WL0,WL1);(var(L1),freeze(L1,string_equal_ci0(WL0,WL1)))).
 

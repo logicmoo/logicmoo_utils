@@ -693,7 +693,8 @@ put_clause_ref(_Ref,_V):- !.
 put_clause_ref(Ref,V):- !, nop(dmsg(put_clause_ref(Ref,V))).
 put_clause_ref(Ref,V):-put_attr(V,cref,Ref).
 
-remove_term_attr_type(Term,Mod):- quietly((term_attvars(Term,AVs),maplist(del_attr_type(Mod),AVs))).
+remove_term_attr_type(Term, Mod):- is_list(Mod),!,maplist(remove_term_attr_type(Term),Mod).
+remove_term_attr_type(Term, Mod):- quietly((term_attvars(Term,AVs),maplist(del_attr_type(Mod),AVs))).
 
 :- op(700,xfx,'=@=').
 

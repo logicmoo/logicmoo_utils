@@ -728,6 +728,10 @@ pred_subst(_Pred ,P,       _, _,       P     ).
 
 safe_functor(P,F,A):- compound(P) -> compound_name_arity(P,F,A) ; functor(P,F,A).
 
+m_functor(M:P, M:F, A):- !, safe_functor(P, F, A).
+m_functor(P, F, A):- safe_functor(P, F, A).
+
+wom_functor(MP, F, A):- strip_module(MP,_,P),safe_functor(P, F, A).
 
 % ===================================================================
 % Substitution based on ==
