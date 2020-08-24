@@ -161,7 +161,7 @@ dmsg000/1,
 
 wldmsg_0(_CM,ops):- !.
 wldmsg_0(_CM,ops):-
- enotrace((
+ dzotrace((
  dmsg:wldmsg_2('======================\\'),
  (prolog_load_context(stream,X)-> dmsgln(prolog_load_context(stream,X)) ; (current_input(X),dmsgln(current_input(X)))),
  ignore((
@@ -203,9 +203,9 @@ wldmsg_1(Info):-
   stream_property(O,file_no(1)),flush_output(O),format(O,'~N',[]),flush_output(O),
   wldmsg_2(Info),!.
 
-same_streams(X,Y):- enotrace((into_stream(X,XX),into_stream(Y,YY),!,XX==YY)).
+same_streams(X,Y):- dzotrace((into_stream(X,XX),into_stream(Y,YY),!,XX==YY)).
 
-into_stream(X,S):- enotrace(into_stream_0(X,S)).
+into_stream(X,S):- dzotrace(into_stream_0(X,S)).
 into_stream_0(file_no(N),XX):- !, stream_property(X,file_no(N)),!,X=XX.
 into_stream_0(Atom,XX):- atom(Atom),stream_property(X,alias(Atom)),!,X =XX.
 into_stream_0(S,XX):- atomic(S),is_stream(S),!,S = XX.
@@ -215,12 +215,12 @@ wldmsg_2(Info):- same_streams(current_output,file_no(1)), stream_property(X,file
 wldmsg_2(Info):- same_streams(current_output,file_no(2)), stream_property(X,file_no(2)), !, output_to_x(X,Info).
 wldmsg_2(Info):- output_to_x(current_output,Info), stream_property(X,file_no(2)), !, output_to_x(X,Info).
 
-output_to_x(S,Info):- ignore(enotrace(catch(output_to_x_0(S,Info),_,true))).
+output_to_x(S,Info):- ignore(dzotrace(catch(output_to_x_0(S,Info),_,true))).
 output_to_x_0(S,Info):- into_stream(S,X),!, flush_output(X),
   catch(format(X,'~N% ~p~n',[Info]),_,format(X,'~N% DMSGQ: ~q~n',[Info])),flush_output(X).
 
-dmsgln(CMSpec):- strip_module(CMSpec,CM,Spec),!, ignore(enotrace(dmsg:wldmsg_0(CM,Spec))).
-% system:dmsgln(List):-!,enotrace(dmsg:wldmsg_0(user,List)).
+dmsgln(CMSpec):- strip_module(CMSpec,CM,Spec),!, ignore(dzotrace(dmsg:wldmsg_0(CM,Spec))).
+% system:dmsgln(List):-!,dzotrace(dmsg:wldmsg_0(user,List)).
 
 :- module_transparent(dmsg:dmsgln/1).
 :- dmsg:export(dmsg:dmsgln/1).
@@ -454,13 +454,13 @@ hide_some_hiddens(S,M):-
    compound_name_arguments(M,F,ArgsO),!.
 
 
-pretty_and_hide(In, Info):- enotrace((portray_vars:pretty_numbervars(In,M),hide_some_hiddens(M,Info))),!.
+pretty_and_hide(In, Info):- dzotrace((portray_vars:pretty_numbervars(In,M),hide_some_hiddens(M,Info))),!.
 
-dmsg_pretty(In):- enotrace( ignore( \+ \+   ( pretty_and_hide(In, Info),dmsg(Info)))).
+dmsg_pretty(In):- dzotrace( ignore( \+ \+   ( pretty_and_hide(In, Info),dmsg(Info)))).
 
-wdmsg_pretty(In):- \+ \+ enotrace((pretty_and_hide(In, Info),wdmsg(Info))).
+wdmsg_pretty(In):- \+ \+ dzotrace((pretty_and_hide(In, Info),wdmsg(Info))).
 
-wdmsg_pretty(F,In):- \+ \+ enotrace((pretty_and_hide(In, Info),wdmsg(F,Info))).
+wdmsg_pretty(F,In):- \+ \+ dzotrace((pretty_and_hide(In, Info),wdmsg(F,Info))).
 
 %= 	 	 
 
@@ -595,13 +595,13 @@ new_line_if_needed:- flush_output,format('~N',[]),flush_output.
 fmt9(Msg):- new_line_if_needed, must(fmt90(Msg)),!,new_line_if_needed.
 
 fmt90(fmt0(F,A)):-on_x_fail(fmt0(F,A)),!.
-fmt90(Msg):- enotrace(on_x_fail(((string(Msg)),format(Msg,[])))),!.
+fmt90(Msg):- dzotrace(on_x_fail(((string(Msg)),format(Msg,[])))),!.
 fmt90(Msg):- 
  on_x_fail((with_output_to(string(S),
    on_x_fail(if_defined_local(portray_clause_w_vars(Msg),fail))),
     format('~s',[S]))),!.
-fmt90(Msg):- enotrace(on_x_fail(format('~p',[Msg]))),!.
-fmt90(Msg):- enotrace(writeq(fmt9(Msg))).
+fmt90(Msg):- dzotrace(on_x_fail(format('~p',[Msg]))),!.
+fmt90(Msg):- dzotrace(writeq(fmt9(Msg))).
 
 % :-reexport(library(ansi_term)).
 % % % OFF :- system:use_module(library(ansi_term)).
@@ -876,7 +876,7 @@ grab_varnames2([AttV|AttVS],Vs2):-
      (get_attr(AttV,vn,Name) -> Vs2 = [Name=AttV|VsMid] ; VsMid=       Vs2),!.
    
 
-dzotrace(G):- enotrace(G).
+dzotrace(G):- notrace(G).
 
 %= 	 	 
 
@@ -1036,7 +1036,7 @@ if_color_debug(Goal,UnColor):- if_color_debug->Goal;UnColor.
 
 
 color_line(C,N):- 
- enotrace((
+ dzotrace((
   format('~N',[]),
     forall(between(1,N,_),ansi_term:ansi_format([fg(C)],"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n",[])))).
 
@@ -1190,7 +1190,7 @@ dmsg0(V):-dzotrace(locally(local_override(no_kif_var_coroutines,true),
 % (debug)message Primary Helper Primary Helper.
 %
 dmsg00(V):-cyclic_term(V),!,writeln(cyclic_term),flush_output,writeln(V),!.
-dmsg00(call(Code)):- !, with_output_to(string(S),catch((enotrace(Code)->TF=true;TF=failed),TF,true)), 
+dmsg00(call(Code)):- !, with_output_to(string(S),catch((dzotrace(Code)->TF=true;TF=failed),TF,true)), 
   (TF=true->dmsg(S);(format(string(S2),'~Ndmsg(call(Code)) of ~q~n~q: ~s ~n',[Code,TF,S]),wdmsg(S2),!,fail)).
 dmsg00(V):- catch(dumpst:simplify_goal_printed(V,VV),_,fail),!,dmsg000(VV),!.
 dmsg00(V):- dmsg000(V),!.
@@ -1359,8 +1359,8 @@ ansifmt(Ctrl,F,A):- colormsg(Ctrl,(format(F,A))).
 %
 % Debugm.
 %
-debugm(X):-enotrace((compound(X),cfunctor(X,F,_),!,debugm(F,X))),!.
-debugm(X):-enotrace((debugm(X,X))).
+debugm(X):-dzotrace((compound(X),cfunctor(X,F,_),!,debugm(F,X))),!.
+debugm(X):-dzotrace((debugm(X,X))).
 
 %= 	 	 
 
@@ -1368,8 +1368,8 @@ debugm(X):-enotrace((debugm(X,X))).
 %
 % Debugm.
 %
-debugm(_,_):-enotrace(current_prolog_flag(dmsg_level,never)),!.
-debugm(Why,Msg):- enotrace((dmsg(debugm(Why,Msg)),!,debugm0(Why,Msg))).
+debugm(_,_):-dzotrace(current_prolog_flag(dmsg_level,never)),!.
+debugm(Why,Msg):- dzotrace((dmsg(debugm(Why,Msg)),!,debugm0(Why,Msg))).
 debugm0(Why,Msg):- 
    /*\+ debugging(mpred),*/
    \+ debugging(Why), \+ debugging(mpred(Why)),!, debug(Why,'~N~p~n',[Msg]),!.

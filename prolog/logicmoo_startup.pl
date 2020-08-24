@@ -296,7 +296,7 @@ erase_clause(H,B):-
 %   if Goal has a problem (like fails) 
 %         trace interactively.
 %
-% @NOTE quietly/1 is the nondet version of enotrace/1.
+% @NOTE quietly/1 is the nondet version of notrace/1.
 
 :- meta_predicate(at_current_Y(+, :)).
 at_current_Y(_S,Goal):- maybe_notrace(Goal).
@@ -857,6 +857,7 @@ init_logicmoo :- ensure_loaded(library(logicmoo_repl)),init_why(during_booting,i
 
 :- use_module(library(prolog_history)).
 
+add_history(O):- is_list(O), member(E,O), compound(E), !, maplist(add_history,O).
 add_history(O):- 
    ignore_not_not((nonvar(O),make_historial(O,A),add_history0(A))),!.
 
@@ -872,7 +873,7 @@ make_historial(O,A):-
 
 %:- multifile prolog:history/2.
 
-add_history0(_):- enotrace(app_argv('--nohistory')),!.
+add_history0(_):- notrace(app_argv('--nohistory')),!.
 add_history0(A):- current_input(S),
    forall(retract('$history':'$history'(_,A)),true),
                   prolog:history(S,add(A)),
@@ -905,7 +906,7 @@ user:expand_answer(Bindings, ExpandedBindings):-
 user:expand_query(Goal, _Expanded, Bindings, _ExpandedBindings):-        fail,
    ignore_not_not((once(( nb_linkval_current('$expand_query',Goal-Bindings),
     append(Bindings,[],Bindings),
-    % ignore_not_not(nortrace),ignore_not_not(enotrace),
+    % ignore_not_not(nortrace),ignore_not_not(notrace),
     format(atom(A), '~W', [Goal, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]),
     add_history0(A))))),
    fail.

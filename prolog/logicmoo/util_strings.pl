@@ -51,7 +51,7 @@
             convert_to_sel_string/5,
             is_s_string/1,
             delistify_single_element/2,
-            ctype_continue/2,
+            ctype_continue/3,
             ctype_switch/2,
             ctype_switcher/1,
             destringify/2,
@@ -180,7 +180,7 @@
         concat_atom_safe/2,
         concat_atom_safe/3,
         convert_to_string/2,
-        ctype_continue/2,
+        ctype_continue/3,
         ctype_switch/2,
         ctype_switcher/1,
         destringify/2,
@@ -354,7 +354,7 @@ list_to_atomics_list0([E|EnglishF],[A|EnglishA]):-
 list_to_atomics_list0([],[]):-!.
 */
 
-maplist_atom_string(M,O):- catch(enotrace(maplist(any_to_string,M,O)),_,fail).
+maplist_atom_string(M,O):- notrace(catch(maplist(any_to_string,M,O),_,fail)).
 
 text_to_uq_atom(A,InOut):- (atom_concat('"',R,A),atom_concat(Sub,'"',R))->Sub=InOut;A=InOut.
 
@@ -393,7 +393,7 @@ convert_to_s_string(I,O):- convert_to_sel_string(fail,=,sl,I,O).
 
 */
 
-convert_to_sel_string(_,_,_,I,O):- enotrace(is_ftVar(I)),!,O=I.
+convert_to_sel_string(_,_,_,I,O):- notrace(is_ftVar(I)),!,O=I.
 convert_to_sel_string(S,a,L,I,O):- !, quietly(must((convert_to_atoms_list(I,M),must_maplist(any_to_atom,M,MM),to_sel_string(S,a,L,MM,O)))),!.
 convert_to_sel_string(S,s,L,I,O):- !, quietly(must((convert_to_string_list(I,M),must_maplist(any_to_string,M,MM),to_sel_string(S,s,L,MM,O)))),!.
 convert_to_sel_string(S,E,L,I,O):- quietly((convert_to_atoms_list(I,SL),must_maplist(E,SL,M),to_sel_string(S,E,L,M,O))),!.
@@ -776,7 +776,7 @@ to_titlecase(CX,Y):- sub_string(CX,1,_,0,Z),string_lower(Z,L), name(CX,[S|_]),ch
 %
 % Text Converted To String Safely Paying Attention To Corner Cases.
 %
-text_to_string_safe(Expr,Forms):-enotrace(on_x_fail(text_to_string(Expr,Forms))).
+text_to_string_safe(Expr,Forms):- notrace(on_x_fail(text_to_string(Expr,Forms))).
 
 
 
@@ -922,7 +922,7 @@ to_case_break_atoms(I,O):- any_to_atom(I,A),to_case_breaks(A,M),maplist(arg(1),M
 %
 % Char Type This.
 %
-char_type_this(C,Lower):-ctype_switcher(Lower),char_type(C,Lower),!.
+char_type_this(C,Lower):- notrace((ctype_switcher(Lower),char_type(C,Lower))),!.
 
 
 %= 	 	 
@@ -931,11 +931,12 @@ char_type_this(C,Lower):-ctype_switcher(Lower),char_type(C,Lower),!.
 %
 % Ctype Switcher.
 %
+%ctype_switcher(digit).
+ctype_switcher(punct).
+ctype_switcher(digit).
+ctype_switcher(white).
 ctype_switcher(lower).
 ctype_switcher(upper).
-ctype_switcher(digit).
-ctype_switcher(punct).
-ctype_switcher(white).
 
 
 %= 	 	 
@@ -944,8 +945,8 @@ ctype_switcher(white).
 %
 % Breaked Codes.
 %
-breaked_codes(S,C0):- nonvar(S),on_x_fail(write_to_codes(S,C)),!,C=C0.
-breaked_codes(S,C):- enotrace(catch(number_codes(S,C),_,
+breaked_codes(S,C0):- notrace(nonvar(S)),on_x_fail(write_to_codes(S,C)),!,C=C0.
+breaked_codes(S,C):- notrace(catch(number_codes(S,C),_,
   (string_codes(S,C)->true;
     (atom_codes(S,C)->true;
        string_equal_ci(S,C))))).
@@ -957,8 +958,8 @@ breaked_codes(S,C):- enotrace(catch(number_codes(S,C),_,
 %
 % Ctype Continue.
 %
-ctype_continue(upper,lower).
-ctype_continue(X,X):-ctype_switcher(X).
+ctype_continue([_],upper,lower).
+ctype_continue(_ ,X,X):-ctype_switcher(X).
 
 
 %= 	 	 
@@ -979,7 +980,7 @@ ctype_switch(T1,T2):-ctype_switcher(T1),ctype_switcher(T2),T1\=T2.
 % Hide Char Type.
 %
 hide_char_type(white).
-hide_char_type(punct).
+%hide_char_type(punct).
 
 % to_case_breaks(+Codes,+SoFarC,+Lower,List)
 
@@ -991,13 +992,18 @@ hide_char_type(punct).
 %
 to_case_breaks([      ],_WillBe,   [],_,     []):-!.
 to_case_breaks([       ],WillBe,SoFar,_NewType,[xti(Left,WillBe)]):-breaked_codes(Left,SoFar),!.
-to_case_breaks([C|Codes],WillBe,SoFar,Upper,New):- ctype_continue(Upper,Lower), char_type(C,Lower),append(SoFar,[C],SoFarC),!,
+to_case_breaks([C|Codes],WillBe,SoFar,Upper,New):- ctype_continue(SoFar,Upper,Lower), 
+      char_type_this(C,Lower),append(SoFar,[C],SoFarC),!,
       to_case_breaks(Codes,WillBe,SoFarC,Lower,New).
+
 to_case_breaks(C___Codes,WillBe,SoFar,Upper,OUT):- is_list(OUT),OUT=[xti(Left,WillBe),xti(New,RType)],!,
   to_first_break_w(C___Codes,SoFar,Upper,Left,New,RType).
-to_case_breaks([C|Codes],WillBe,SoFar,Upper,OUT):- ctype_switch(Upper,Digit), char_type(C,Digit),!, 
+
+
+to_case_breaks([C|Codes],WillBe,SoFar,Upper,OUT):- ctype_switch(Upper,Digit), char_type_this(C,Digit),!, 
   breaked_codes(Left,SoFar), to_case_breaks(Codes,Digit,[C],Digit,New),!,
   (hide_char_type(WillBe)->OUT=New;OUT=[xti(Left,WillBe)|New]).
+
 to_case_breaks([C|Codes],WillBe,SoFar,Upper,New):- append(SoFar,[C],SoFarC),to_case_breaks(Codes,WillBe,SoFarC,Upper,New).
 
 :- export(to_first_break/2).
@@ -1030,8 +1036,8 @@ to_first_break(Text,LType,Left,Right,RType):- string_codes(Text,[C|Codes]), !,to
 %
 to_first_break_w([],       []   ,empty,'',[],empty):-!.
 to_first_break_w([],       SoFar,_Some,Left,[],empty):-breaked_codes(Left,SoFar),!.
-to_first_break_w([C|Codes],SoFar,Upper,Left,Rest,RType):- ctype_continue(Upper,Lower), char_type(C,Lower),append(SoFar,[C],SoFarC),!,to_first_break_w(Codes,SoFarC,Lower,Left,Rest,RType).
-to_first_break_w([C|Codes],SoFar,Lower,Left,Rest,Upper):- ctype_switch(Lower,Upper), char_type(C,Upper), breaked_codes(Left,SoFar),!,breaked_codes(Rest,[C|Codes]).
+to_first_break_w([C|Codes],SoFar,Upper,Left,Rest,RType):- ctype_continue(SoFar,Upper,Lower), char_type_this(C,Lower),append(SoFar,[C],SoFarC),!,to_first_break_w(Codes,SoFarC,Lower,Left,Rest,RType).
+to_first_break_w([C|Codes],SoFar,Lower,Left,Rest,Upper):- ctype_switch(Lower,Upper), char_type_this(C,Upper), breaked_codes(Left,SoFar),!,breaked_codes(Rest,[C|Codes]).
 to_first_break_w([C|Codes],SoFar,Lower,Left,Rest,RType):- append(SoFar,[C],SoFarC),to_first_break_w(Codes,SoFarC,Lower,Left,Rest,RType).
 
 % ===========================================================
@@ -1165,7 +1171,7 @@ destringify('$VAR'(S),'$VAR'(S)):-!.
 destringify(string(S),string(S)):-is_ftVar(S),!.
 destringify([],[]):-!.
 destringify('[]','[]'):-!.
-destringify(T,A):- on_x_fail(call((text_to_string(T,S),!,maybe_notrace(atom_string(A,S))))),!.
+destringify(T,A):- notrace(on_x_fail(call((text_to_string(T,S),!,maybe_notrace(atom_string(A,S)))))),!.
 destringify(X,S):-is_ftString2(X),stringToCodelist(X,CL),name(S,CL),!.
 destringify([H|T],[HH|TT]):-!,destringify(H,HH),destringify(T,TT),!.
 destringify(X,P):- compound(X),X=..LIST,maplist(destringify,LIST,DL),P=..DL,!.
@@ -1653,7 +1659,7 @@ divide_list(L,L0,LT):-append(L0,LT,L).
 % String Equal Ci.
 % 
 string_equal_ci(L0,L1):- 
- enotrace((to_word_list(L0,WL0),WL0\==[],to_word_list(L1,WL1)->WL1\==[],!,
+ notrace((to_word_list(L0,WL0),WL0\==[],to_word_list(L1,WL1)->WL1\==[],!,
    string_equal_ci0(WL0,WL1))),!.
     % (string_equal_ci0(WL0,WL1);(var(L1),freeze(L1,string_equal_ci0(WL0,WL1)))).
 

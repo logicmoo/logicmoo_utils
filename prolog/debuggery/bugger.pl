@@ -779,7 +779,7 @@ if_interactive(Goal,Else):-
 
 ~q.
 ===================================================================",[Goal,Else]),
-    enotrace(with_tty_raw((wait_for_input([In],RL,2.0),RL \== [],get_single_char(C1),char_type(C1,to_upper(C))))),
+    notrace(with_tty_raw((wait_for_input([In],RL,2.0),RL \== [],get_single_char(C1),char_type(C1,to_upper(C))))),
     writeln([C]),
  (  C = 'g' -> (wdmsg("(... starting goal)~n",[]), !, (WantTrace,call(Goal)));
     C = 's' -> (dmsg("(... skipping goal)~n",[]), !);
@@ -1009,7 +1009,7 @@ differnt_modules(User2,User1):- User1 \== User2.
 
 
 :- dynamic(unwrap_for_debug/1).
-% unwrap_for_debug(F):-member(F,[enotrace,quietly]).
+% unwrap_for_debug(F):-member(F,[notrace,quietly]).
 % unwrap_for_debug(F):-member(F,[traceok,must,must_det,quietly]).
 %unwrap_for_debug(F):-member(F,['on_x_debug',on_x_debug]),!,fail.
 %unwrap_for_debug(F):-member(FF,['OnError','OnFailure','LeastOne','Ignore','must']),atom_concat(_,FF,F),!.
@@ -1340,7 +1340,7 @@ call_skipping_n_clauses(N,H):-
 %
 % Cli N Trace.
 %
-cli_ntrace(X):- tracing -> locally( tlbugger:wastracing,call_cleanup((enotrace,call(X)),dtrace)) ; call(X).
+cli_ntrace(X):- tracing -> locally( tlbugger:wastracing,call_cleanup((notrace,call(X)),dtrace)) ; call(X).
 
 
 
@@ -1348,7 +1348,7 @@ cli_ntrace(X):- tracing -> locally( tlbugger:wastracing,call_cleanup((enotrace,c
 %
 % Traceok.
 %
-traceok(X):-  tlbugger:wastracing -> call_cleanup((dtrace,call(X)),enotrace) ; call(X).
+traceok(X):-  tlbugger:wastracing -> call_cleanup((dtrace,call(X)),notrace) ; call(X).
 
 % :- mpred_trace_none(tlbugger:skip_bugger).
 % :- mpred_trace_none(skipWrapper).
@@ -1516,7 +1516,7 @@ shrink_clause( HB,HB).
 % Set No Debug.
 %
 set_no_debug:-
-  enotrace,
+  notrace,
   must_det_l((
    asserta(is_set_no_debug),
    set_prolog_flag(generate_debug_info, true),
@@ -1531,7 +1531,7 @@ set_no_debug:-
    maybe_leash(-all),
    maybe_leash(+exception),
    visible(-cut_call),!,
-   enotrace, nodebug)),!.
+   notrace, nodebug)),!.
 
 :- export(set_no_debug_thread/0).
 
@@ -1584,7 +1584,7 @@ set_yes_debug:-
    maybe_leash(+all),
    maybe_leash(+exception),
    visible(+cut_call),
-   enotrace, debug)),!.
+   notrace, debug)),!.
 
 
 
@@ -1819,7 +1819,7 @@ doHideTrace(M,F,A,ATTRIB):- tryHide(M:F/A),!,
 %
 % Class Trace.
 %
-ctrace:-willTrace->dtrace;enotrace.
+ctrace:-willTrace->dtrace;notrace.
 
 
 
@@ -1895,7 +1895,7 @@ do_gc0:- set_prolog_flag(gc, true), do_gc1, set_prolog_flag(gc,false),
 %
 % Do Gc Secondary Helper.
 %
-do_gc1:- enotrace((
+do_gc1:- notrace((
   trim_stacks,
   cleanup_strings,
   garbage_collect_atoms,
@@ -2062,7 +2062,7 @@ with_each(Wrapper,Goal):-with_each(1,Wrapper,Goal).
 %
 % Whenever Functor Debug.
 %
-on_f_debug(Goal):-  Goal *-> true; ((nortrace,enotrace,debugCallWhy(failed(on_f_debug(Goal)),Goal)),fail).
+on_f_debug(Goal):-  Goal *-> true; ((nortrace,notrace,debugCallWhy(failed(on_f_debug(Goal)),Goal)),fail).
 
 
 
@@ -3152,7 +3152,7 @@ disabled_this:- asserta((user:prolog_exception_hook(Exception, Exception, Frame,
 % :- '$hide'('$syspreds':visible/1).
 % :- '$hide'('$syspreds':leash/1).
 % :- '$hide'(visible/1).
-% :- '$hide'(enotrace/0).
+% :- '$hide'(notrace/0).
 % :- '$hide'(quietly/1).
 % :- '$hide'(dtrace/0).
 % :-'$set_predicate_attribute'(!, trace, 1).
@@ -3171,7 +3171,7 @@ disabled_this:- asserta((user:prolog_exception_hook(Exception, Exception, Frame,
 % :- '$hide'(tlbugger:A/0).
 
 % :- '$hide'(dmsg/1).
-% :-'$hide'(system:enotrace/1). 
+% :-'$hide'(system:notrace/1). 
 
 
 

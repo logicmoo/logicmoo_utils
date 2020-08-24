@@ -1267,7 +1267,7 @@ ok_show(P):-not(bad_pred(P)).
 %
 % Scansrc List Undefined.
 %
-scansrc_list_undefined(_):-!.
+%scansrc_list_undefined(_):-!.
 scansrc_list_undefined(A):- real_list_undefined(A).
 
 
@@ -1379,14 +1379,15 @@ update_changed_files1 :-
 %
 % Remove Undef Search.
 %
+remove_undef_search:- !.
 remove_undef_search:- ((
  '@'(use_module(library(check)),'user'),
  redefine_system_predicate(check:list_undefined(_)),
  abolish(check:list_undefined/1),
- assert((check:list_undefined(A):- not(thread_self_main),!, ignore(A=[]))),
- assert((check:list_undefined(A):- dmsg(check:list_undefined(A)),!)),
- assert((check:list_undefined(A):- check:reload_library_index,  update_changed_files,call(thread_self_main),!, ignore(A=[]))),
- assert((check:list_undefined(A):- ignore(A=[]),scansrc_list_undefined(A),!)))).
+ assertz((check:list_undefined(A):- \+ thread_self_main ,!, ignore(A=[]))),
+ %assert((check:list_undefined(A):- dmsg(check:list_undefined(A)),!)),
+ assertz((check:list_undefined(A):- check:reload_library_index,  update_changed_files, call(thread_self_main),!, ignore(A=[]))),
+ assertz((check:list_undefined(A):- ignore(A=[]),scansrc_list_undefined(A),!)))).
 
 % :- remove_undef_search.
 
