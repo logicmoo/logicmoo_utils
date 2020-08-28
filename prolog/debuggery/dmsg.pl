@@ -189,11 +189,11 @@ wldmsg_0(_CM,ops):-
  !.
 
 wldmsg_0(_,CM:Goal):- !, wldmsg_0(CM,Goal).
-wldmsg_0(_,forall(CM:Goal)):- !,ignore((nonvar(Goal),wldmsg_0(CM,forall(Goal)))).
-wldmsg_0(_,call(CM:Goal)):- !,ignore((nonvar(Goal),wldmsg_0(CM,call(Goal)))).
+wldmsg_0(_,forall(CM:Goal)):- callable(Goal), !,ignore((nonvar(Goal),wldmsg_0(CM,forall(Goal)))).
+wldmsg_0(_,call(CM:Goal)):- callable(Goal), !,ignore((nonvar(Goal),wldmsg_0(CM,call(Goal)))).
 wldmsg_0(CM,List):- is_list(List),!,maplist(wldmsg_0(CM),List).
-wldmsg_0(CM,forall(Goal)):- !, ignore((nonvar(Goal),forall(CM:call(Goal), wldmsg_1(Goal)))).
-wldmsg_0(CM,call(Goal)):- !, ignore((nonvar(Goal),CM:call(Goal), wldmsg_1(Goal))).
+wldmsg_0(CM,forall(Goal)):- callable(Goal), !, ignore((nonvar(Goal),forall(CM:call(Goal), wldmsg_1(Goal)))).
+wldmsg_0(CM,call(Goal)):- callable(Goal), !, ignore((nonvar(Goal),CM:call(Goal), wldmsg_1(Goal))).
 wldmsg_0(_,Info):-wldmsg_1(Info). 
 
 wldmsg_1(List):- is_list(List),!,maplist(wldmsg_1,List).
@@ -1190,7 +1190,7 @@ dmsg0(V):-dzotrace(locally(local_override(no_kif_var_coroutines,true),
 % (debug)message Primary Helper Primary Helper.
 %
 dmsg00(V):-cyclic_term(V),!,writeln(cyclic_term),flush_output,writeln(V),!.
-dmsg00(call(Code)):- !, with_output_to(string(S),catch((dzotrace(Code)->TF=true;TF=failed),TF,true)), 
+dmsg00(call(Code)):- callable(Code), !, with_output_to(string(S),catch((dzotrace(Code)->TF=true;TF=failed),TF,true)), 
   (TF=true->dmsg(S);(format(string(S2),'~Ndmsg(call(Code)) of ~q~n~q: ~s ~n',[Code,TF,S]),wdmsg(S2),!,fail)).
 dmsg00(V):- catch(dumpst:simplify_goal_printed(V,VV),_,fail),!,dmsg000(VV),!.
 dmsg00(V):- dmsg000(V),!.
