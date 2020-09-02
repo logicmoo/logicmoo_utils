@@ -10,5 +10,5 @@ script:
  - swipl -s t/loop_check_tests.plt -g run_tests,halt -t 'halt(1)'
  - swipl -s t/sanity_tests.plt2 -g run_tests,halt -t 'halt(1)'
  - swipl -s t/sanity_tests_cav.plt -g run_tests,halt -t 'halt(1)'
- - swipl -s t/sce_sanity_tests.plt .plt -g run_tests,halt -t 'halt(1)'
- - swipl -s t/test_no_repeats.plt .plt -g run_tests,halt -t 'halt(1)'
+ - swipl -s t/sce_sanity_tests.plt -g run_tests,halt -t 'halt(1)'
+ - swipl -s t/test_no_repeats.plt -g run_tests,halt -t 'halt(1)'
