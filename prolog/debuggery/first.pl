@@ -465,7 +465,7 @@ add_var_to_env(NameS,Var):-
    ((is_list(NameS);string(NameS))->name(Name,NameS);NameS=Name),
    get_varname_list(VsIn),
    add_var_to_list(Name,Var,VsIn,NewName,NewVar,NewVs),
-   (NewName\==Name -> put_attr(Var, vn, NewName) ; true),
+  % (NewName\==Name -> put_attr(Var, vn, NewName) ; true),
    (NewVar \==Var  -> put_attr(NewVar, vn, Name) ; true),
    (NewVs  \==VsIn -> put_variable_names(NewVs) ; true).
    

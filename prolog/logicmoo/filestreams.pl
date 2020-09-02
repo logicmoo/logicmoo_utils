@@ -312,7 +312,7 @@ file_open_read(File,In):-open(File,read,In,[]),!,see(In),current_input(In).
 % % % OFF :- system:use_module(library(socket),[]).
 % % % OFF :- system:use_module(library(debug),[]).
 % % % OFF :- system:use_module(library(option),[]).
-% % % OFF :- system:use_module(library(http/thread_httpd),[]).
+:- system:use_module(library(http/thread_httpd),[]).
 % % % OFF 
 :- system:use_module(library(http/http_header)).
 

@@ -1137,6 +1137,7 @@ pack_upgrade_soft :- pack_upgrade_soft(pfc), pack_upgrade_soft(logicmoo_utils), 
 
 :- system:reexport(library(logicmoo/call_reorder)).
 :- system:reexport(library(logicmoo/nb_set_term)).
+:- system:reexport(library(logicmoo/pretty_clauses)).
 
 %=======================================
 %= REGISTER FOR INIT EVENTS

@@ -282,15 +282,15 @@ get_var_name(V,N):-quietly(get_var_name0(V,N)),!.
 
 get_var_name0(Var,Name):- nonvar(Name),!,must(get_var_name0(Var, NameO)),!,Name=NameO.
 get_var_name0(Var,Name):- nonvar(Var),!,get_var_name1(Var,Name),!.
-get_var_name0(Var,Name):- get_attr(Var, vn, Name),!.
 get_var_name0(Var,Name):- var_property(Var,name(Name)),!.
+get_var_name0(Var,Name):- get_attr(Var, vn, Name),!.
 get_var_name0(Var,Name):- nb_current('$variable_names', Vs),varname_of(Vs,Var,Name),!.
 get_var_name0(Var,Name):- get_attr(Var, varnames, Name),!.
 get_var_name0(Var,Name):- nb_current('$old_variable_names', Vs),varname_of(Vs,Var,Name),!.
 get_var_name0(Var,Name):- get_varname_list(Vs),varname_of(Vs,Var,Name),!.
 % get_var_name0(Var,Name):- attvar(Var),get_varname_list(Vs),format(atom(Name),'~W',[Var, [variable_names(Vs)]]).
 
-varname_of(Vs,Var,Name):- member(N=V,Vs),(atomic(N)->(V==Var,!,N=Name);(!,fail)).
+varname_of(Vs,Var,Name):- member(NV,Vs), (compound(NV) -> (NV=(N=V),atomic(N), V==Var,!,N=Name) ; (!,fail)).
 
 get_var_name1('$VAR'(Name),Name):- atom(Name),!.
 get_var_name1('$VAR'(Int),Name):- integer(Int),format(atom(A),"~w",['$VAR'(Int)]),!,A=Name.
