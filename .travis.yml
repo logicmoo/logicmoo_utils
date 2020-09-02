@@ -4,7 +4,8 @@ before_script:
  - sudo apt-get update -q
  - sudo apt-get install swi-prolog-nox
 
-script: 
+script:
+ - swipl -g "pack_install(logicmoo_utils),halt" -t 'halt(1)' 
  - swipl -s t/each_call_cleanup.plt -g run_tests,halt -t 'halt(1)'
  - swipl -s t/locally_sanity_tests.plt -g run_tests,halt -t 'halt(1)'
  - swipl -s t/loop_check_tests.plt -g run_tests,halt -t 'halt(1)'
