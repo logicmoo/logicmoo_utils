@@ -1,15 +1,14 @@
 
 before_script:
-sudo apt-add-repository ppa:swi-prolog/devel -y
-sudo apt-get update -q
-sudo apt-get install swi-prolog-nox
+ - sudo apt-add-repository ppa:swi-prolog/devel -y
+ - sudo apt-get update -q
+ - sudo apt-get install swi-prolog-nox
 
 script: 
-
-swipl -s t/each_call_cleanup.plt -g run_tests,halt -t 'halt(1)'
-swipl -s t/locally_sanity_tests.plt -g run_tests,halt -t 'halt(1)'
-swipl -s t/loop_check_tests.plt -g run_tests,halt -t 'halt(1)'
-swipl -s t/sanity_tests.plt2 -g run_tests,halt -t 'halt(1)'
-swipl -s t/sanity_tests_cav.plt -g run_tests,halt -t 'halt(1)'
-swipl -s t/sce_sanity_tests.plt .plt -g run_tests,halt -t 'halt(1)'
-swipl -s t/test_no_repeats.plt .plt -g run_tests,halt -t 'halt(1)'
+ - swipl -s t/each_call_cleanup.plt -g run_tests,halt -t 'halt(1)'
+ - swipl -s t/locally_sanity_tests.plt -g run_tests,halt -t 'halt(1)'
+ - swipl -s t/loop_check_tests.plt -g run_tests,halt -t 'halt(1)'
+ - swipl -s t/sanity_tests.plt2 -g run_tests,halt -t 'halt(1)'
+ - swipl -s t/sanity_tests_cav.plt -g run_tests,halt -t 'halt(1)'
+ - swipl -s t/sce_sanity_tests.plt .plt -g run_tests,halt -t 'halt(1)'
+ - swipl -s t/test_no_repeats.plt .plt -g run_tests,halt -t 'halt(1)'
