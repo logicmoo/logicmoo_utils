@@ -380,13 +380,14 @@ print_tree(T) :- as_is(T),line_position(current_output,0),!,format('~p~n',[T]),!
 % print_tree(T) :- as_is(T),line_position(current_output,0),may_tab(1),format('~N~p',[T]),!.
 print_tree(T) :-
   line_position(current_output,Was),
-   ignore((numbervars80(T,111,_),
+   ignore((numbervars(T,111,[attvar(bind)]),
    pt0([],'',T,0),nop(pt_nl), fail)),
    line_position(current_output,Now),
    nop(Now==Was -> true ; nl).
 
 may_tab(A):- line_position(current_output,0), tab(A),!.
 may_tab(_):- write('  ').
+
 
 format_functor(F):- upcase_atom(F,U), ((F==U,current_op(_,_,F)) -> format("'~w'",[F]) ; format("~q",[F])).
 

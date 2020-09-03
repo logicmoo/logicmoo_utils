@@ -339,7 +339,7 @@ pretty_final(H):- compound_name_arity(H,F,A),compound_name_arguments(H,F,[P1|ARG
 
 pretty_final(H,F,A,P1,ARGS):- atom_codes(F,[_,49|Rest]),atom_codes(F0,Rest),!,pretty_final(H,F0,A,P1,ARGS).
 pretty_final(_,F,_,_P,_RGS):- atom_codes(F,[F0]),char_type(F0,punct),!.
-char_type
+% char_type
 pretty_final(_H,F,_A,P1,[]):- may_debug_var_weak(F,P1).
 pretty_final(H,F,A,P1,ARGS):- 
    must_maplist_det(pretty_final,[P1|ARGS]),
