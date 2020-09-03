@@ -136,19 +136,27 @@ debug_var0(Atom,Var):- p_n_atom(Atom,UP),
 
 
 afix_varname(Suffix,Var):- var(Var), get_var_name(Var,Prev),atomic(Prev),afix_varname_w_prev(Prev,Suffix,Var).
-afix_varname(Suffix,Var):- add_var_to_env(Suffix,Var).
+afix_varname(Suffix,Var):- add_var_to_env_trimed(Suffix,Var).
 
 afix_varname_w_prev(Suffix,Prev,Var):- atom_concat('_',NewFix,Suffix),!,afix_ordered_varname(Prev,NewFix,Var).
 afix_varname_w_prev(Suffix,Prev,Var):- atom_concat(NewFix,'_',Suffix),!,afix_ordered_varname(NewFix,Prev,Var).
 afix_varname_w_prev(Afix,Prev,Var):- atom_concat('_',NewPreFix,Prev),!,afix_ordered_varname(Afix,NewPreFix,Var).
 afix_varname_w_prev(Afix,Prev,Var):- atom_concat(NewPreFix,'_',Prev),!,afix_ordered_varname(NewPreFix,Afix,Var).
 afix_varname_w_prev(Suffix,Prev,Var):- afix_ordered_varname(Prev,Suffix,Var).
-%afix_varname_w_prev(UP,_Prev,Var):- add_var_to_env(UP,Var).
+%afix_varname_w_prev(UP,_Prev,Var):- add_var_to_env_trimed(UP,Var).
 
 afix_ordered_varname(Left,Right,_Var):- atom_contains(Left,Right),!.
 afix_ordered_varname(Left,Right,_Var):- atom_contains(Right,Left),!.
-afix_ordered_varname(Left,Right, Var):- atomic_list_concat([Left,'_',Right],New),add_var_to_env(New,Var).
-%afix_ordered_varname(UP,_Prev,Var):- add_var_to_env(UP,Var).
+afix_ordered_varname(Left,Right, Var):- atomic_list_concat([Left,'_',Right],New),
+  add_var_to_env_trimed(New,Var).
+
+add_var_to_env_trimed(New,Var):- atom_length(New,Len), Len < 2, !, add_var_to_env(New,Var).
+add_var_to_env_trimed(New,Var):- atom_concat(NewNew,'_',New),add_var_to_env_trimed(NewNew,Var).
+add_var_to_env_trimed(New,Var):- atom_concat(NewNew,'_v',New),add_var_to_env_trimed(NewNew,Var).
+add_var_to_env_trimed(New,Var):- atom_concat('_',NewNew,New),add_var_to_env_trimed(NewNew,Var).
+add_var_to_env_trimed(New,Var):- atom_concat('?',NewNew,New),add_var_to_env_trimed(NewNew,Var).
+add_var_to_env_trimed(New,Var):- add_var_to_env(New,Var).
+%afix_ordered_varname(UP,_Prev,Var):- add_var_to_env_trimed(UP,Var).
 
 check_varname(UP):- name(UP,[C|_]),(char_type(C,digit)->throw(check_varname(UP));true).
                         
@@ -188,10 +196,14 @@ pretty_numbervars(Term, TermO):-
   (guess_pretty(Term1),
    source_variables_lwv(Term1,Vs),
    copy_term(Term+Vs,TermO+Vs2, _),
-   our_implode_var_names(Vs2))),!.
+   implode_varnames(Vs2))),!.
 
-our_implode_var_names(Vars):- \+ compound(Vars),!.
-our_implode_var_names([N=V|Vars]):- ignore(V='$VAR'(N)), our_implode_var_names(Vars).
+implode_varnames(V):- var(V),!, ignore((get_var_name(V,Name),V='$VAR'(Name))),!.
+implode_varnames(G):- ground(G),!.
+implode_varnames(N=V):- atomic(N),!, ignore(V='$VAR'(N)),!.
+implode_varnames([NV|Vars]):- implode_varnames(NV), implode_varnames(Vars).
+implode_varnames(G):- term_variables(G,Vs),maplist(implode_varnames,Vs).
+  
 
 guess_pretty(H):- pretty_enough(H), !.
 guess_pretty(O):- must_or_rtrace((guess_pretty1(O),guess_varnames2(O,_))).
@@ -208,7 +220,7 @@ guess_varnames(IO):- guess_varnames(IO,_).
 guess_varnames(I,O):- guess_pretty1(I), guess_varnames2(I,O).
 
 
-guess_varnames2(I,O):-guess_varnames2(add_var_to_env,I,O).
+guess_varnames2(I,O):-guess_varnames2(add_var_to_env_trimed,I,O).
 
 :- meta_predicate guess_varnames2(2,*,*).
 guess_varnames2(_Each,G,G):- \+ compound(G),!.
@@ -248,7 +260,7 @@ lcolormsg1(Msg):- fmt9(Msg).
 
 is_good_name(IsGood):- \+ atomic(IsGood),!,fail.
 is_good_name([]):- !,fail.
-is_good_name(IsBad):- atom_contains(IsBad,'_Param'), !, fail.
+is_good_name(IsBad):- atom_contains(IsBad,'_P_'), !, fail.
 is_good_name(IsBad):- atom_contains(IsBad,'_Ret'), !, fail.
 % is_good_name(IsBad):- atomic_list_concat([_,_,_|_],'_',IsBad), !, fail.
 is_good_name(_IsGood).
@@ -296,8 +308,8 @@ pretty1(isa(V,R)):- name_one(V,R).
 pretty1(iza(V,R)):- name_one(V,R).
 pretty1(pred(V,See,_,_)):- debug_var(See,V).
 pretty1(rel(V,_,On,_)):- debug_var([On,'_'],V).
-pretty1(card(V,Num,R)):- ground(Num:R),atomic_list_concat(['_',R,'_',Num],Eq_2),debug_var(Eq_2,V).
-pretty1(H):-compound_name_arguments(H,_,ARGS),must_maplist_det(pretty1,ARGS).
+pretty1(card(V,Num,R)):- ground(Num:R),atomic_list_concat(['_',R,'_',Num],Eq_2),debug_var(Eq_2,V),!.
+pretty1(H):-compound_name_arguments(H,_,ARGS),ignore(must_maplist_det(pretty1,ARGS)).
 
 pretty_two(H):- pretty_enough(H),!.
 pretty_two(H):- is_list(H), !, maplist(pretty_two,H).
@@ -338,13 +350,12 @@ pretty_final([H | B]):- pretty_final(H),pretty_final(B),may_debug_var_weak('CAR'
 pretty_final(H):- compound_name_arity(H,F,A),compound_name_arguments(H,F,[P1|ARGS]), pretty_final(H,F,A,P1,ARGS).
 
 pretty_final(H,F,A,P1,ARGS):- atom_codes(F,[_,49|Rest]),atom_codes(F0,Rest),!,pretty_final(H,F0,A,P1,ARGS).
-pretty_final(_,F,_,_P,_RGS):- atom_codes(F,[F0]),char_type(F0,punct),!.
-% char_type
-pretty_final(_H,F,_A,P1,[]):- may_debug_var_weak(F,P1).
+pretty_final(H,F,A,P1,ARGS):- atom_codes(F,[T|Rest]),\+ char_type(T, alpha), !,atom_codes(F0,Rest),!,pretty_final(H,F0,A,P1,ARGS).
+pretty_final(_H,'',_A,P1,ARGS):- must_maplist_det(guess_varnames,[P1|ARGS]),!.
 pretty_final(H,F,A,P1,ARGS):- 
-   must_maplist_det(pretty_final,[P1|ARGS]),
+   must_maplist_det(guess_varnames,[P1|ARGS]),
    arg(A,H,R),may_debug_var_weak([F,'_'],R),
-   ignore((A>2, may_debug_var_weak([F,'_Param'],P1))),   
+   ignore((A>2, may_debug_var_weak([F,'_P_',A,'_v'],P1))),   
    !. 
 
 atom_concat_or_rtrace_priv(X,Y,Z):- tracing->atom_concat(X,Y,Z);catch(atom_concat(X,Y,Z),_,(writeq(atom_concat_or_rtrace_priv(X,Y,Z)),break)).
