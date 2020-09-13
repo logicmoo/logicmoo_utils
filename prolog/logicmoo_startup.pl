@@ -733,6 +733,7 @@ lmconfig:never_export_named(_,attr_unify_hook,2).
 lmconfig:never_export_named(_,attribute_goals,3).
 lmconfig:never_export_named(_,project_attributes,2).
 lmconfig:never_export_named(_,attr_portray_hook,2).
+lmconfig:never_export_named(_,isa,2).
 lmconfig:never_export_named(_,F,_):- atom_concat('$',_,F) ; atom_concat('__aux',_,F).
 
 lmconfig:never_reexport_named(_,goal_expansion,_).
@@ -796,10 +797,10 @@ all_source_file_predicates_are_transparent:-
 all_source_file_predicates_are_transparent(S,_LC):- 
  forall(source_file(M:H,S),
  (functor(H,F,A),
-  ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), 
+  ignore(((\+ predicate_property(M:H,transparent), \+ lmconfig:never_export_named(M,F,A), module_transparent(M:F/A), 
   \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A])))))).
 
-
+dont_mess_with(baseKB:isa/2).
 
 :- export(fixup_exports/0).
 
@@ -1138,6 +1139,8 @@ pack_upgrade_soft :- pack_upgrade_soft(pfc), pack_upgrade_soft(logicmoo_utils), 
 :- system:reexport(library(logicmoo/call_reorder)).
 :- system:reexport(library(logicmoo/nb_set_term)).
 :- system:reexport(library(logicmoo/pretty_clauses)).
+
+:- system:reexport(library(logicmoo/dcg_meta)).
 
 %=======================================
 %= REGISTER FOR INIT EVENTS

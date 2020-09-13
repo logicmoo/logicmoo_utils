@@ -91,7 +91,8 @@
             read_stream_to_arglist/2,
             rejoined/3,
             remove_predupes/2,
-            replace_in_string/4,
+            replace_in_string/3,
+            replace_in_string/4,            
             replace_in_string/5,
             replace_periods/2,
             replace_periods_string_list/2,
@@ -1777,8 +1778,15 @@ replace_in_string(SepChars, PadChars,Repl, A,C):- split_string(A,SepChars,PadCha
 %
 % Replace In String.
 %
+
 replace_in_string(F,R,OriginalString,K):-atom(OriginalString),!,atom_string(OriginalString,S),replace_in_string(F,R,S,ModifiedString),atom_string(K,ModifiedString).
 replace_in_string(Find,Repl,OriginalString,ModifiedString):-  atomic_list_concat(List,Find,OriginalString),atomics_to_string(List,Repl,ModifiedString).
+
+replace_in_string([KV|FR],OriginalString,O):-!,
+  arg(1,KV,F),arg(2,KV,R),
+  replace_in_string(F,R,OriginalString,M),
+  replace_in_string(FR,M,O).
+replace_in_string([],O,O).
 
 
 %= 	 	 

@@ -63,6 +63,11 @@
 
 :- set_module(class(library)).
 
+protected_op(_,',').
+with_operators(Ops,Goal):- setup_call_cleanup(push_operators(Ops,Undo),Goal,pop_operators(Undo)).
+with_no_operators(Goal):- setof(op(0,Y,Z),X^(current_op(X,Y,Z),\+ protected_op(Y,Z)),Zero), with_operators(Zero,Goal).
+with_only_operators(Ops,Goal):-  with_no_operators(with_operators(Ops,Goal)).
+
 
 % :- use_module(library(gui_tracer)).
 :- use_module(library(system)).
