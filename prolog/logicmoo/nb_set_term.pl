@@ -31,6 +31,6 @@ nb_set_rem1(Set, F):- functor(Set,_, A),
   ((arg(N, Set, E), N < A, E=@=F) -> throw(cant_remove(arg(N, Set, E))) ;
    (arg(A,Set,T), ((T==[];var(T)) -> true ; nb_set_rem1(T, F)))).
 
-           
+
 :- fixup_exports.
 

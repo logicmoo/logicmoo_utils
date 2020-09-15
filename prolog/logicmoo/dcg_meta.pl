@@ -46,6 +46,10 @@
 
 :- set_module(class(library)).
 
+:- meta_predicate track_stream(*,0).
+:- meta_predicate read_string_until(*,*,//,?,?).
+:- meta_predicate read_string_until_pairs(*,//,?,?).
+
 
 
 
@@ -70,6 +74,26 @@ user_portray_dcg_seq(List):- catch(atom_codes(Atom,List),_,fail),length(List,Len
 
 % :- ensure_loaded(library(logicmoo_utils)).
 % :- ensure_loaded(library(logicmoo_util_strings)).
+
+:- meta_predicate bx(0).
+:- meta_predicate expr_with_text(*,2,*,*,*).
+:- meta_predicate locally_setval(*,*,0).
+:- meta_predicate notrace_catch_fail(0).
+:- meta_predicate notrace_catch_fail(0,?,0).
+:- meta_predicate phrase_from_buffer_codes(//,*).
+:- meta_predicate phrase_from_buffer_codes_nd(//,*).
+:- meta_predicate phrase_from_pending_stream(*,//,*).
+:- meta_predicate phrase_from_pending_stream(//,?).
+:- meta_predicate phrase_from_stream_lazy_part(//,*).
+:- meta_predicate read_string_until(*,*,//,?,?).
+:- meta_predicate read_string_until_no_esc(*,//,?,?).
+:- meta_predicate read_string_until_pairs(*,//,?,?).
+:- meta_predicate zalwayz(//,?,?).
+:- meta_predicate(zalwayz(0)).
+:- meta_predicate track_stream(*,0).
+:- meta_predicate always_b(//,?,?).
+:- meta_predicate phrase_from_stream_nd(//,+).
+:- meta_predicate read_string_until(*,//,?,?).
 
  
 :- meta_predicate dcgLeftOfMid(?,//,?,?).
@@ -308,6 +332,7 @@ dcgZeroOrMore(_True) -->[].
 
 dcgLeftOf(Mid,[Left|T],S,[MidT|RightT]):-append([Left|T],[MidT|RightT],S),phrase(Mid,MidT),phrase([Left|T],_LeftT).
 
+
 dcgLeftOfMid([Left|T],Mid,S,[MidT|RightT]):-append([Left|T],[MidT|RightT],S),phrase(Mid,MidT),phrase([Left|T],_LeftT).
 
 dcgLeftMidRight(Left,Mid,Right) --> dcgLeftOfMid(LeftL,Mid),{phrase(Left,LeftL,[])},Right.
@@ -439,15 +464,25 @@ file_meta_with_comments(Pred, Out,S,E):- append_term(Pred,O,PredO), expr_with_te
 
 file_comment_expr(C)--> {get_dcg_meta_reader_options(file_comment_reader,Pred), append_term(Pred,C,PredC)},PredC.
 
-
 read_string_until_no_esc(String,End)--> dcg_notrace(read_string_until(noesc,String,End)).
-read_string_until(String,End)--> dcg_notrace(read_string_until(esc,String,End)).
+read_string_until(String,End)--> read_string_until(esc,String,End).
+
 read_string_until(_,[],eoln,S,E):- S==[],!,E=[].
 read_string_until(esc,[C|S],End) --> `\\`,!, zalwayz(escaped_char(C)),!, read_string_until(esc,S,End),!.
-read_string_until(_,[],HB) --> HB, !.
-read_string_until(Esc,[C|S],HB) --> [C],!,read_string_until(Esc,S,HB),!.
+read_string_until(_,[],End) --> End, !.
+%read_string_until(Esc,[35, 36|S],HB) --> {kif_ok}, `&%`, !,read_string_until(Esc,S,HB),!.
+read_string_until(Esc,[C|S],End) --> [C],!,read_string_until(Esc,S,End),!.
 
+
+read_string_until_pairs([C|S],End) --> `\\`,!, zalwayz(escaped_char(C)),!, read_string_until_pairs(S,End).
+read_string_until_pairs([],HB) --> HB, !.
+read_string_until_pairs([C|S],HB) --> [C],read_string_until_pairs(S,HB).
+
+escaped_char(C) --> eoln,!,[C].
 escaped_char(E) --> [C], {atom_codes(Format,[92,C]),format(codes([E|_]),Format,[])},!.
+escaped_char(Code)  --> [C], {escape_to_char([C],Code)},!.
+
+escape_to_char(Txt,Code):- notrace_catch_fail((sformat(S,'_=`\\~s`',[Txt]),read_from_chars(S,_=[Code]))),!.
 
 zalwayz(G,H,T):- phrase(G,H,T),!.
 zalwayz(G,H,T):- nb_current('$translation_stream',S),is_stream(S), \+ stream_property(S,tty(true)),!,always_b(G,H,T).
@@ -492,6 +527,39 @@ phrase_from_pending_stream(CodesPrev,Grammar,In):-
 dcg_notrace(G,S,E):- tracing -> setup_call_cleanup(notrace,phrase(G,S,E),trace); phrase(G,S,E).
 my_lazy_list_location(Loc,S,S):- attvar(S), notrace(catch(lazy_list_location(Loc,S,S),_,fail)),!.
 my_lazy_list_location(file(_,_,-1,-1))-->[].
+
+
+track_stream(_In,G):- !,G.
+track_stream(In,G):- \+ is_stream(In),!,G.
+track_stream(In,G):- 
+   b_setval('$translation_stream',In),
+   notrace_catch_fail(stream_position(In,Pos,Pos),_,true),
+   character_count(In,Chars),
+   stream_property(In,encoding(Was)),
+   (setup_call_catcher_cleanup(
+        nop(set_stream(In,encoding(octet))),
+        (ignore(notrace_catch_fail(line_count(In,Line),_,(Line = -1))),
+         b_setval('$translation_line',Line-Chars),
+           ((G),!)),
+        Catcher,
+        true)->true;Catcher=fail),
+     track_stream_cleanup(Catcher,In,Was,Pos).
+
+track_stream_cleanup(Exit,In,Was,_Pos):- (Exit==exit ; Exit == (!)),!,
+   set_stream(In,encoding(Was)).
+track_stream_cleanup(Catcher,In,Was,Pos):-
+   set_stream(In,encoding(Was)),
+   ((nonvar(Pos),supports_seek(In))->stream_position(In,_Was,Pos);true),!,
+   (compound(Catcher)-> (arg(1,Catcher,E),throw(E)) ; fail).
+
+
+:- meta_predicate locally_setval(*,*,0).
+
+locally_setval(Name,Value,Goal):- 
+ (nb_current(Name,Was)->true;Was=[]),
+  b_setval(Name,Value),
+  call(Goal),
+  b_setval(Name,Was).
 
 
 
