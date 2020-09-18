@@ -486,6 +486,7 @@ escape_to_char(Txt,Code):- notrace_catch_fail((sformat(S,'_=`\\~s`',[Txt]),read_
 
 zalwayz(G,H,T):- phrase(G,H,T),!.
 zalwayz(G,H,T):- nb_current('$translation_stream',S),is_stream(S), \+ stream_property(S,tty(true)),!,always_b(G,H,T).
+zalwayz(G,H,T):- always_b(G,H,T).
 
 always_b(G,H,T):- break,H=[_|_],writeq(phrase_h(G,H,T)),dcg_print_start_of(H),writeq(phrase(G,H,T)),!,trace,ignore(rtrace(phrase(G,H,T))),!,notrace,dcg_print_start_of(H),writeq(phrase(G,H,T)), break,!,fail.
 always_b(G,H,T):- writeq(phrase(G,H,T)),dcg_print_start_of(H),writeq(phrase(G,H,T)),!,trace,ignore(rtrace(phrase(G,H,T))),!,notrace,dcg_print_start_of(H),writeq(phrase(G,H,T)), break,!,fail.

@@ -25,6 +25,7 @@
           call_on_eof/1, 
           call_on_eof/2, 
           disable_in_file/1,
+          is_current_source_term/1,
           enable_in_file/1,
           is_file_enabling/1,  
           do_eof_actions/2,
@@ -69,6 +70,14 @@ Thread.
 
 :- set_module(class(library)).
 :- meta_predicate l_once(0).
+
+
+is_current_source_term(H):- notrace(is_current_source_term0(H)).
+is_current_source_term0((H:-B)):- !, (is_current_source_term1((H:-B))->true; (B==true -> is_current_source_term1(H))),!.
+is_current_source_term0((H)):- is_current_source_term1(H) -> true ; is_current_source_term1((H:-true)).
+is_current_source_term1(In):-
+    prolog_load_context('term',Term), % dmsg(Term=In),
+    (Term==In ; Term=@=In).
 
 
 :- system:reexport(library(debug),[debug/3]).

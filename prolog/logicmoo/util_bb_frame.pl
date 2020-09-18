@@ -12,11 +12,16 @@
 
 
 push_frame(Info, Frame):- var(Frame), !, gensym(frame, F), Frame = [lbl(F)], push_frame(Info, Frame).
+push_frame(Info, cg(Frame)):- !, push_frame(Info, Frame),!.
+push_frame(Info, _Frame):- Info==[],!.
 push_frame(Info, Frame):- do_eval_or_same(Info, BetterInfo), Info\=@=BetterInfo, push_frame(BetterInfo, Frame).
 push_frame(Info, Frame):- member(Sub, Frame), Sub==Info, !.
 push_frame([I1|I2], Frame):- !, push_frame(I1, Frame), push_frame(I2, Frame).
 push_frame('&'(I1,I2), Frame):- !, push_frame(I1, Frame), push_frame(I2, Frame).
 push_frame(Info, Frame):- Frame = [H|T], setarg(2, Frame, [H|T]), setarg(1, Frame, Info).
+
+get_frame(Frame, Frame):- \+ (Frame= cg(_)),!.
+get_frame(cg(Frame), Frame):-!.
 
 
 %  LocalContexts
@@ -58,14 +63,77 @@ do_eval_or_same(G, GG):- compound_name_arguments(G, F, GL), F\==percept_props, !
  maplist(do_eval_or_same, GL, GGL), !, compound_name_arguments(GG, F, GGL).
 do_eval_or_same(G, G).
 
+
+get_frame_vars(Frame,FVs):-
+  get_frame(Frame,List), 
+  setof(frame_var(Var, RealVar),frame_var(Var,List,RealVar),FVs),!.
+get_frame_vars(_Frame,[]).
+
+
+
+merge_simular_graph_vars(CG,PCG):- 
+  get_frame_vars(CG,FV), get_frame_vars(PCG,PFV),
+  combine_gvars(FV,PFV),!.
+
+combine_gvars([],_):-!.
+combine_gvars(_,[]):-!.
+combine_gvars([S|S1],S2):- ignore(member(S,S2)),
+  combine_gvars(S1,S2).
+
+
+merge_simular_vars([],[]):-!.
+merge_simular_vars([One|Rest],List):-  member(One,Rest),merge_simular_vars(Rest,List),!.
+merge_simular_vars([One|Rest],[One|List]):-  merge_simular_vars(Rest,List),!.
+
+resolve_frame_constants(CG0,CG):-
+ get_frame_vars(CG0,FVs),
+ merge_simular_vars(FVs,SFVs),
+ resolve_frame_constants(SFVs,CG0,CG1),
+ must(correct_frame_preds(CG1,CG)).
+
+event_frame_pred('agnt').
+event_frame_pred('inst').
+
+correct_frame_preds([H|CG1],CG):- !, 
+  correct_frame_preds(H,H1),!,
+  correct_frame_preds(CG1,CG2),
+  flatten([H1,CG2],CG).
+
+correct_frame_preds(FrameP,FramePO):- compound(FrameP),
+  compound_name_arguments(FrameP,F,[A,B|C]),
+  %downcase_atom(F,DC),
+  =(F,DC),
+  compound_name_arguments(FramePO,DC,[A,B|C]), !,  
+  ignore((event_frame_pred(DC) -> debug_var('_Event',A), nop(debug_var('Doer',B)))).
+correct_frame_preds(CG,CG).
+
+resolve_frame_constants([],IO,IO):-!.
+resolve_frame_constants([DoConst|More],Props,Out):- !, 
+  resolve_frame_constants(DoConst,Props,Mid),
+  resolve_frame_constants(More,Mid,Out).
+resolve_frame_constants(frame_var(Var, RealVar),Props,Out):-
+  downcase_atom(Var,VarD),
+  upcase_atom(Var,VarU),
+  % sUbst(Props,frame_var(Var, RealVar),[],Mid),
+  sUbst_each(Props,[
+
+  ?(RealVar)=RealVar,?(Var)=RealVar,?(VarD)=RealVar,?(VarU)=RealVar,
+  *(RealVar)=RealVar,*(Var)=RealVar,*(VarD)=RealVar,*(VarU)=RealVar,
+      Var=RealVar,VarU=RealVar,VarD=RealVar],Out),!.
+resolve_frame_constants(_,Mid,Mid).
+
+
 frame_var(_, Frame, _):- \+ compound(Frame), !, fail.
+frame_var(Name, cg(Frame), Var):- !, frame_var(Name, Frame, Var).
 frame_var(Name, Frame, Var):- nonvar(Var), !, frame_var(Name, Frame, NewVar), !, NewVar=Var.
 frame_var(Name, Frame, Var):- compound(Name), !, arg(_, Name, E), frame_var(E, Frame, Var), !.
-frame_var(Name, [Frame1|Frame2], Var):- !, frame_var(Name, Frame1, Var);frame_var(Name, Frame2, Var).
+frame_var(Name, [Frame1|Frame2], Var):- !, (frame_var(Name, Frame1, Var);frame_var(Name, Frame2, Var)).
+frame_var(Name, frame_var(Prop, Var),Var):- !, same_name(Name, Prop).
+frame_var(Name, cg_name(Var, Prop),Var):- !, same_name(Name, Prop).
 frame_var(Name, Prop = Var, Var):- !, same_name(Name, Prop).
 frame_var(Name, f(Pred, 1, [Var]), Var):- !, same_name(Name, Pred).
 frame_var(Name, f(_, _, [Prop|List]), Var):- !, same_name(Name, Prop), last(List, Var).
-frame_var(Name, Frame, Var):- compound_name_arity(Frame, Pred, Arity), Arity > 0, compound_name_arguments(Frame, Pred, List),
+frame_var(Name, Frame, Var):- fail, compound_name_arity(Frame, Pred, Arity), Arity > 0, compound_name_arguments(Frame, Pred, List),
   frame_var(Name, f(Pred, Arity, List), Var).
 frame_var(Name, Frame, Var):- arg(_, Frame, E), frame_var(Name, E, Var), !.
 
@@ -74,18 +142,28 @@ asCol(A, 'TypeFn'(A)):- \+ callable(A), !.
 asCol(A, S):- format(atom(S), '~w', [A]).
 
 to_upcase_name(V, V):- var(V), !.
+to_upcase_name('$VAR'(T), N):- !, to_upcase_name(T, N).
+to_upcase_name('?'(T), N):- !, to_upcase_name(T, N).
+to_upcase_name('*'(T), N):- !, to_upcase_name(T, N).
 to_upcase_name(T, N):- compound(T), !, compound_name_arity(T, A, _), !, to_upcase_name(A, N).
 to_upcase_name(T, N):- format(atom(A), '~w', [T]), upcase_atom(A, N).
 
+to_downcase_name(V, N):- var(V), !, N = V.
+to_downcase_name('$VAR'(T), N):- !, to_downcase_name(T, N).
+to_downcase_name('?'(T), N):- !, to_downcase_name(T, N).
+to_downcase_name('*'(T), N):- !, to_downcase_name(T, N).
+to_downcase_name(T, N):- compound(T), !, compound_name_arity(T, A, _), !, to_downcase_name(A, N).
+to_downcase_name(T, N):- format(atom(A), '~w', [T]), downcase_atom(A, N).
 
-
+same_name(T1, T2):- var(T1),!,ground(T2), to_downcase_name(T1,T2).
+same_name(T1, T2):- T1 = T2,!.
 same_name(T1, T2):- ground(T1), ground(T2), to_upcase_name(T1, N1), to_upcase_name(T2, N2), !, N1==N2.
 
 
 
 %frame_to_asserts(List, cmdFrame(Frame)):- is_list(List), sort(List, ListR), list_to_conjuncts('&', ListR, Frame), !.
 %frame_to_asserts(Frame, cmdFrame(Frame)).
-frame_to_asserts(Frame, Frame).
+frame_to_asserts(Frame, Asserts):- get_frame(Frame, Asserts),!.
 
 frame_defaults([], _Frame):-!.
 frame_defaults([FrameArg| FrameArgS], Frame):-
@@ -123,8 +201,8 @@ frame_arg_to_slot(FrameArg, Name=NewArg):-
    (member(var(NewArg), FrameArg);member(slot(NewArg), FrameArg)), !,
    (member(pred(Name), FrameArg);member(prep(Name), FrameArg);member(default(Name), FrameArg)), !.
 
-
-frmprint(Frame) :-
+frmprint(Frame) :- get_frame(Frame,GFrame),frmprint0(GFrame).
+frmprint0(Frame) :-
     %catch(make_pretty(I, O), _, I=O),
     guess_pretty(Frame),
     predsort(frcmp, Frame, FrameA),
@@ -170,7 +248,57 @@ frcmp(P1, P2, Cmp):- arg(N, P1, F1), arg(N, P2, F2), frcmp(F1, F2, Cmp), Cmp \= 
 frcmp(P1, P2, Cmp):- compare(P1, P2, Cmp).
 %reframed_call( Pred, Doer, [give, Object, to, Recipient], give(Doer, Object, Recipient), _Mem):- !.
 
-:- fixup_exports.
 
+
+sUbst_each(A, [NV|List], D) :-
+    (   NV=..[_, N, V]
+    ->  true
+    ;   NV=..[N, V]
+    ),
+    !,
+    sUbst(A, N, V, M),
+    sUbst_each(M, List, D).
+sUbst_each(A, _, A).
+
+
+
+
+sUbst(A, B, C, D) :-
+    notrace(nd_sUbst(A, B, C, D0)),
+    on_x_debug(D=D0), !.
+
+
+
+
+nd_sUbst(Var, VarS, SUB, SUB) :-
+    Var==VarS,
+    !.
+nd_sUbst(Var, _, _, Var) :-
+    (\+ compound(Var); Var = '$VAR'(_)),
+    !.
+
+nd_sUbst([H|P], X, Sk, [H1|P1]) :- !, 
+    nd_sUbst(H, X, Sk, H1), 
+    nd_sUbst(P, X, Sk, P1).
+
+nd_sUbst(P, X, Sk, P1) :-
+    compound_name_arguments(P, Fc, Args),
+    nd_sUbst2(X, Sk, Fc, 0, [Fc|Args], [RFc|RArgs]),
+    compound_name_arguments(P1, RFc, RArgs).
+
+nd_sUbst2(_, _, _, _, [], []):-!.
+nd_sUbst2(X, Sk, Fc, N, [A|Args], [R|RArgs]):-
+  subst_arg(X, Sk, Fc, N, A, R),
+  N1 is N + 1,
+  nd_sUbst2(X, Sk, Fc, N1, Args, RArgs).
+
+subst_arg(X, Sk, Fc, N, A, R):- \+ skipped_replace(Fc,N), nd_sUbst(A, X, Sk, R).
+subst_arg(_,  _,  _, _, A, A).
+
+skipped_replace('$VAR',_).
+skipped_replace('frame_var',1).
+skipped_replace('cg_name',2).
+
+:- fixup_exports.
 
 

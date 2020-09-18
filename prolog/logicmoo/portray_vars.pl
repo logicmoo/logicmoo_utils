@@ -196,13 +196,32 @@ pretty_numbervars(Term, TermO):-
   (guess_pretty(Term1),
    source_variables_lwv(Term1,Vs),
    copy_term(Term+Vs,TermO+Vs2, _),
-   implode_varnames(Vs2))),!.
+   implode_varnames_pred(to_var_dollar, Vs2))),!.
 
-implode_varnames(V):- var(V),!, ignore((get_var_name(V,Name),V='$VAR'(Name))),!.
-implode_varnames(G):- ground(G),!.
-implode_varnames(N=V):- atomic(N),!, ignore(V='$VAR'(N)),!.
-implode_varnames([NV|Vars]):- implode_varnames(NV), implode_varnames(Vars).
-implode_varnames(G):- term_variables(G,Vs),maplist(implode_varnames,Vs).
+
+ground_variables_as_atoms(_Pred,[],_Vars):-!.
+ground_variables_as_atoms(_Pred,_,[]):-!.
+ground_variables_as_atoms(Pred,Vs,[N=V|Vars]):-
+  ground_variables_as_atoms(Pred,Vs,Vars),
+  (member_eq0(V, Vs) -> call(Pred,N,V) ; true).
+
+implode_varnames_as_atoms(Term):-
+   nb_current('$variable_names',Vars), 
+   term_variables(Term,Vs),!,
+   ground_variables_as_atoms(to_var_atom,Vs,Vars).
+
+to_var_dollar(Name,V):- ignore(V='$VAR'(Name)).
+to_var_atom(Name,V):- ignore(V=Name).
+print_var_nv(N,V):- wdmsg(N=V).
+
+:- meta_predicate(implode_varnames_pred(2,+)).
+
+implode_varnames(Term):- implode_varnames_pred(to_var_dollar,Term).
+implode_varnames_pred(P2, V):- var(V),!, ignore((get_var_name(V,Name),call(P2,Name,V))),!.
+implode_varnames_pred(_, G):- ground(G),!.
+implode_varnames_pred(P2, N=V):- atomic(N),!, ignore(call(P2,N,V)),!.
+implode_varnames_pred(P2, [NV|Vars]):- implode_varnames_pred(P2, NV), implode_varnames_pred(P2, Vars).
+implode_varnames_pred(P2, G):- term_variables(G,Vs),maplist(implode_varnames_pred(P2),Vs).
   
 
 guess_pretty(H):- pretty_enough(H), !.
