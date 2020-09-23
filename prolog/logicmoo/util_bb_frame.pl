@@ -10,6 +10,7 @@
 % ===================================================================
 :- module(logicmoo_util_bb_frame, []).
 
+:- use_module(pretty_clauses).
 
 push_frame(Info, Frame):- var(Frame), !, gensym(frame, F), Frame = [lbl(F)], push_frame(Info, Frame).
 push_frame(Info, cg(Frame)):- !, push_frame(Info, Frame),!.
@@ -202,13 +203,14 @@ frame_arg_to_slot(FrameArg, Name=NewArg):-
    (member(pred(Name), FrameArg);member(prep(Name), FrameArg);member(default(Name), FrameArg)), !.
 
 frmprint(Frame) :- get_frame(Frame,GFrame),frmprint0(GFrame).
+frmprint0(Frame) :- \+ is_list(Frame),!,frmprint_e(Frame).
 frmprint0(Frame) :-
     %catch(make_pretty(I, O), _, I=O),
     guess_pretty(Frame),
     predsort(frcmp, Frame, FrameA),
     reverse(FrameA, FrameO),
-    maplist(frmprint_e, FrameO).
-frmprint_e(Frame) :- format('~N  ', []), fmt90(Frame).
+    frmprint_e(FrameO).
+frmprint_e(Frame) :- with_output_to(atom(A),print_tree(Frame)), format('~N~w~n', [A]).
 
 sortDeref(P, PP):- \+ compound(P), !, P=PP.
 %sortDeref(isa(X, Y), visa(X, Y)):-!.
@@ -238,14 +240,15 @@ correct_normals(P, Normals):- P=..[F, A1, A2|List], wrapper_funct_correction(F),
   correct_normals([P1|P2], Normals).
 correct_normals(Normal, [Normal]).
 
-frcmp(P1, P2, Cmp):- (\+ compound(P1) ; \+ compound(P2)), !, compare(P1, P2, Cmp).
-frcmp(P1, P2, Cmp):- N=1, (arg(N, P1, A);arg(N, P2, A)), is_list(A), !, compare(P1, P2, Cmp).
-frcmp(P2, P1, Cmp):- sortDeref(P1, PP1)->P1\=@=PP1, !, frcmp(P2, PP1, Cmp).
-frcmp(P1, P2, Cmp):- sortDeref(P1, PP1)->P1\=@=PP1, !, frcmp(PP1, P2, Cmp).
-frcmp(P1, P2, Cmp):- N=1, arg(N, P1, F1), arg(N, P2, F2), F1==F2, !, compare(P1, P2, Cmp).
-frcmp(P1, P2, Cmp):- safe_functor(P1, F1, _), safe_functor(P2, F2, _), F1\==F2, compare(F1, F2, Cmp), Cmp \= (=), !.
-frcmp(P1, P2, Cmp):- arg(N, P1, F1), arg(N, P2, F2), frcmp(F1, F2, Cmp), Cmp \= (=), !.
-frcmp(P1, P2, Cmp):- compare(P1, P2, Cmp).
+
+frcmp(Cmp, P1, P2):- (\+ compound(P1) ; \+ compound(P2)), !, compare(Cmp, P1, P2).
+frcmp(Cmp, P1, P2):- N=1, (arg(N, P1, A);arg(N, P2, A)), is_list(A), !, compare(Cmp, P1, P2).
+frcmp(Cmp, P2, P1):- sortDeref(P1, PP1)->P1\=@=PP1, !, frcmp(Cmp, P2, PP1).
+frcmp(Cmp, P1, P2):- sortDeref(P1, PP1)->P1\=@=PP1, !, frcmp(Cmp, PP1, P2).
+frcmp(Cmp, P1, P2):- N=1, arg(N, P1, F1), arg(N, P2, F2), F1==F2, !, compare(Cmp, P1, P2).
+frcmp(Cmp, P1, P2):- safe_functor(P1, F1, _), safe_functor(P2, F2, _), F1\==F2, compare(Cmp, F1, F2), Cmp \= (=), !.
+frcmp(Cmp, P1, P2):- arg(N, P1, F1), arg(N, P2, F2), frcmp(Cmp, F1, F2), Cmp \= (=), !.
+frcmp(Cmp, P1, P2):- compare(Cmp, P1, P2).
 %reframed_call( Pred, Doer, [give, Object, to, Recipient], give(Doer, Object, Recipient), _Mem):- !.
 
 
@@ -298,6 +301,7 @@ subst_arg(_,  _,  _, _, A, A).
 skipped_replace('$VAR',_).
 skipped_replace('frame_var',1).
 skipped_replace('cg_name',2).
+skipped_replace('cg_values',2).
 
 :- fixup_exports.
 

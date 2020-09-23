@@ -62,9 +62,11 @@ debug_var(X,Y):-  quietly(must_or_rtrace(debug_var0(X,Y))).
 debug_var(Sufix,X,Y):- quietly((flatten([X,Sufix],XS),debug_var(XS,Y))).
 maybe_debug_var(X,Y):- quietly(must_or_rtrace(may_debug_var(X,Y))).
 
-p_n_atom(Cmpd,UP):- sub_term(Atom,Cmpd),nonvar(Atom),\+ number(Atom), Atom\==[], catch(p_n_atom0(Atom,UP),_,fail),!.
-p_n_atom(Cmpd,UP):- Cmpd=='', UP='',!.
-p_n_atom(Cmpd,UP):- term_to_atom(Cmpd,Atom),p_n_atom0(Atom,UP),!.
+p_n_atom(Cmpd,UPO):- p_n_atom1(Cmpd,UP),toPropercase(UP,UPO),!.
+p_n_atom1(Cmpd,UP):- compound(Cmpd), sub_term(Atom,Cmpd),nonvar(Atom),\+ number(Atom), Atom\==[], catch(p_n_atom0(Atom,UP),_,fail),!.
+p_n_atom1(Cmpd,UP):- Cmpd=='', UP='',!.
+p_n_atom1(Cmpd,UP):- number(Cmpd),!,format(atom(UP),"_Num~w_",[Cmpd]).
+p_n_atom1(Cmpd,UP):- term_to_atom(Cmpd,Atom),p_n_atom0(Atom,UP),!.
 
 filter_var_chars([58|X],[107, 119, 95|Y]):- filter_var_chars_trim_95(X,Y).
 filter_var_chars([95|X],[95|Y]):- !, filter_var_chars_trim_95(X,Y).
@@ -304,8 +306,8 @@ pretty_enough(H):- ground(H), !.
 pretty_enough(H):- \+ compound(H),!. % may_debug_var(F,'_Call',H).
 pretty_enough(H):- compound_name_arity(H,_,0), !.
 
-name_one(V,R):- var(V), ground(R), may_debug_var(R,V).
-name_one(R,V):- var(V), ground(R), may_debug_var(R,V).
+name_one(V,R):- var(V), ground(R), debug_var(R,V).
+name_one(R,V):- var(V), ground(R), debug_var(R,V).
 name_one(_,_).
 
 pretty1(H):- pretty_enough(H),!.
@@ -325,6 +327,11 @@ pretty1(debug_var(R,V)):- may_debug_var(R,V).
 pretty1(bv(R,V)):- name_one(V,R).
 pretty1(isa(V,R)):- name_one(V,R).
 pretty1(iza(V,R)):- name_one(V,R).
+pretty1(cg_name(V,R)):- name_one(V,R).
+pretty1(cg_type(V,R)):- name_one(V,R).
+pretty1(cg_equal(V,R)):- name_one(V,R).
+pretty1(cg_quantz(V,R)):- name_one(V,R).
+pretty1(frame_var(V,R)):- name_one(V,R).
 pretty1(pred(V,See,_,_)):- debug_var(See,V).
 pretty1(rel(V,_,On,_)):- debug_var([On,'_'],V).
 pretty1(card(V,Num,R)):- ground(Num:R),atomic_list_concat(['_',R,'_',Num],Eq_2),debug_var(Eq_2,V),!.

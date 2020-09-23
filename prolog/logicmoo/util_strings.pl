@@ -768,7 +768,9 @@ first_char_to_lower(CX,Y):- name(CX,[S|SS]),char_type(S,to_upper(NA)),name(NA,[N
 %
 % Converted To Titlecase.
 %
-to_titlecase(CX,Y):- sub_string(CX,1,_,0,Z),string_lower(Z,L), name(CX,[S|_]),char_type(S,to_lower(NA)),atom_concat(NA,L,Y).
+to_titlecase(CX,Y):- sub_string(CX,1,_,0,Z),string_lower(Z,L), name(CX,[S|_]),char_type(S,to_lower(NA)),atom_concat(NA,L,Y),!.
+to_titlecase('',''):-!.
+to_titlecase(CX,Y):- first_char_to_upper(CX,Y).
 
 
 %= 	 	 

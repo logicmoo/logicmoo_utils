@@ -19,10 +19,10 @@
 :- meta_predicate with_op_cleanup(*,*,*,0).
 
 
-str_repl(F,R,I,O):- if_string_repl(I,F,R,O),!.
-str_repl(_,_,I,I).
+str_repl(F,R,Tab,O):- if_string_repl(Tab,F,R,O),!.
+str_repl(_,_,Tab,Tab).
 
-replcterm(F,R,I,O):- subst(I,F,R,O),!.
+replcterm(F,R,Tab,O):- subst(Tab,F,R,O),!.
 
 if_string_repl(T, B, A, NewT):-   
    atomics_to_string(List, B, T), List=[_,_|_], !,
@@ -294,6 +294,8 @@ maybe_o_s_l.
 output_line_count(L):- nb_current('$ec_output_stream',Outs),is_stream(Outs),line_count(Outs,L).
 output_line_count(L):- line_count(current_output,L).
 
+output_line_position(L):- line_position(current_output,L).
+
 :- dynamic(ec_reader:last_output_lc/3).
 ec_reader:last_output_lc(0,foo,bar).
 
@@ -369,6 +371,9 @@ any_line_count(_,0).
 /* Print term as a tree */
 
 :- export(print_tree/1).
+:- export(print_tree/2).
+:- export(prefix_spaces/1).
+
 
 
 pt_nl:- nl.
@@ -376,97 +381,117 @@ pt_nl:- nl.
 :- dynamic(pretty_clauses:goal_expansion/2).
 % pretty_clauses:goal_expansion(pt_nl,(write(S:L),nl)):- source_location(S,L).
 
-print_tree(T) :- as_is(T),line_position(current_output,0),!,format('~p~n',[T]),!.
-% print_tree(T) :- as_is(T),line_position(current_output,0),may_tab(1),format('~N~p',[T]),!.
-print_tree(T) :-
-  line_position(current_output,Was),
-   ignore((numbervars(T,111,[attvar(bind)]),
-   pt0([],'',T,0),nop(pt_nl), fail)),
-   line_position(current_output,Now),
-   nop(Now==Was -> true ; nl).
+print_tree(Term) :- must_or_rtrace(( guess_pretty(Term),print_tree(Term, '.'))).
+print_tree(Term, Final) :- print_tree0(Final,Term).
 
-may_tab(A):- line_position(current_output,0), tab(A),!.
-may_tab(_):- write('  ').
+portray_with_vars(A):- (nb_current('$variable_names',Vs)-> true ; Vs=[]), 
+  write_term(A, [partial(true),portrayed(true),quoted(true),variable_names(Vs)]).
 
+print_tree0(Final,Term) :-
+   output_line_position(Was), 
+   print_tree0(Final,Term, Was),
+   output_line_position(Now),
+   nop((Now==Was -> true ; (nl,format('~t~*|', [Was])))),
+   !.
+
+% print_tree0(Final,Term) :- as_is(Term),line_position(current_output,0),prefix_spaces(1),format('~N~p',[Term]),!.
+print_tree0(Final,Term,Tab) :- \+ as_is(Term), pt0([],Final, Term, Tab), !.
+print_tree0(Final,Term,Tab):- prefix_spaces(Tab), format('~@~w',[portray_with_vars(Term),Final]),!.
+
+
+prefix_spaces(Tab):- output_line_position(Now), Now > Tab, !,nl, prefix_spaces(Tab).
+prefix_spaces(Tab):- output_line_position(Now), Need is Tab - Now, format('~t~*|', [Need]).
 
 format_functor(F):- upcase_atom(F,U), ((F==U,current_op(_,_,F)) -> format("'~w'",[F]) ; format("~q",[F])).
 
 is_list_functor(F):- F == lf.
 
-inperent([In|_],TTs,T,Ts):- \+ is_list_functor(In),
-      TTs=..[In,T,Ts], 
-      functor(TTsS,In,2),     
-     ((nonvar(T), T=TTsS);(nonvar(Ts), Ts=TTsS)).
+inperent([F|_],TTs,Term,Ts):- fail, \+ is_list_functor(F),
+      TTs=..[F,Term,Ts], 
+      functor(TTsS,F,2),     
+     ((nonvar(Term), Term=TTsS);(nonvar(Ts), Ts=TTsS)).
 
-pt0(_,LC,A,I) :-
-   as_is(A), !,
-   may_tab(I), write_simple(A),write(LC), nop(pt_nl).
+pt0(_,Final,Term,Tab) :- %  \+ compound(Term),
+   as_is(Term), !,
+   prefix_spaces(Tab), write_simple(Term),write(Final), nop(pt_nl).
 
 /*
-pt0(In,LC,TTs,I) :- 
-   inperent(In,TTs,T,Ts),
-   I0 is I-3,
-   pt0(In,LC,T,I0),   
-   pt0(In,LC,Ts,I).
+pt0(FS,Final,TTs,Tab) :- 
+   inperent(FS,TTs,T,Ts),
+   I0 is Tab-3,
+   pt0(FS,Final,T,I0),   
+   pt0(FS,Final,Ts,Tab).
 */
 
-pt0(In,LC,[T|Ts],I) :- !,
-  may_tab(I),write('['),
-  I2 is I+2,
-  I1 is I+1,
-   pt0(In,',',T,I1),
-   format(atom(NLC),'  ]~w',[LC]),   
-   pt1([lf|In],NLC,Ts,I2),!.
+pt0(FS,Final,[T|Ts],Tab) :- !,
+  prefix_spaces(Tab),write('[ '),
+   I2 is Tab+2,
+   pt0(FS,'',T,I2),
+   format(atom(NLC),' ]~w',[Final]),   
+   pt_args([lf|FS],NLC,Ts,I2),!.
 
-pt0(In,LC,q(E,V,G),I):- atom(E), !, T=..[E,V,G],!, pt0(In,LC,T,I).
+pt0(FS,Final,q(E,V,G),Tab):- atom(E), !, T=..[E,V,G],!, pt0(FS,Final,T,Tab).
 
-pt0(In,LC,T,I) :- T=..[F,A], !,
-   may_tab(I), format_functor(F),format('(',[]),
-   I0 is I+1, format(atom(LC2),')~w',[LC]),   
-   pt1([F|In],LC2,[A],I0).
+pt0(FS,Final,T,Tab) :- !,
+   T=..[F,A|As],   
+   (((FS==F, F == & )
+     -> (I0 is Tab+1,LCO='~w' )
+      ; (prefix_spaces(Tab), format_functor(F),format('(',[]), I0 is Tab+3, pt_nl, LCO=')~w'))),
+   format(atom(LC2),LCO,[Final]),
+   pt0([F|FS],'',A,I0),
+   pt_args([F|FS],LC2,As,I0).
+/*
 
-pt0(In, LC,T,I) :-    
-   T=..[F,A0,A|As], as_is(A0), append([L1|Left],[R|Rest],[A|As]), \+ is_arity_lt1(R), !,
-   may_tab(I), format_functor(F),format('( ',[]),
+pt0(FS,Final,T,Tab) :- fail,  T=..[F,A], !,
+   prefix_spaces(Tab), format_functor(F),format('(',[]),
+   I0 is Tab+1, format(atom(LC2),')~w',[Final]),   
+   pt_args([F|FS],LC2,[A],I0).
+
+pt0(FS, Final,T,Tab) :- fail,   
+   T=..[F,A0,A|As], is_arity_lt1(A0), append([L1|Left],[R|Rest],[A|As]), \+ is_arity_lt1(R), !,
+   prefix_spaces(Tab), format_functor(F),format('( ',[]),
    write_simple(A0), write_simple_each([L1|Left]), format(', '), pt_nl,
-   I0 is I+3, format(atom(LC2),')~w',[LC]),   
-   pt1([F|In],LC2,[R|Rest],I0).
+   I0 is Tab+3, format(atom(LC2),')~w',[Final]),   
+   pt_args([F|FS],LC2,[R|Rest],I0).
 
 
-pt0(In,LC,T,I) :- T=..[F,A,B|As], is_arity_lt1(A), !, 
-   may_tab(I), format_functor(F), format('( ~p,',[A]), pt_nl,
-   I0 is I+2, format(atom(LC2),')~w',[LC]),
-   pt1([F|In],LC2,[B|As],I0).
+pt0(FS,Final,T,Tab) :- fail,  T=..[F,A,B|As], is_arity_lt1(A), !, 
+   prefix_spaces(Tab), format_functor(F), format('( ~@,',[portray_with_vars(A)]), pt_nl,
+   I0 is Tab+2, format(atom(LC2),')~w',[Final]),
+   pt_args([F|FS],LC2,[B|As],I0).
+*/
 
-pt0(In,LC,T,I) :- !,
-   T=..[F|As],   
-   (((In==F, F == & )
-     -> (I0 is I+1,LCO='~w' )
-      ; (may_tab(I), format_functor(F),format('(',[]), I0 is I+3, pt_nl, LCO=')~w'))),
-   format(atom(LC2),LCO,[LC]),
-   pt1([F|In],LC2,As,I0).
+splice_off([A0,A|As],[A0|Left],[R|Rest]):- 
+   is_arity_lt1(A0), append(Left,[R|Rest],[A|As]), 
+    Rest\==[] , %  is_list(Rest),
+   ( (\+ is_arity_lt1(R)) ; (length(Left,Len),Len>=3)),!.
 
-pt1(_In,_LC,[],_) :- !.
-pt1( In, LC,[A],I) :- !,
-   pt0(In,LC,A,I).
-pt1( In, LC,[A0,A|As],I) :- is_arity_lt1(A0), append([L1|Left],[R|Rest],[A|As]), Rest\==[], 
-   is_list(Rest), \+ is_arity_lt1(R), !,
-   may_tab(I), write_simple(A0), write_simple_each([L1|Left]), pt_nl,
-   pt0([lf|In],',',R,I),
-   pt1([lf|In],LC,Rest,I).  
-pt1( In, LC,[A|As],I) :- !,
-   pt0([lf|In],',',A,I),
-   pt1([lf|In],LC,As,I).
+pt_args( In, Final,Var,Tab):- Var\==[], is_arity_lt1(Var), write(' | '), pt0(In,Final,Var,Tab).
+pt_args(_In, Final,[],_) :- !, write(Final).
+pt_args( FS, Final,[A|R],Tab) :- R==[], !,  write(', '), prefix_spaces(Tab), pt0(FS,Final,A,Tab).
+pt_args( FS, Final,[A0,A|As],Tab) :- 
+   splice_off([A0,A|As],[L1|Left],[R|Rest]), !, 
+   write(', '), prefix_spaces(Tab), write_simple(A0), write_simple_each([L1|Left]), 
+   output_line_position(New), write(', '),
+   nl, 
+   Avr is round(((New - Tab)/2 + Tab)) + 4, !,
+   prefix_spaces(Avr), pt0([lf|FS],'',R,Avr),
+   pt_args([lf|FS],Final,Rest,Avr).  
+pt_args( FS, Final,[A|As],Tab) :- !,  write(', '), prefix_spaces(Tab), 
+   pt0([lf|FS],'',A,Tab),
+   pt_args([lf|FS],Final,As,Tab).
 
 
 
 is_arity_lt1(A) :- \+ compound(A),!.
 is_arity_lt1(A) :- compound_name_arity(A,_,0),!.
 is_arity_lt1(A) :- functor(A,'$VAR',_),!.
+is_arity_lt1(S) :- is_charlist(S),!.
+is_arity_lt1(S) :- is_codelist(S),!.
 
 as_is(V):- var(V).
 as_is(A) :- is_arity_lt1(A), !.
-as_is(A) :- is_list(A),length(A,L),L<2,!.
+as_is([A]) :- is_list(A),length(A,L),L<2,!.
 as_is(A) :- functor(A,F,_), simple_f(F).
 as_is(A) :- functor(A,F,2), simple_fs(F),arg(2,A,One),atomic(One),!.
 as_is('_'(_)) :- !.
@@ -487,16 +512,13 @@ simple_f(isa).
 simple_f(HasSpace):- atom_contains(HasSpace,' ').
 
 simple_arg(S):- (nvar(S) ; \+ compound(S)),!.
-simple_arg(S):- S=[_,A], simple_arg(A), !.
+%simple_arg(S):- S=[_,A], simple_arg(A), !.
 simple_arg(S):- \+ (arg(_,S,Var), compound(Var), \+ nvar(Var)).
 
 nvar(S):- \+ is_arity_lt1(S)-> functor(S,'$VAR',_); var(S).
 
-
-
-% write_simple(A):- is_arity_lt2(A),!, format('~p',[A]).
-write_simple(A):- is_arity_lt1(A),!, format('~q',[A]).
-write_simple(A):- format('~p',[A]).
+%write_simple(A):- is_arity_lt1(A),!, portray_with_vars(A).
+write_simple(A):- portray_with_vars(A).
 
 write_simple_each([]).
 write_simple_each([A0|Left]):-  format(', '), write_simple(A0), write_simple_each(Left).
