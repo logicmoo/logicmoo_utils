@@ -93,7 +93,7 @@ trusted_redo_call_cleanup(Setup,Goal,Cleanup):-
             (Setup,notrace(nb_setarg(1,HdnCleanup,Cleanup)),notrace(fail))))),
         HdnCleanup).
 
-:- '$hide'(trusted_redo_call_cleanup(_,_,_)).
+:- '$hide'(trusted_redo_call_cleanup/3).
 
 
 %! each_call_catcher_cleanup(:Setup, :Goal, +Catcher, :Cleanup).

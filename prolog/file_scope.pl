@@ -290,7 +290,8 @@ file_option_to_db(Option,DB):-
   loading_source_file(File),!,
   DBP=..[Option,File],
   DB=t_l:DBP,
-  ( predicate_property(DB,defined)->true;(thread_local(DB),volatile(DB))).
+  MFA=t_l:Option/1,
+  ( predicate_property(DB,defined)->true;(thread_local(MFA),volatile(MFA))).
 
 enable_in_file(Option):- file_option_to_db(Option,DB),assert_if_new(DB),set_prolog_flag_until_eof(Option,true).
 

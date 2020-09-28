@@ -96,15 +96,16 @@ old_get_predicate_attribute(MA, Name, Val) :-
                        */
 
 :- meta_predicate(totally_hide(:)).
-totally_hide(M:F/A):- cfunctor(P,F,A),!,totally_hide(M:P).
-totally_hide(MP):- strip_module(MP,CM,P),
-   (predicate_property(MP,imported_from(M));M=CM),
+
+totally_hide(CM:F/A):- cfunctor(P,F,A),!,
+   (predicate_property(CM:P,imported_from(M));M=CM),
    Pred=M:P,!,
    % (current_prolog_flag(runtime_debug,N), N>2) -> unhide(Pred) ; 
   '$with_unlocked_pred_local'(Pred,
-   (('$hide'(Pred),'old_set_predicate_attribute'(Pred, trace, 0),
+   (('$hide'(M:F/A),'old_set_predicate_attribute'(Pred, trace, 0),
    'old_set_predicate_attribute'(Pred, iso, 1),
    'old_set_predicate_attribute'(Pred, hide_childs, 1)))).
+totally_hide(MP):- strip_module(MP,CM,P),cfunctor(P,F,A),!,totally_hide(CM:F/A).
 
 set_pred_attrs(M:F/A,List):- cfunctor(P,F,A),!,set_pred_attrs(M:P,List).
 set_pred_attrs(MP,N=V):- !, strip_module(MP,CM,P),

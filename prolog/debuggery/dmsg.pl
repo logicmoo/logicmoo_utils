@@ -1868,6 +1868,6 @@ cls:- ignore(catch(system:shell(cls,0),_,fail)).
   ignore(((\+ atom_concat('$',_,F),(export(F/A) , current_predicate(system:F/A)->true; system:import(M:F/A))))),
   ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A]))))))))).
 
-:- '$hide'(wdmsg(_)).
-:- '$hide'(wdmsg(_,_)).
+:- '$hide'(wdmsg/1).
+:- '$hide'(wdmsg/2).
 

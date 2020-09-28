@@ -2657,7 +2657,7 @@ prolog_current_frames(Each):- prolog_current_frame(Frame),prolog_current_frame_o
 prolog_current_frame_or_parent(Frame,Each):- Each=Frame; 
   (prolog_frame_attribute(Frame,parent,Parent),prolog_current_frame_or_parent(Parent,Each)).
 
-:- module_transparent(caller_module(-)).
+:- module_transparent(caller_module/1).
 
 
 
@@ -2676,7 +2676,7 @@ caller_module(Module):-caller_module2(Module,v(function_expansion,func,user,'$to
 %
 caller_module2(Module,Skipped):- module_stack(Module,_), \+ arg(_,Skipped,Module).
 
-:- module_transparent(module_stack(-,-)).
+:- module_transparent(module_stack/2).
 
 
 

@@ -243,7 +243,8 @@ with_no_retry_undefined(Goal):- locally(set_prolog_flag(retry_undefined, none),
 
 
 % Every module has it''s own
-chk_retry_undefined(CallerMt,'$pldoc',4):- multifile(CallerMt:'$pldoc'/4),discontiguous(CallerMt:'$pldoc'/4),dynamic(CallerMt:'$pldoc'/4),!.
+chk_retry_undefined(CallerMt,'$pldoc',4):- multifile(CallerMt:'$pldoc'/4),discontiguous(CallerMt:'$pldoc'/4),
+ dynamic(CallerMt:'$pldoc'/4),!.
 % System-like Autoloads (TODO: confirm these can be removed)
 chk_retry_undefined(CallerMt,debug,1):- CallerMt:use_module(CallerMt:library(debug)),!.
 chk_retry_undefined(CallerMt,debugging,1):- CallerMt:use_module(CallerMt:library(debug)),!.
@@ -466,7 +467,7 @@ make_as_dynamic_realy(Reason,M,F,A):-
    M:multifile(M:F/A),
    M:discontiguous(M:F/A),
    M:module_transparent(M:F/A),
-   (is_static_predicate(M:PI) -> true ; (predicate_property(M:PI,dynamic) -> true ; must(M:dynamic(M:PI)))),   
+   (is_static_predicate(M:PI) -> true ; (predicate_property(M:PI,dynamic) -> true ; must(M:dynamic(M:F/A)))),   
    public(M:F/A),
    nop(on_f_throw( (M:F/A)\== (baseKB:loaded_external_kbs/1))),
    nop(assertz_if_new(( M:PI :- (fail,infoF(createdFor(Reason)))))))).

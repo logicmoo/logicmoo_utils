@@ -302,7 +302,7 @@ hotrace(G):- quietly(G).
 
 
 :-thread_local(in_aiml_tag/1).
-:-thread_local(inLineNum).
+:-thread_local(inLineNum/0).
 
 skipOver(_).
 

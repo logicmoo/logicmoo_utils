@@ -936,8 +936,8 @@ logicmoo_base_port(Base):- app_argv1(One),\+ is_list(One),
 % ==============================================
 % Easier to trace while access_level system
 % ==============================================
-:- '$hide'('$toplevel':restore_debug).
-:- '$hide'('$toplevel':save_debug).
+:- '$hide'('$toplevel':restore_debug/0).
+:- '$hide'('$toplevel':save_debug/0).
 %:- '$hide'('$toplevel':residue_vars/2).
 :- '$hide'('system':deterministic/1).
 :- '$hide'(toplevel_call/2).

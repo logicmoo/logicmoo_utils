@@ -364,7 +364,7 @@ compile_dynamic(M, G):-
 
 maybe_dynamic(M,H):- predicate_property(M:H,static),!.
 maybe_dynamic(M,H):- predicate_property(M:H,dynamic),!.
-maybe_dynamic(M,H):- M:dynamic(M:H).
+maybe_dynamic(M,H):- functor(H,F,A),M:dynamic(M:F/A).
 
 
 

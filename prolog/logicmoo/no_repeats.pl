@@ -67,7 +67,7 @@ loop_check_nr(CL):- loop_check(no_repeats(CL)).
 
 % ===================================================================
 
-:- thread_local  tlbugger:attributedVars.
+:- thread_local  tlbugger:attributedVars/0.
 
 %  tlbugger:attributedVars.
 
