@@ -156,7 +156,7 @@ loading_source_file0(File):- t_l:pretend_loading_file(File).
 loading_source_file0(File):- prolog_load_context(source,File), prolog_load_context(file,File),!.
 loading_source_file0(File):- prolog_load_context(source,File), prolog_load_context(file,IFile),IFile\==File,!.
 loading_source_file0(File):- prolog_load_context(source,File). % maybe warn the above didnt catch it
-loading_source_file0(File):- prolog_load_context(file,File),break.
+loading_source_file0(File):- prolog_load_context(file,File),dumpST, break.
 loading_source_file0(File):- loading_file(File).
 loading_source_file0(File):- '$current_source_module'(Module),module_property(Module, file(File)).
 loading_source_file0(File):- 'context_module'(Module),module_property(Module, file(File)).

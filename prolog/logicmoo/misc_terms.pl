@@ -953,7 +953,7 @@ functor_h(':-'(Obj),F,A):- nonvar(Obj), !,functor_h(Obj,F,A).
 functor_h(Obj,F,0):- string(Obj),!,maybe_notrace(atom_string(F,Obj)).
 
 functor_h(Obj,Obj,0):- \+ compound(Obj),!.
-
+functor_h(Obj,F,0):- compound_name_arity(Obj,F,0),!.
 functor_h(Obj,F,A):-var(F),!,strip_module(Obj,_M,P),functor(P,F,A).
 functor_h(Obj,F,A):-functor(Obj,F,A).
 

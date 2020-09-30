@@ -244,7 +244,7 @@ guess_varnames(I,O):- guess_pretty1(I), guess_varnames2(I,O).
 guess_varnames2(I,O):-guess_varnames2(add_var_to_env_trimed,I,O).
 
 :- meta_predicate guess_varnames2(2,*,*).
-guess_varnames2(_Each,G,G):- \+ compound(G),!.
+guess_varnames2(_Each,G,G):- pretty_enough(G),!.
 guess_varnames2(Each, subrelation(V,N), subrelation(V,N)):- var(V), \+ variable_name(V,_), atomic(N),call(Each,N,V),!.
 guess_varnames2(Each, isNamed(V,N), isNamed(V,N)):- var(V), \+ variable_name(V,_), atomic(N),call(Each,N,V),!.
 guess_varnames2(Each, isNamed(V,H), isNamed(V,H)):- var(V), \+ variable_name(V,_),

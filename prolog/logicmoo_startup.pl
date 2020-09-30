@@ -34,6 +34,64 @@
           init_why/2,
           run_pending_inits/0]).
 
+:- dynamic   user:file_search_path/2.
+:- multifile user:file_search_path/2.
+
+:- if( \+ current_predicate(add_absolute_search_folder/2)).
+
+
+name_to_files(Spec, Files) :-
+    name_to_files(Spec, Files, true).
+name_to_files(Spec, Files, Exists) :-
+    name_to_files_(Spec, Files, Exists),
+    (   Files==[]
+    ->  print_message(warning, format('No match: ~w', [Spec])),
+        fail
+    ;   true
+    ).
+
+
+%    working_directory(Dir,Dir);prolog_load_context(directory,Dir)
+
+spec_to_files(Spec,Files):-
+    findall(File,
+            (   absolute_file_name(Spec,File,[ access(exist),file_type(directory),file_errors(fail),solutions(all)])
+            ;   absolute_file_name(Spec,File,[ access(exist),file_errors(fail),solutions(all)])), Files).
+
+name_to_files_(Spec, Files, _) :-
+ % prolog_load_context(directory,Dir),
+    compound(Spec),
+    compound_name_arity(Spec, _Alias, 1), !,
+    spec_to_files(Spec,Files).
+name_to_files_(Spec, Files, Exists) :-
+    use_module(library(shell)),
+    shell:file_name_to_atom(Spec, S1),
+    expand_file_name(S1, Files0),
+    (   Exists==true,
+        Files0==[S1],
+        \+ access_file(S1, exist)
+    ->  print_message(warning,format('"~w" does not exist', [S1])),
+        fail
+    ;   Files=Files0
+    ).
+
+
+with_abs_paths(Pred1, Path):- is_list(Path),!,maplist(with_abs_paths(Pred1),Path).
+with_abs_paths(Pred1, Path):- 
+ ((atom(Path), is_absolute_file_name(Path)) -> 
+ (wdmsg(with_abs_paths(Pred1,Path)),
+ call(Pred1,Path));
+ (must((forall((
+     (name_to_files(Path, MatchesL)*-> member(Matches,MatchesL) ; Path = Matches),
+    spec_to_files(Matches,AbsPath)),
+    with_abs_paths(Pred1,AbsPath)))))).
+
+ain_file_search_path(Name,Path):- 
+ (user:file_search_path(Name,Path) -> true ; asserta(user:file_search_path(Name,Path))).
+
+add_absolute_search_folder(Name,Path):- with_abs_paths(ain_file_search_path(Name), Path).
+
+:- endif.
 
 :- if(false).
 :- system:use_module(library(apply)).
