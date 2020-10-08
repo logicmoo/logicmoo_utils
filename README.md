@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/TeamSPoon/logicmoo_utils.svg)](https://travis-ci.org/TeamSPoon/logicmoo_utils) default
 
 
-## Installation using SWI-Prolog 7.5.x or later (due to duplicate transitive deps failing in earlier versions):
+## Installation using SWI-Prolog 8.1.x or later (due to duplicate transitive deps failing in earlier versions):
 
     `?- pack_install('https://github.com/TeamSPoon/logicmoo_utils.git'). `
 
