@@ -65,10 +65,22 @@ trim_stop(S,O):- sub_string(S, N, 1, 0, Last),
   (Last = "." -> sub_string(S, 0, N, 1, O); 
      ((Last="\n";Last="\r";Last=" ") -> (sub_string(S, 0, N, 1, Before),trim_stop(Before,O)) ; S=O)).
 
+clause_to_string_et(T,S):-
+ guess_varnames(T),
+ get_varname_list(Vs), 
+ print_et_to_string(T,S0,
+    [portrayed(true),portray(true),partial(false),% spacing(next_argument),
+     variable_names(Vs),
+     nl(false),fullstop(false),singletons(false)]),!,
+ trim_stop(S0,S),!.
+
 clause_to_string(T,S):- 
+ get_varname_list(Vs),
  with_output_to(string(S0), 
   prolog_listing:portray_clause(current_output,T,
-    [portrayed(false),partial(true),nl(false),fullstop(false),singletons(false)])),!,
+    [portrayed(false),variable_names(Vs),partial(true),nl(false),
+     % spacing(next_argument),
+     fullstop(false),singletons(false)])),!,
  trim_stop(S0,S).
 
 :- export(compound_gt/2).
@@ -83,13 +95,18 @@ print_e_to_string_b(H, S):-
 
 print_e_to_string_b(H, HS):- print_e_to_string(H, HS),!.
 
-print_e_to_string(T, Ops, S):- member(':-', Ops), !, clause_to_string(T,S).
-print_e_to_string(T, Ops, S):- member('-->', Ops), !, clause_to_string(T,S).
-
-print_e_to_string(T, Ops, S):- member('<-', Ops), !, 
-   subst(T,('<-'),(':-'),T0), 
+print_e_to_string(T, Ops, S):- member(Infix,['<-']), member(Infix, Ops), !, 
+   subst(T,Infix,(':-'),T0), 
    clause_to_string(T0,S0), !,
-   mid_pipe(S0,str_repl(':-','<-'),S).
+   mid_pipe(S0,str_repl(':-',Infix),S).
+print_e_to_string(T, Ops, S):- Pos=['<-','->','<->',':-'],  
+   member(Infix,Pos), select(Infix,Ops,Rest), member(Infix2, Pos),
+    \+ member(Infix2,Rest), !, 
+   subst(T,Infix,(':-'),T0), 
+   clause_to_string(T0,S0), !,
+   mid_pipe(S0,str_repl(':-',Infix),S).
+
+print_e_to_string(T, Ops, S):- member(E, Ops),member(E,[':-',',','not','-->']), !, clause_to_string(T,S).
 
 print_e_to_string(exists(Vars,H), _, S):-
   print_e_to_string(H, HS),
@@ -123,20 +140,28 @@ print_e_to_string(B, _, S):- is_list(B),  !,
   print_e_to_string((:- B), S0),  
   mid_pipe(S0,[str_repl(':-','')],S).  
 
-print_e_to_string(T, _Ops, S):-  is_list(T), print_et_to_string(T,S,[right_margin(80)]),!.
+print_e_to_string(T, _Ops, S):-  is_list(T), print_et_to_string(T,S,[right_margin(200)]),!.
 print_e_to_string(T, _Ops, S):-  must(print_et_to_string(T,S,[])).
 
 print_et_to_string(T,S,Options):-
   ttyflush,
+   Old = [numbervars(true),
+                  quoted(true),
+                  ignore_ops(false),
+                  no_lists(false),
+                  %spacing(next_argument),
+                  portray(true)],
+   swi_option:merge_options(Options,Old,WriteOpts),
+   PrintOpts = [output(current_output)|Options],
+                                 
   sformat(S, '~@',
     [(prolog_pretty_print:print_term(T, 
-             [   % left_margin(1),
-                 write_options([numbervars(true),
-                                quoted(true),
-                                portray(true)]),
-                 %  max_length(120),
-                 % indent_arguments(auto),
-                 output(current_output)|Options]),
+             [   %left_margin(1),
+                 %operators(true),
+                 %tab_width(2),
+                 %max_length(120),
+                 %indent_arguments(auto),                  
+                 write_options(WriteOpts)|PrintOpts]),
       ttyflush)]).
 
 
@@ -170,8 +195,8 @@ pprint_ecp_cmt(C, P):-
 pprint_ecp(C, P):- \+ is_output_lang(C), !, pprint_ecp_cmt(C, P).
 pprint_ecp(C, P):-
   maybe_mention_s_l(1),
-  echo_format('~N'),
-  pprint_ec_and_f(C, P, '.~n').
+  notrace((echo_format('~N'),
+  pprint_ec_and_f(C, P, '.~n'))).
 
 pprint_ec_and_f(C, P, AndF):-
   maybe_mention_s_l(2),
@@ -254,35 +279,41 @@ is_outputing_to_file:-
   current_output(S),
   stream_property(S,file_name(_)).
 
-put_out(Char):- put(Char),
-  (is_outputing_to_file-> put(user_error,Char);true).
+get_ansi_dest(S):- \+ is_outputing_to_file,!,current_output(S).
+get_ansi_dest(S):- S = user_error, !.
+get_ansi_dest(S):- S = user_output, !.
 
-real_format(Fmt, Args):- 
-  (is_outputing_to_file -> with_output_to(user_error, (ansi_format([hfg(magenta)], Fmt, Args),ttyflush)) ; true),
-  format(Fmt, Args),!,ttyflush.
-   
+with_output_to_ansi_dest(Goal):- 
+  get_ansi_dest(AnsiDest),with_output_to(AnsiDest,(Goal,ttyflush)),ttyflush.
   
-real_ansi_format(Ansi, Fmt, Args) :-  
-   (is_outputing_to_file -> format(Fmt, Args) ; true),
-   with_output_to(user_error,(ansi_format(Ansi, Fmt, Args),ttyflush)),
-   ttyflush.
+
+put_out(Char):- put(Char),
+  (is_outputing_to_file -> with_output_to_ansi_dest(put(Char)) ; true),!.
+  
+
+real_format(Fmt, Args):- listify(Args,ArgsL), real_ansi_format([hfg(magenta)], Fmt, ArgsL).
+
+real_ansi_format(Ansi, Fmt, Args):- listify(Args,ArgsL), real_ansi_format0(Ansi, Fmt, ArgsL).
+real_ansi_format0(Ansi, Fmt, Args) :-  \+ is_outputing_to_file, !, ansi_format(Ansi, Fmt, Args).
+real_ansi_format0(Ansi, Fmt, Args) :-  
+     format(Fmt, Args), with_output_to_ansi_dest(ansi_format(Ansi, Fmt, Args)).
 
 
 
 %s_l(F,L):- source_location(F,L),!.
 
-:- dynamic(last_s_l/2).
+:- dynamic(etmp:last_s_l/2).
 
 :- export(maybe_mention_s_l/1).
-maybe_mention_s_l(N):- last_s_l(B,L), LLL is L+N,  s_l(BB,LL), B==BB, !, (LLL<LL -> mention_s_l; (N==1->mention_o_s_l;true)).
+maybe_mention_s_l(N):- etmp:last_s_l(B,L), LLL is L+N,  s_l(BB,LL), B==BB, !, (LLL<LL -> mention_s_l; (N==1->mention_o_s_l;true)).
 maybe_mention_s_l(_):- mention_s_l.
 
 :- export(mention_s_l/0).
 mention_s_l:- 
-  s_l(F,L), real_ansi_format([fg(green)], '~N% From ~w~n', [F:L]),
+  s_l(F,L), % real_ansi_format([fg(green)], '~N% From ~w~n', [F:L]),
   (o_s_l_diff->mention_o_s_l;true),
-  retractall(last_s_l(F,_)),
-  asserta(last_s_l(F,L)).
+  retractall(etmp:last_s_l(F,_)),
+  asserta(etmp:last_s_l(F,L)).
 
 
 o_s_l_diff:- s_l(F2,L2), ec_reader:o_s_l(F1,L1), (F1 \= F2; ( Diff is abs(L1-L2), Diff > 0)), !.
@@ -299,18 +330,21 @@ output_line_position(L):- line_position(current_output,L).
 :- dynamic(ec_reader:last_output_lc/3).
 ec_reader:last_output_lc(0,foo,bar).
 
-mention_o_s_l:- ec_reader:o_s_l(F,L),!,out_o_s_l_1(F,L).
-mention_o_s_l:- s_l(F,L), was_s_l(F,L),! .
+mention_o_s_l:- ignore(do_mention_o_s_l),!.
+do_mention_o_s_l:- ec_reader:o_s_l(F,L),!,out_o_s_l_1(F,L).
+do_mention_o_s_l:- s_l(F,L), was_s_l(F,L),! .
 
 out_o_s_l_1(F,L):- ec_reader:last_output_lc(Was,F,L),
   output_line_count(OLC),
   Diff is abs(Was-OLC), Diff<6,!.
-out_o_s_l_1(F,L):- out_o_s_l_2(F,L).
+out_o_s_l_1(F,L):- out_o_s_l_2(F,L),!.
 out_o_s_l_2(F,L):- 
       retractall(ec_reader:last_output_lc(_,_,_)),
       output_line_count(OLC),
       asserta(ec_reader:last_output_lc(OLC,F,L)),
-      real_ansi_format([fg(green)], '~N~q.~n', [:- was_s_l(F,L)]),!.
+      (is_outputing_to_file -> 
+        (format('~N~q.~n', [:- was_s_l(F,L)]), with_output_to(user_error,(ansi_format([fg(green)], '~N% From ~w~n', [F:L]),ttyflush)))
+         ; (ansi_format([fg(green)], '~N% From ~w~n', [F:L]),ttyflush)),!.
 
 :- dynamic(ec_reader:o_s_l/2).
 :- export(was_s_l/2).
@@ -432,9 +466,28 @@ pt0(FS,Final,[T|Ts],Tab) :- !,
 
 pt0(FS,Final,q(E,V,G),Tab):- atom(E), !, T=..[E,V,G],!, pt0(FS,Final,T,Tab).
 
+pt0([Fs|FS],Final,T,Tab0) :- 
+   T=..[F,A,As], 
+   Fs == F,   
+   major_conj(F),
+   Tab is Tab0,
+   prefix_spaces(Tab0),write(' '),
+   sformat(FinA, " ~w ",[F]), print_tree(A,FinA),
+   format(atom(LC2),'~w',[Final]),
+   pt0([F|FS],LC2,As,Tab).
+
+pt0(FS,Final,T,Tab0) :- 
+   T=..[F,A,As], 
+   major_conj(F),
+   Tab is Tab0+1,
+   prefix_spaces(Tab0),write('('),
+   sformat(FinA, " ~w ",[F]), print_tree(A,FinA),
+   format(atom(LC2),')~w',[Final]),
+   pt0([F|FS],LC2,As,Tab).
+
 pt0(FS,Final,T,Tab) :- !,
    T=..[F,A|As],   
-   (((FS==F, F == & )
+   (((FS==F, major_conj(F) )
      -> (I0 is Tab+1,LCO='~w' )
       ; (prefix_spaces(Tab), format_functor(F),format('(',[]), I0 is Tab+3, pt_nl, LCO=')~w'))),
    format(atom(LC2),LCO,[Final]),
@@ -461,6 +514,9 @@ pt0(FS,Final,T,Tab) :- fail,  T=..[F,A,B|As], is_arity_lt1(A), !,
    pt_args([F|FS],LC2,[B|As],I0).
 */
 
+
+major_conj(F):-  (F == ',';F == ';';F=='&'),!.
+
 splice_off([A0,A|As],[A0|Left],[R|Rest]):- 
    is_arity_lt1(A0), append(Left,[R|Rest],[A|As]), 
     Rest\==[] , %  is_list(Rest),
@@ -485,6 +541,8 @@ pt_args( FS, Final,[A|As],Tab) :- !,  write(', '), prefix_spaces(Tab),
 
 is_arity_lt1(A) :- \+ compound(A),!.
 is_arity_lt1(A) :- compound_name_arity(A,_,0),!.
+is_arity_lt1(A) :- functor(A,'-',_),!.
+is_arity_lt1(A) :- functor(A,'+',_),!.
 is_arity_lt1(A) :- functor(A,'$VAR',_),!.
 is_arity_lt1(S) :- is_charlist(S),!.
 is_arity_lt1(S) :- is_codelist(S),!.
@@ -497,7 +555,9 @@ as_is(A) :- functor(A,F,2), simple_fs(F),arg(2,A,One),atomic(One),!.
 as_is('_'(_)) :- !.
 as_is(Q) :- is_quoted(Q).
    
+as_is(not(A)) :- !,as_is(A).
 as_is(A) :- A=..[_|S], maplist(is_arity_lt1,S), !.
+as_is(A) :- A=..[_,_|S], maplist(is_arity_lt1,S), !.
 % as_is(F):- simple_arg(F), !.
 
 is_quoted(Q):- nonvar(Q), fail, catch(call(call,quote80(Q)),_,fail),!.

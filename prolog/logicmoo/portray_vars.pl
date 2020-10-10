@@ -339,22 +339,24 @@ pretty1(H):-compound_name_arguments(H,_,ARGS),ignore(must_maplist_det(pretty1,AR
 
 pretty_two(H):- pretty_enough(H),!.
 pretty_two(H):- is_list(H), !, maplist(pretty_two,H).
-pretty_two(H):- compound_name_arguments(H,F,ARGS),
-   pretty_two(1,F,ARGS), !.
+pretty_two(H):- compound_name_arity(H,F,A),compound_name_arguments(H,F,ARGS),
+   pretty_two(1,F,A,ARGS), !.
 
-pretty_two(_,_,[]).
-pretty_two(N,F,[E|ARGS]):-  
+pretty_two(_,_,_,[]).
+pretty_two(N,F,A,[E|ARGS]):-  
   Np1 is N + 1,
-  ignore(maybe_nameable_arg(F,N,E)),
-  pretty_two(Np1,F,ARGS).
+  ignore(maybe_nameable_arg(F,A,N,E)),
+  pretty_two(Np1,F,A,ARGS).
 
-maybe_nameable_arg(F,N,E):- compound(E)-> pretty_two(E) ; 
- ((var(E),arg_type_decl_name(F,N,T))-> may_debug_var(T,E) ; true).
+maybe_nameable_arg(F,A,N,E):- compound(E)-> pretty_two(E) ; 
+ ((var(E),arg_type_decl_name(F,A,N,T))-> may_debug_var(T,E) ; true).
 
-arg_type_decl_name(holds_at,2,time).
-arg_type_decl_name(releasedAt,2,time).
-arg_type_decl_name(happens,2,maptime).
-arg_type_decl_name(at,2,location).
+ec_timed(EC23):- member(EC23,[holds_at,holds,releasedAt,happens]).
+arg_type_decl_name(happens,2,2,when).
+arg_type_decl_name(EC23,2,2,time_at):- ec_timed(EC23).
+arg_type_decl_name(EC23,3,2,time_from):- ec_timed(EC23).
+arg_type_decl_name(EC23,3,3,time_until):- ec_timed(EC23).
+arg_type_decl_name(at,2,2,tloc).
 
 :- meta_predicate(maplist_not_tail(1,*)).
 maplist_not_tail(_,ArgS):- var(ArgS),!.
