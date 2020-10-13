@@ -1119,6 +1119,7 @@ pack_upgrade_soft(Pack) :-
         pack_install(Pack,
                      [ url(LatestURL),
                        upgrade(true),
+                       interactive(false),
                        pack(Pack)
                      ])
     ;   print_message(informational, pack(up_to_date(Pack)))
