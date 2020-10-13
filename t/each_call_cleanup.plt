@@ -1,5 +1,6 @@
 
 
+:- use_module('../prolog/logicmoo_common').
 :- use_module(library(each_call_cleanup)).
 
 

@@ -1135,6 +1135,34 @@ pack_upgrade_soft :- pack_upgrade_soft(pfc), pack_upgrade_soft(logicmoo_utils), 
 :- system:import(pack_upgrade_soft/0).
 
 
+fix_deps(Pack-_Why):-
+  pack_install(Pack,[interactive(false)]),
+  %pack_info(Pack),
+  !.
+
+correct_unsatisfied_dependencies:-
+  prolog_pack:unsatisfied_dependencies(List),reverse(List,R),maplist(fix_deps,R).
+correct_unsatisfied_dependencies:-!.
+
+ensure_this_pack_installed_correctly:-
+  % pack_upgrade(logicmoo_utils),
+  % pack_install('https://github.com/TeamSPoon/predicate_streams.git',[silent(true),git(true),interactive(false)]),
+  pack_install(predicate_streams,[interactive(false)]),
+  pack_install(gvar_syntax,[interactive(false)]),
+  pack_install(dictoo,[interactive(false)]),
+  pack_list_installed,
+  correct_unsatisfied_dependencies,
+  !.
+
+ensure_this_pack_installed:- exists_source(library(debuggery/first)),!.
+ensure_this_pack_installed:- 
+  prolog_load_context(directory,Here),
+  absolute_file_name('../../',PackDir,[relative_to(Here),file_type(directory)]),
+  attach_packs(PackDir),
+  exists_source(library(debuggery/first)),!,
+  ensure_this_pack_installed_correctly.
+
+:- ensure_this_pack_installed.
 
 % :- pack_list_installed.
 

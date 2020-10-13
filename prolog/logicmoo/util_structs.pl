@@ -355,7 +355,7 @@ prop_get_try(Name, STRUCT,  Value, Ref):- STRUCT = mutable(Struct), !, prop_get_
 prop_get_map(_,    Dict,       _ ):- ( \+ \+ Dict=[] ),!, fail.
 prop_get_map(Name, Struct,  Value):- is_list(Struct),memberchk(Name=Value,Struct).
 prop_get_map(Name, Dict,    Value):- is_dict(Dict),!,get_dict(Name,Dict,Value).
-prop_get_map(Name, Dict,    Value):- is_rbtree(Dict),!,dtrace,nb_rb_get_node(Dict,Name,Value).
+prop_get_map(Name, Dict,    Value):- is_rbtree(Dict),!,nb_rb_get_node(Dict,Name,Value).
 prop_get_map(Name, Dict,    Value):- is_assoc(Dict),!,get_assoc(Dict,Name,Value).
 
 
@@ -397,7 +397,7 @@ prop_set(Call):- Call=..[P,A,B],prop_set(P,A,B).
 %
 % Prop Set.
 %
-prop_set(Name,Dict,Value):- (var(Name);var(Dict)),!,dtrace,trace_or_throw(var_prop_set(Name,Dict,Value)).
+prop_set(Name,Dict,Value):- (var(Name);var(Dict)),!,trace_or_throw(var_prop_set(Name,Dict,Value)).
 prop_set(_,     Dict, _ ):- ( \+ \+ Dict=[] ),!, fail.
 prop_set(Name,Dict,Value):- 
  member_arg_convert(Dict,Name,_,Value,NewValue) -> 
@@ -411,7 +411,7 @@ prop_set(Name,Dict,Value):-
 %
 % Prop Set Try.
 %
-prop_set_try(Name,Dict,Value,_):- (var(Name);var(Dict);var(Value)),!,dtrace,trace_or_throw(var_prop_set(Name,Dict,Value)).
+prop_set_try(Name,Dict,Value,_):- (var(Name);var(Dict);var(Value)),!,trace_or_throw(var_prop_set(Name,Dict,Value)).
 prop_set_try(_,    Dict,   _, _):- ( \+ \+ Dict=[] ),!, fail.
 prop_set_try([Name],Dict,Value,NewDict):-!, prop_set_try(Name,Dict,Value, NewDict).
 prop_set_try(Name, bb,   Value, _):- !, hooked_gvar_put(Name,Value).
@@ -430,7 +430,7 @@ prop_set_try( Name,Dict,Value, NewDict) :- is_dict(Dict),!,prop_set_dict_real(Na
 %
 % Prop Set Map.
 %
-prop_set_map(Name,Dict,Value):- (var(Name);var(Dict);var(Value)),!,dtrace,trace_or_throw(var_prop_set_map(Name,Dict,Value)).
+prop_set_map(Name,Dict,Value):- (var(Name);var(Dict);var(Value)),!,trace_or_throw(var_prop_set_map(Name,Dict,Value)).
 prop_set_map(sclass, STERM, Type):- STERM=sterm(Type,_), nb_setarg_ex(1,STERM,Type).
 prop_set_map(Name, STERM, Value):- STERM=sterm(_,List),
   nb_set_s2list(Name,List,Value,NewList),(List\==NewList -> nb_setarg_ex(2,STERM,NewList) ; true).
@@ -440,7 +440,7 @@ prop_set_map(Name,HDict,Value):- is_list(HDict), memberchk(sclass=_,HDict),!,nb_
 prop_set_map(Name,HDict,Value):- compound(HDict), HDict = mutable(Dict),
    must_det_l((prop_set_try(Name,Dict,Value,NewDict),(Dict == NewDict -> true ; (must(nonvar(NewDict)),nb_setarg_ex(1,HDict,NewDict))))).
 
-prop_set_map(Name,Dict,Value):- is_rbtree(Dict),!,dtrace, nb_rb_insert(Name,Dict,Value).
+prop_set_map(Name,Dict,Value):- is_rbtree(Dict),!,nb_rb_insert(Name,Dict,Value).
 prop_set_map(Name,List,Value):- is_list(List), !, nb_set_pairlist(Name,List,Value).
 prop_set_map(Index,Dict,Value):- integer(Index),!, nb_setarg_ex(Index,Dict,Value).
 prop_set_map(Name,Dict,Value):- functor(Dict,StructName,_),
@@ -596,7 +596,7 @@ merge_values(Old,Value,[Value,Old]).
 %
 % Non Backtackable Setarg Ex.
 %
-nb_setarg_ex(Name,Struct,New):-(var(Name);var(Struct);var(New)),!,dtrace,trace_or_throw(var_prop_set_map(Name,Struct,New)).
+nb_setarg_ex(Name,Struct,New):-(var(Name);var(Struct);var(New)),!,trace_or_throw(var_prop_set_map(Name,Struct,New)).
 nb_setarg_ex(Name,Struct,New):-arg(Name,Struct,Old),nb_setarg(Name,Struct,New),ignore(Old=New).
 
 

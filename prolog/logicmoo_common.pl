@@ -24,7 +24,7 @@
 :- discontiguous logicmoo_common:'$exported_op'/3.
 
 
-:- system:reexport(library(logicmoo_startup)).
+:- system:reexport((logicmoo_startup)).
 /*
 :- system:reexport(library(logicmoo/util_dlist)).
 :- system:reexport(library(logicmoo/attvar_reader)).
