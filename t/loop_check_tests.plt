@@ -1,18 +1,23 @@
 
-:- use_module(library(must_trace)).
-:- use_module(library(bugger)).
-:- ensure_loaded(library(ansimesg)).
+:- include(sanity_tests).
 
-:- set_prolog_flag(must_saftey,3).
-:- set_prolog_flag(must_debug,0).
-:- set_prolog_flag(must_speed,0).
+:- use_module(library(loop_check)).
 
-:- set_prolog_flag(must_type,keep_going).
+loop_inf0 :- loop_check(loop_inf0).
 
-test(0):- must(\+ fail).
+loop_inf1 :- loop_check(loop_inf2).
+loop_inf1 :- loop_inf0.
+loop_inf2 :- loop_inf1.
 
-test(1):- must_once(fail).
+loop_inf3 :- loop_inf1.
+loop_inf3.
 
-all_tests:- forall(test(_),true).
 
-:- listing(test(_)).
+test(loop_inf0):- must(\+ loop_inf0).
+
+test(loop_inf1):- must(\+ loop_inf1).
+
+test(loop_inf2):- must(\+ loop_inf2).
+
+test(loop_inf3):- must(   loop_inf3).
+

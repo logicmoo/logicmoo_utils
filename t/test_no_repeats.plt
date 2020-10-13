@@ -1,18 +1,10 @@
 
-:- use_module(library(must_trace)).
-:- use_module(library(bugger)).
-:- ensure_loaded(library(ansimesg)).
+:- include(sanity_tests).
 
-:- set_prolog_flag(must_saftey,3).
-:- set_prolog_flag(must_debug,0).
-:- set_prolog_flag(must_speed,0).
+test(no_repeats_3, all(X == [1,2,3])) :-
+    no_repeats(X,member(X,[1,2,3,3,3,2,1])).
 
-:- set_prolog_flag(must_type,keep_going).
+test(no_repeats_3a, all(X == [3,2,1])) :-
+    no_repeats(X,member(X,[3,2,3,3,3,2,1])).
 
-test(0):- must(\+ fail).
 
-test(1):- must_once(fail).
-
-all_tests:- forall(test(_),true).
-
-:- listing(test(_)).

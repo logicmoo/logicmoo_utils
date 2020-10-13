@@ -1,11 +1,12 @@
 
-:- use_module(library(each_call_cleanup)).
+:- include(sanity_tests).
 
 
-test(0):- each_call_cleanup(writeln(start),(between(1,3,X),writeln(X)), writeln(end)),fail. 
+:- dynamic(local_pred_0/0).
+test(local_pred_0):- locally(local_pred_0,local_pred_0), \+ local_pred_0.
 
-% todo - fix so ref is bound
-test(1):- each_call_cleanup(asserta(scce0,REF),(between(1,3,X),writeln(REF:X)),erase(REF)),fail. 
+test(local_gvar):- locally(b_setval(local_gvar,set),nb_current(local_gvar,set)), \+ nb_current(local_gvar,set).
 
 
-:- listing(test(_)).
+test(local_pred_0):- locally(local_pred_0,local_pred_0), \+ local_pred_0.
+
