@@ -1,7 +1,7 @@
 
 :- include(sanity_tests).
 
-:- use_module((attvar_reader)).
+:- use_module(library(attvar_reader)).
 
 :- read_attvars(false).
 

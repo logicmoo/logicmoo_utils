@@ -15,8 +15,8 @@
 :- create_prolog_flag(read_attvars,false,[keep(true)]).
 :- module_transparent((read_attvars/1,read_attvars/0)).
 
-% % % OFF :- system:use_module((toplevel_variable_names)).
-% % % OFF :- system:use_module((attvar_serializer)).
+:- use_module((toplevel_variable_names)).
+:- use_module((attvar_serializer)).
 
 
 :- multifile(lmcache:use_attvar_expander/1).
