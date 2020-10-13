@@ -175,8 +175,8 @@ import_dynamic(M:F/A):-
   multifile(M:F/A),
   dynamic(M:F/A),
   M:export(M:F/A),
-  system:import(M:F/A).
-  import(F/A).
+  system:import(M:F/A),
+  import(M:F/A).
 
 :- import_dynamic(us:member_datatype/3).
 :- import_dynamic(us:member_init/3).
@@ -358,6 +358,7 @@ prop_get_map(Name, Dict,    Value):- is_dict(Dict),!,get_dict(Name,Dict,Value).
 prop_get_map(Name, Dict,    Value):- is_rbtree(Dict),!,nb_rb_get_node(Dict,Name,Value).
 prop_get_map(Name, Dict,    Value):- is_assoc(Dict),!,get_assoc(Dict,Name,Value).
 
+prop_get_map(Name, Struct,  Value):- Name==sclass, compound(Struct),functor(Struct,Value,_),!.
 
 prop_get_map(sclass, sterm(Type,_), Type).
 prop_get_map(Name, sterm(_,LIST), Value):- append(_,[N,V|_],LIST),key_match(Name,N),!,V=Value.
@@ -419,6 +420,7 @@ prop_set_try(_,    Struct,   _, _):- ( \+ compound(Struct)),!,fail.
 prop_set_try([Name,Last],Dict,Value,WasNewDict):- prop_get(Name,Dict,SubDict),prop_set_try(Last,SubDict,Value,NewSubDict),NewSubDict\==SubDict,prop_set_try(Name,Dict,NewSubDict,WasNewDict),!.
 prop_set_try([Name|More],Dict,Value,WasNewDict):-prop_get(Name,Dict,SubDict),prop_set_try(More,SubDict,Value,NewDict),NewDict\==SubDict,prop_set_try(Name,Dict,NewDict,WasNewDict).
 
+prop_set_try( Name,Dict,Value, Dict):- Name = sclass, functor(Dict,F,_), F==Value,!.
 prop_set_try( Name,Dict,Value, Dict):-  prop_set_map(Name,Dict,Value),!.
 prop_set_try( Name,Dict,Value, NewDict) :- is_dict(Dict),!,prop_set_dict_real(Name,Dict,Value,NewDict).
 
@@ -438,7 +440,9 @@ prop_set_map(Name, STERM, Value):- STERM=sterm(_,List),
 prop_set_map(Name,HDict,Value):- is_list(HDict), memberchk(sclass=_,HDict),!,nb_set_pairlist(Name,HDict,Value).
 
 prop_set_map(Name,HDict,Value):- compound(HDict), HDict = mutable(Dict),
-   must_det_l((prop_set_try(Name,Dict,Value,NewDict),(Dict == NewDict -> true ; (must(nonvar(NewDict)),nb_setarg_ex(1,HDict,NewDict))))).
+   (Dict == [] -> nb_setarg(1,HDict,[Name=Value]) ;
+    must_det_l((prop_set_try(Name,Dict,Value,NewDict),(Dict == NewDict -> true ; 
+     (must(nonvar(NewDict)),nb_setarg_ex(1,HDict,NewDict)))))).
 
 prop_set_map(Name,Dict,Value):- is_rbtree(Dict),!,nb_rb_insert(Name,Dict,Value).
 prop_set_map(Name,List,Value):- is_list(List), !, nb_set_pairlist(Name,List,Value).
@@ -722,7 +726,7 @@ compile_argtypes(StructDecl,Loc,StructPrototype):-
   (number(Loc) -> 
     ((
       ArgNames=..[StructName|PArgNames],ain(us:struct_names(StructName,ArgNames)),
-      Datatypes=..[StructName|PArgTypes],ain(struct_datatypes(StructName,Datatypes))));
+      Datatypes=..[StructName|PArgTypes],ain(us:struct_datatypes(StructName,Datatypes))));
     true))).
     
 
@@ -855,7 +859,7 @@ new_struct(Type,[sclass=Type]):-!.
 %
 % Datatype Converted To Init.
 %
-datatype_to_init(dict, mutable([sclass=dict])).
+datatype_to_init(dict, Dict):- Dict = mutable([]). % sclass=dict
 datatype_to_init(rb,   NewArg):-rb_new(NewArg),!.
 datatype_to_init(assoc,NewArg):-empty_assoc(NewArg),!.
 datatype_to_init(actions,[]).

@@ -1,6 +1,7 @@
 
 :- use_module('../prolog/logicmoo_common').
 :- use_module(library(plunit)).
+:- use_module(library(test_cover)).
 
 :- set_prolog_flag(must_saftey,3).
 :- set_prolog_flag(must_debug,0).
