@@ -418,9 +418,9 @@ enumerate_files00(Spec,Result):- enumerate_files1(Spec,M),enumerate_files2(M,Res
 filematch3(RelativeTo,Mask,File1):-
    findall(Ext,t_l:file_ext(Ext),EXTs),flatten([EXTs,'','pl.in'],Flat),
    absolute_file_name(Mask,File1Matched,[extensions(Flat),
-   expand(true),file_errors(fail),solutions(all),relative_to(RelativeTo),access(read)]),expand_file_name(File1Matched,File1S),member(File1,File1S).
+   expand(true),file_errors(fail),solutions(all),relative_to(RelativeTo),access(read)]),expand_file_name_safe(File1Matched,File1S),member(File1,File1S).
 filematch3(RelativeTo,Mask,File1):-absolute_file_name(Mask,File1Matched,[file_type(directory),
-   expand(true),file_errors(fail),solutions(all),relative_to(RelativeTo),access(read)]),expand_file_name(File1Matched,File1S),member(File1,File1S).
+   expand(true),file_errors(fail),solutions(all),relative_to(RelativeTo),access(read)]),expand_file_name_safe(File1Matched,File1S),member(File1,File1S).
 
 :- export(enumerate_files2/2).
 
@@ -433,6 +433,21 @@ filematch3(RelativeTo,Mask,File1):-absolute_file_name(Mask,File1Matched,[file_ty
 enumerate_files2(Spec,Result):-sub_atom(Spec,_,1,_,'*') -> enumerate_files1(Spec,Result);Spec=Result.
 
 :- export(enumerate_files1/2).
+
+must_filematch(string(A),string(A)):-!.
+must_filematch(A,B):- filematch_smart(A,B) *-> true ; throw(must_filematch(A,B)).
+
+filematch_smart(Match,Each):- filematch(Match,Each)*-> true; filematch_smart_1(Match,Each) *-> true; filematch_smart_2(Match,Each).
+%filematch_smart_2(Match,Each):- atom(Match),absolute_file_name(Match,Dir0),expand_file_name(Dir0,DirS),DirS\==[],!,member(Each,DirS).
+filematch_smart_1(Match,Each):- absolute_file_name(Match,Dir0,
+ [file_errors(fail),expand(true),solutions(all)]),
+  expand_file_name_wc(Dir0,DirS),
+  member(Each,DirS).
+filematch_smart_2(Match,Each):- atom(Match),!, \+ is_absolute_file_name(Match),!, filematch_smart_2(pddl(Match),Each).
+
+
+must_filematch_list(Match,List):- findall(File, must_filematch(Match,File), List).
+
 
 %= 	 	 
 
@@ -457,15 +472,34 @@ enumerate_files1(Atom,Result):- atomic(Atom),once((member(Sep,['/**/','/**','**'
 %
 % Expand File Name Safely Paying Attention To Corner Cases.
 %
+
 expand_file_name_safe(I,O):-var(I),trace_or_throw(instanciation_error(expand_file_name_safe(I,O))),!.
-expand_file_name_safe(I,O):- \+ compound(I), catch(expand_file_name(I,O),_,fail),O\=[],!.
-expand_file_name_safe(I,[O]):- catch(expand_file_search_path(I,O),_,fail),!.
+expand_file_name_safe(I,O):- atom(I),expand_file_name_wc(I,O),O\==[],!.
+expand_file_name_safe(I,O):- \+ compound(I), catch(expand_file_name(I,O),_,fail),O\==[I],O\=[],!.
+expand_file_name_safe(I,[O]):- catch(expand_file_search_path(I,O),_,fail),O\==[I],!.
 expand_file_name_safe(I,L):- 
   findall(O,
-    (absolute_file_name(I,O,[expand(true),solutions(all)]);absolute_file_name(I,O,[expand(true),solutions(all),file_type(directory)])),
+    (absolute_file_name(I,O,[expand(true),solutions(all)]);
+     absolute_file_name(I,O,[expand(true),solutions(all),file_type(directory)])),
     L),!.
 
+
+expand_file_name_wc(I,O):- atom(I),atomic_list_concat(List,'/',I),nav_each(List,O).
+
+nav_each([''|Seg],O):- !,nav_each('/',Seg,O).
+nav_each([Path|Seg],O):- nav_each('.',[Path|Seg],O).
+
+nav_each([],_,O):-!, O = [].
+nav_each([L|List],Seg,S):- !, is_list(List),
+  nav_each(L,Seg,O1), nav_each(List,Seg,O2), append(O1,O2,O), list_to_set(O,S).
+nav_each(Path,Seg,O):- notrace(catch(expand_file_name(Path,S),_,fail)), [Path]\==S,!, nav_each(S,Seg,O).
+nav_each(Path, _, O):- \+ exists_dirf(Path),!, O = [].
+nav_each(Path,[],[O]):- !, absolute_file_name(Path,O),!.
+nav_each(Path,['.'],O):- nav_each(Path,[''],O),!. 
+nav_each(Path,[''],O):- !, (exists_directory(Path) -> nav_each(Path,[],O) ; O = []).
+nav_each(Path,[A|Seg],O):-  directory_file_path(Path,A,Try),!,nav_each(Try,Seg,O).
 :- export(exists_file_or_dir/1).
+
 
 %= 	 	 
 
@@ -870,7 +904,7 @@ atom_concat_safe0(L,R,A):- ((atom(A),(atom(L);atom(R))) ; ((atom(L),atom(R)))), 
 %
 % Canonical Pathname.
 %
-canonical_pathname(Absolute,AbsoluteB):-prolog_to_os_filename(AbsoluteA,Absolute),expand_file_name(AbsoluteA,[AbsoluteB]),!.
+canonical_pathname(Absolute,AbsoluteB):-prolog_to_os_filename(AbsoluteA,Absolute),expand_file_name_safe(AbsoluteA,[AbsoluteB]),!.
 
 
 
@@ -923,5 +957,78 @@ os_to_prolog_filename(OS,PL):-current_directory_search(CurrentDir),join_path(Cur
 os_to_prolog_filename(OS,PL):-atom(OS),atomic_list_concat([X,Y|Z],'\\',OS),atomic_list_concat([X,Y|Z],'/',OPS),!,os_to_prolog_filename(OPS,PL).
 os_to_prolog_filename(OS,PL):-atom_concat_safe0(BeforeSlash,'/',OS),os_to_prolog_filename(BeforeSlash,PL).
 os_to_prolog_filename(OS,PL):-absolute_file_name(OS,OSP),OS \== OSP,!,os_to_prolog_filename(OSP,PL).
+
+
+dedupe_files(SL0,SL):- maplist(relative_file_name,SL0,SL1), list_to_set(SL1,SL2),maplist(absolute_file_name_or_dir,SL2,SLO),!,
+  list_to_set(SLO,SL),!.
+
+  relative_file_name(A,S):-  prolog_canonical_source(A,L), file_name_on_path(L,S), atom(S), \+ name(S,[]), (exists_file(S);exists_directory(S)),!.
+  relative_file_name(A,A).          
+
+exists_all_filenames(S0, SL, Options):- 
+  findall(N, (relative_from(D), 
+     absolute_file_name_or_dir(S0, N, 
+        [relative_to(D), file_errors(fail), access(read), solutions(all)|Options])), SL0),
+  dedupe_files(SL0,SL),!.
+
+
+absolute_file_name_or_dir(S0,N):-absolute_file_name_or_dir(S0,N,[file_errors(fail), access(read), solutions(all)]).
+absolute_file_name_or_dir(S0,N,Options):- 
+  absolute_file_name(S0,N,Options)*-> true
+  ;(\+ member(file_ext(_),Options),
+    \+ member(file_type(_),Options),!,
+      (absolute_file_name(S0,N,[file_type(directory)|Options]) *-> true
+     ; absolute_file_name(S0,N,[file_type(txt)|Options]))).
+
+absolute_file_name_or_dir(S0,N,Options):- absolute_file_name(S0,N,Options).
+
+:- export(resolve_local_files/2).
+resolve_local_files(S0,SL):- is_list(S0), !, maplist(resolve_local_files,S0,SS), append(SS,SF),dedupe_files(SF,SL).
+resolve_local_files(S0,SL):- atom(S0), exists_file(S0), !, SL = [S0].
+resolve_local_files(S0,SS):- atom(S0),atom_concat(AA,'M.e',S0),atom_concat(AA,'.e',SL),resolve_local_files(SL,SS),!.
+resolve_local_files(S0,SS):- atom(S0),atom_concat('answers/Mueller2004c/',AA,S0),atom_concat("ecnet/",AA,SL),resolve_local_files(SL,SS),!.
+%resolve_local_files(S0,SS):- atom(S0),atom_concat("answers/",AA,S0),atom_concat("examples/",AA,SL),resolve_local_files(SL,SS),!.
+resolve_local_files(S0,SS):- findall(S1,resolve_local_files_1(S0,S1),SL),flatten(SL,SF),dedupe_files(SF,SS),SS\==[], !.
+% expand_file_search_path
+%resolve_local_files(S0,SS):- atom(S0), findall(S1,resolve_local_files_1(ec(S0),S1),SL),flatten(SL,SF),dedupe_files(SF,SS),!.
+   
+resolve_local_files_1(S0,SL):- atom(S0), expand_file_name(S0,SL), SL = [E|_], exists_file(E), !.
+resolve_local_files_1(S0,SL):- exists_all_filenames(S0,SL, [expand(false)]), SL \= [].
+resolve_local_files_1(S0,SL):- exists_all_filenames(S0,SL, [expand(true)]), SL \= [].
+resolve_local_files_1(S0,SL):- expand_file_search_path(S0,S1),S0\==S1,resolve_local_files(S1,SL).
+resolve_local_files_1(S0,SS):- atom(S0), file_base_name(S0,S1), S0\==S1, resolve_local_files(S1,SS).
+%resolve_local_files_1(S0,SL):- atom(S0), resolve_local_files(ec(S0),SL).
+
+relative_from(F):- nb_current('$ec_input_file', F).
+relative_from(D):- working_directory(D,D).
+relative_from(F):- stream_property(_,file_name(F)).
+relative_from(D):- expand_file_search_path(library('ec_planner'),D),exists_directory(D).
+relative_from(D):- expand_file_search_path(library('ec_planner/../../ext/ec_sources'),D),exists_directory(D).
+
+user:file_search_path(ec,D):- findall(D,relative_from(D),L),dedupe_files(L,S),member(D,S).
+/*
+resolve_file(S0,SS):- atom(S0), exists_file(S0), !, SS=S0. 
+resolve_file(S0,SS):- absolute_file_name(S0, SS, [expand(true), file_errors(fail), access(read)]), !.
+resolve_file(S0,SS):- relative_from(F), absolute_file_name(S0, SS, [relative_to(F),file_errors(fail),access(read)]), !.
+resolve_file(S0,SS):- atom(S0), file_base_name(S0,S1), S0\==S1, resolve_file(S1,SS).
+*/
+
+:- export(needs_resolve_local_files/2).
+needs_resolve_local_files(F, L):- \+ is_stream(F), \+ is_filename(F),
+  resolve_local_files(F, L), !,  L \= [], L \= [F].
+
+:- export(is_filename/1).
+is_filename(F):- atom(F), \+ is_stream(F),
+  (exists_file(F);is_absolute_file_name(F)).
+
+%chop_e(InputNameE,InputName):- atom_concat(InputName,'.e',InputNameE),!.
+%chop_e(InputName,InputName).
+
+:- export(calc_where_to/3).
+calc_where_to(outdir(Dir, Ext), InputName, OutputFile):- 
+    % chop_e(InputNameE,InputName),
+    atomic_list_concat([InputName, '.', Ext], OutputName),
+    make_directory_path(Dir),
+    absolute_file_name(OutputName, OutputFile, [relative_to(Dir)]).
 
 :- fixup_exports.

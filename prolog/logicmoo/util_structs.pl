@@ -21,7 +21,6 @@
             datatype_to_init/2,
             decl_argtypes/1,
             decl_struct/1,
-            default_point/1,
             ensure_instance/2,
             ensure_instance/3,
             ensure_struct/2,
@@ -31,24 +30,16 @@
             hooked_gvar_get/2,
             hooked_gvar_put/2,
             if_changed/3,
-            is_point/1,
             key_match/2,
-            make_point/2,
-            make_point/3,
             member_arg_convert/5,
-            member_datatype/2,
+            %us:member_datatype/2,
             merge_values/3,
             nb_set_pairlist/3,
             nb_set_pairlist0/3,
             nb_set_s2list/4,
             nb_set_s2list0/4,
-            nb_set_x_of_point/2,
-            nb_set_y_of_point/2,
             nb_setarg_ex/3,
             new_struct/2,
-            point_data/3,
-            point_x/2,
-            point_y/2,
             prop_get/1,
             prop_get/3,
             prop_get_map/3,
@@ -66,13 +57,6 @@
             record_var_names/1,
             record_var_names/2,
             record_var_type/2,
-            set_point_field/3,
-            set_point_fields/3,
-            set_point_fields/4,
-            set_x_of_point/2,
-            set_x_of_point/3,
-            set_y_of_point/2,
-            set_y_of_point/3,
             sisctus_key/2,
             struct_sclass/2,
             t2ot/2,
@@ -89,7 +73,6 @@
         datatype_to_init/2,
         decl_argtypes/1,
         decl_struct/1,
-        default_point/1,
         ensure_instance/2,
         ensure_instance/3,
         ensure_struct/2,
@@ -99,25 +82,17 @@
         hooked_gvar_get/2,
         hooked_gvar_put/2,
         if_changed/3,
-        is_point/1,
         key_match/2,
-        make_point/2,
-        make_point/3,
         member_arg_convert/5,
-        member_datatype/2,
+        %us:member_datatype/2,
         merge_values/3,
         %module_local_init /2,
         nb_set_pairlist/3,
         nb_set_pairlist0/3,
         nb_set_s2list/4,
         nb_set_s2list0/4,
-        nb_set_x_of_point/2,
-        nb_set_y_of_point/2,
         nb_setarg_ex/3,
         new_struct/2,
-        point_data/3,
-        point_x/2,
-        point_y/2,
         prop_get/1,
         prop_get/3,
         prop_get_map/3,
@@ -135,13 +110,6 @@
         record_var_names/1,
         record_var_names/2,
         record_var_type/2,
-        set_point_field/3,
-        set_point_fields/3,
-        set_point_fields/4,
-        set_x_of_point/2,
-        set_x_of_point/3,
-        set_y_of_point/2,
-        set_y_of_point/3,
         struct_sclass/2,
         t2ot/2,
         t2ot_0/2,
@@ -155,7 +123,8 @@
   prop_get/1,prop_get/3,prop_set/1,prop_set/3,prop_merge/3,
   prop_set_nvlist/2,
   decl_argtypes/1,
-  decl_struct/1,struct_decl/1,
+  decl_struct/1,
+  %us:struct_decl/1,
   if_changed/3,
   prop_get_nvlist/2,
   term_to_ord_term/2,
@@ -169,8 +138,28 @@
 
 
 
-% % % OFF :- system:use_module(library(record)).
+:- ensure_loaded(library(record)).
+:- ensure_loaded(library(rbtrees)).
+:- ensure_loaded(library(ordsets)).
 
+/*
+default_point/1,
+is_point/1,
+make_point/2,
+make_point/3,
+nb_set_x_of_point/2,
+nb_set_y_of_point/2,
+point_data/3,
+point_x/2,
+point_y/2,
+set_point_field/3,
+set_point_fields/3,
+set_point_fields/4,
+set_x_of_point/2,
+set_x_of_point/3,
+set_y_of_point/2,
+set_y_of_point/3,
+*/
 :- record point(x:integer=0, y:integer=0).
      /*
         default_point(Point),
@@ -180,37 +169,24 @@
         make_point([y(20)], YPoint),
    */
 
+:- use_module(library(assoc)).
+:- module_transparent(import_dynamic/1).
+import_dynamic(M:F/A):- 
+  multifile(M:F/A),
+  dynamic(M:F/A),
+  M:export(M:F/A),
+  system:import(M:F/A).
+  import(F/A).
 
-:- export(struct_decl/1).
-:- multifile(struct_decl/1).
-:- dynamic(struct_decl/1).
+:- import_dynamic(us:member_datatype/3).
+:- import_dynamic(us:member_init/3).
+:- import_dynamic(us:member_loc/3).
+:- import_dynamic(us:struct_datatype/2).
+:- import_dynamic(us:struct_decl/1).
+:- import_dynamic(us:struct_names/2).
+:- import_dynamic(us:struct_prototype/2).
 
-:- export(struct_names/2).
-:- multifile(struct_names/2).
-:- dynamic(struct_names/2).
-
-:- export(struct_datatype/2).
-:- multifile(struct_datatype/2).
-:- dynamic(struct_datatype/2).
-
-:- export(struct_prototype/2).
-:- multifile(struct_prototype/2).
-:- dynamic(struct_prototype/2).
-
-
-:- export(member_datatype/3).
-:- multifile(member_datatype/3).
-:- dynamic(member_datatype/3).
-
-:- export(member_loc/3).
-:- multifile(member_loc/3).
-:- dynamic(member_loc/3).
-
-:- export(member_init/3).
-:- multifile(member_init/3).
-:- dynamic(member_init/3).
-
-% :- struct_datatype(_,_) -> true; true.
+% :- us:struct_datatype(_,_) -> true; true.
 
 
 %= 	 	 
@@ -388,7 +364,7 @@ prop_get_map(Name, sterm(_,LIST), Value):- append(_,[N,V|_],LIST),key_match(Name
 
 prop_get_map(Indx, Struct,  Value):- integer(Indx),!, arg(Indx,Struct,Value).
 
-prop_get_map(Name, Struct,  Value):- member_loc(StructName,Name,N), functor(Struct,StructName,_),!,
+prop_get_map(Name, Struct,  Value):- us:member_loc(StructName,Name,N), functor(Struct,StructName,_),!,
       must((integer(N) -> arg(N,Struct,Value); prop_get_map(Name, Struct,  Value))).
 
 
@@ -468,7 +444,7 @@ prop_set_map(Name,Dict,Value):- is_rbtree(Dict),!,dtrace, nb_rb_insert(Name,Dict
 prop_set_map(Name,List,Value):- is_list(List), !, nb_set_pairlist(Name,List,Value).
 prop_set_map(Index,Dict,Value):- integer(Index),!, nb_setarg_ex(Index,Dict,Value).
 prop_set_map(Name,Dict,Value):- functor(Dict,StructName,_),
-   (member_loc(StructName,Name,N) -> nb_setarg_ex(N,Dict,Value);
+   (us:member_loc(StructName,Name,N) -> nb_setarg_ex(N,Dict,Value);
      must_det_l((prop_get(extraprops,Dict,Extra),nonvar(Extra),prop_set(Name,Extra,Value)))).
 
 
@@ -626,11 +602,11 @@ nb_setarg_ex(Name,Struct,New):-arg(Name,Struct,Old),nb_setarg(Name,Struct,New),i
 
 %= 	 	 
 
-%% member_datatype( ?VALUE1, ?VALUE2) is semidet.
+%% us:member_datatype( ?VALUE1, ?VALUE2) is semidet.
 %
 % Member Datatype.
 %
-member_datatype(prototype,compound).
+us:member_datatype(prototype,compound).
 
 
 %= 	 	 
@@ -680,8 +656,8 @@ member_arg_convert(_,varnames,_N,Value,Value):-!.
 member_arg_convert(Struct,Name,N,Value,NewValue):- \+ \+ (Struct=[] ),!,member_arg_convert(any,Name,N,Value,NewValue).
 member_arg_convert(Struct,Name,N,Value,NewValue):- \+atom(Struct),!, struct_sclass(Struct,SC),!,member_arg_convert(SC,Name,N,Value,NewValue).
 member_arg_convert(uppercase_string,charAt(_),_,Char,Converted):-to_upper(Char,Converted).
-member_arg_convert(StructName,Name,_N,Value,NewValue):-member_datatype(StructName,Name,Type),to_datatype(Type,Value,NewValue).
-member_arg_convert(StructName,_Name,N,Value,NewValue):-struct_datatype(StructName,ArgTypes),arg(N,ArgTypes,Datatype),to_datatype(Datatype,Value,NewValue).
+member_arg_convert(StructName,Name,_N,Value,NewValue):-us:member_datatype(StructName,Name,Type),to_datatype(Type,Value,NewValue).
+member_arg_convert(StructName,_Name,N,Value,NewValue):-us:struct_datatype(StructName,ArgTypes),arg(N,ArgTypes,Datatype),to_datatype(Datatype,Value,NewValue).
 member_arg_convert(_Type,Datatype,_,Value,NewValue):-to_datatype(Datatype,Value,NewValue).
 member_arg_convert(_Type,_Named,_,UnConverted,UnConverted).
 
@@ -718,7 +694,7 @@ decl_struct(StructDecl):-
   must_det_l((
     compile_argtypes(StructDecl,1,StructPrototype),    
     functor(StructPrototype,StructName,_),
-    show_call(ain(struct_prototype(StructName,StructPrototype))))),!.
+    show_call(ain(us:struct_prototype(StructName,StructPrototype))))),!.
 
 
 %= 	 	 
@@ -745,7 +721,7 @@ compile_argtypes(StructDecl,Loc,StructPrototype):-
     StructPrototype=..[StructName|InitArgs],
   (number(Loc) -> 
     ((
-      ArgNames=..[StructName|PArgNames],ain(struct_names(StructName,ArgNames)),
+      ArgNames=..[StructName|PArgNames],ain(us:struct_names(StructName,ArgNames)),
       Datatypes=..[StructName|PArgTypes],ain(struct_datatypes(StructName,Datatypes))));
     true))).
     
@@ -761,9 +737,9 @@ compile_argtypes(StructDecl,Loc,StructPrototype):-
 compile_struct_slots(_,_,[],[],[],[]).
 compile_struct_slots(StructType,Loc,[Param|ARGS],[Name|ArgNames],[Datatype|Datatypes],[Init|InitTypes]):-
    extract_struct_parameter(=,Param,Name,Datatype,Init),
-   (number(Loc)->(ain(member_loc(StructType,Name,Loc)), Loc2 is Loc + 1);Loc2=Loc),
-   ain(member_datatype(StructType,Name,Datatype)),
-   (nonvar(Init)-> ain(member_init(StructType,Name,Datatype));true),   
+   (number(Loc)->(ain(us:member_loc(StructType,Name,Loc)), Loc2 is Loc + 1);Loc2=Loc),
+   ain(us:member_datatype(StructType,Name,Datatype)),
+   (nonvar(Init)-> ain(us:member_init(StructType,Name,Datatype));true),   
    compile_struct_slots(StructType,Loc2,ARGS,ArgNames,Datatypes,InitTypes).
 
 
@@ -803,7 +779,7 @@ extract_struct_parameter(Def,Name,Name,Def).
 % Hook To [module_local_init/2] For Module Logicmoo_util_structs.
 % Module Local Init.
 %
-% @TODO module_local_init(_UserModule,SystemModule):- ain(SystemModule:'==>'(struct_decl(StructDecl),decl_struct(StructDecl))).
+% @TODO module_local_init(_UserModule,SystemModule):- ain(SystemModule:'==>'(us:struct_decl(StructDecl),decl_struct(StructDecl))).
 
 
 
@@ -865,8 +841,8 @@ prop_get_nvlist(Struct,[N=V|More]):-must_det_l((ignore(show_failure(why,prop_get
 % New Struct.
 %
 new_struct(Type,Struct):- var(Type),!,trace_or_throw(var_new_struct(Type,Struct)).
-new_struct(Type,Struct):- struct_prototype(Type,Struct),!,struct_prototype(Type,Struct).
-new_struct(Type,Struct):- struct_datatype(Type,DType),!,new_struct(DType,Struct).
+new_struct(Type,Struct):- us:struct_prototype(Type,Struct),!,us:struct_prototype(Type,Struct).
+new_struct(Type,Struct):- us:struct_datatype(Type,DType),!,new_struct(DType,Struct).
 new_struct(Type,mutable([sclass=Type])):-!.
 new_struct(Type,[sclass=Type]):-!.
 
@@ -892,4 +868,4 @@ new_struct(map, mutable(O)):- dict_create(O,Name,[]),!.
 %new_struct(Type,Struct):- rb_insert_new(_O,sclass,Type,Struct),!.
 new_struct(Name,mutable(O)):- dict_create(O,Name,[]),!.
 */
-
+:- fixup_exports.
