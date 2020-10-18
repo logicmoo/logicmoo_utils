@@ -1169,7 +1169,7 @@ install_logicmoo:-
   ensure_this_pack_installed,
   maplist(ensure_loicmoo_pack_install,[
     body_reordering,lps_corner,predicate_streams,eggdrop,pfc,logicmoo_ec,gvar_syntax,logicmoo_base,
-    dictoo,logicmoo_webui,logicmoo_utils,prologmud_samples,instant_prolog_docs,logicmoo_strorytron,
+    dictoo,logicmoo_webui,logicmoo_utils,prologmud_samples,instant_prolog_docs,
     logicmoo_cg,prologmud,wam_common_lisp,narsese,
     multimodal_dcg,logicmoo_nlu]),
   pack_list_installed,
