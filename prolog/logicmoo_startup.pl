@@ -1164,10 +1164,10 @@ ensure_this_pack_installed:-
 
 :- ensure_this_pack_installed.
 
-ensure_loicmoo_pack_install(X):- atomic_list_concat('https://github.com/TeamSPoon/',X,'.git'],URL),pack_install(URL,[interactive(false)]).
+ensure_logicmoo_pack_install(X):- atomic_list_concat(['https://github.com/TeamSPoon/',X,'.git'],URL),pack_install(URL,[interactive(false)]).
 install_logicmoo:-
   ensure_this_pack_installed,
-  maplist(ensure_loicmoo_pack_install,[
+  maplist(ensure_logicmoo_pack_install,[
     body_reordering,lps_corner,predicate_streams,eggdrop,pfc,logicmoo_ec,gvar_syntax,logicmoo_base,
     dictoo,logicmoo_webui,logicmoo_utils,prologmud_samples,instant_prolog_docs,
     logicmoo_cg,prologmud,wam_common_lisp,narsese,
