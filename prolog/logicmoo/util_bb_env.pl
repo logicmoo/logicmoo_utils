@@ -12,59 +12,59 @@
 % ===================================================================
 */
 :- module(logicmoo_util_bb_env, [
-abolish_and_make_static/2,
-add_push_prefix_arg/4,
-% bb:'$sourcefile_info_env'/1,
-% baseKB:decl_env_mpred/2, a-box:defaultTBoxMt/1,
-clause_to_hb/3,
-clause_to_hb0/3,
-decl_env_mpred/2,
-decl_env_mpred_dom/2,
-decl_env_mpred_fa/4,
-decl_env_mpred_real/4,
-decl_env_mpred_task/2,
-do_prefix_arg/4,
-env_1_info/2,
-env_assert/1,
-env_asserta/1,
-env_call/1,
-env_clear/1,
-env_consult/1,
-env_get/1,
-env_info/1,
-env_info/2,
-env_learn_pred/2,
-env_meta_term/1,
-env_mpred_op/1,
-env_mpred_op/2,
-env_mpred_op/3,
-env_mpred_op_1/3,
-env_predinfo/2,
-env_push_args/4,
-env_push_argsA/4,
-env_recorded/2,
-env_retract/1,
-env_retractall/1,
-env_set/1,
-env_shadow/2,
-env_source_file/1,
-env_term_expansion/2,
-get_env_ctx/1,
-get_env_expected_ctx/1,
-get_env_source_ctx/2,
-get_mp_arity/2,
-get_mpred_stubType/3,
-harvest_preds/2,
-hb_to_clause_env/3,
-hb_to_clause_env0/3,
-in_dyn/2,
-in_dyn_pred/2,
-inside_file_bb/1,
-lg_op2/3,
-ppi/1,
-pred_1_info/4,
-push_prefix_arg/4,
-term_expansion_add_context/5
+   abolish_and_make_static/2,
+   add_push_prefix_arg/4,
+   % bb:'$sourcefile_info_env'/1,
+   % baseKB:decl_env_mpred/2, a-box:defaultTBoxMt/1,
+   clause_to_hb/3,
+   clause_to_hb0/3,
+   decl_env_mpred/2,
+   decl_env_mpred_dom/2,
+   decl_env_mpred_fa/4,
+   decl_env_mpred_real/4,
+   decl_env_mpred_task/2,
+   do_prefix_arg/4,
+   env_1_info/2,
+   env_assert/1,
+   env_asserta/1,
+   (env_call)/1,
+   env_clear/1,
+   env_consult/1,
+   env_get/1,
+   env_info/1,
+   env_info/2,
+   env_learn_pred/2,
+   env_meta_term/1,
+   env_mpred_op/1,
+   env_mpred_op/2,
+   env_mpred_op/3,
+   env_mpred_op_1/3,
+   env_predinfo/2,
+   env_push_args/4,
+   env_push_argsA/4,
+   env_recorded/2,
+   env_retract/1,
+   env_retractall/1,
+   env_set/1,
+   env_shadow/2,
+   env_source_file/1,
+   env_term_expansion/2,
+   get_env_ctx/1,
+   get_env_expected_ctx/1,
+   get_env_source_ctx/2,
+   get_mp_arity/2,
+   get_mpred_stubType/3,
+   harvest_preds/2,
+   hb_to_clause_env/3,
+   hb_to_clause_env0/3,
+   in_dyn/2,
+   in_dyn_pred/2,
+   inside_file_bb/1,
+   lg_op2/3,
+   ppi/1,
+   pred_1_info/4,
+   push_prefix_arg/4,
+   term_expansion_add_context/5
 ]).
 
 :- kb_global(baseKB:mpred_prop/4).
@@ -86,7 +86,7 @@ term_expansion_add_context/5
 
 
 
-:- thread_local(t_l:push_env_ctx).
+:- thread_local(t_l:push_env_ctx/0).
 :- dynamic(bb:'$sourcefile_info_env'/1).
 :- multifile(bb:'$sourcefile_info_env'/1).
 
@@ -160,7 +160,7 @@ get_mpred_stubType(F,A,StubOut):-
    nop(StubIn==dyn->true;dmsg(get_mpred_stubType(F,A,StubIn))),
    StubOut=dyn.
 
-get_mpred_stubType(F,A,dyn):-clause_b(mpred_prop(M,F,A,dyn)).
+get_mpred_stubType(F,A,dyn):- clause_b(mpred_prop(_M,F,A,dyn)).
 get_mpred_stubType(_,_,dyn).
 
 :- ain(isa_kb:box_prop(l)).
@@ -204,6 +204,9 @@ decl_env_mpred_task(Props,Preds):-
 
 % abolish_and_make_static(_F,_A):-!.
 abolish_and_make_static(F,A):-
+ ignore(baseKB:mpred_prop(M,F,A,_)),
+ ignore(baseKB:current_predicate(M:F/A)),
+
   must_det_l((
    retractall(get_mp_arity(F,A)),
    retractall(arity(F,A)),
@@ -224,7 +227,9 @@ decl_env_mpred_fa(Prop,_Pred,F,A):-  t_l:push_env_ctx,
 decl_env_mpred_fa(Prop,Pred,F,A):-
    decl_env_mpred_real(Prop,Pred,F,A).
 
-decl_env_mpred_real(Prop,Pred,F,A):- 
+decl_env_mpred_real(Prop,Pred,F,A):-
+  ignore(baseKB:mpred_prop(M,F,A,_)),
+  ignore(M=ocl),
   (Prop==task->(thread_local(/*ocluser*/ocl:F/A));true),
   (Prop==dyn->(dynamic(/*ocluser*/ocl:F/A));true),
   (Prop==cache->'$set_pattr'(ocl:Pred, pred, (volatile));true),
@@ -258,7 +263,7 @@ lg_op2(_,OP,OP).
 
 env_mpred_op(_,_,[]):-!.
 env_mpred_op(ENV,OP,F/A):- % dtrace,
-   var(A),!, forall(clause_b(mpred_prop(M,F,A,ENV)),((functor(P,F,A),env_mpred_op(ENV,OP,P)))).
+   var(A),!, forall(clause_b(mpred_prop(_M,F,A,ENV)),((functor(P,F,A),env_mpred_op(ENV,OP,P)))).
 env_mpred_op(ENV,retractall,F/A):-functor(P,F,A),!,env_mpred_op(ENV,retractall,P).
 % env_mpred_op(ENV,OP,Dom):- isa_kb:box_prop(Dom),!,forall(baseKB:mpred_prop(M,F,A,Dom),env_mpred_op(ENV,OP,F/A)).
 % env_mpred_op(ENV,OP,F/A):-!, functor(P,F,A), (((get_mpred_stubType(F,A,LG2),LG2\==ENV)  -> env_mpred_op(LG2,OP,P) ; env_mpred_op(ENV,OP,P) )).
@@ -305,7 +310,7 @@ env_info(Pred,Infos):- (nonvar(Pred)-> env_predinfo(Pred,Infos) ; (get_mp_arity(
 
 
 harvest_preds(Type,Functors):-
- findall(functor(P,F,A),((get_mp_arity(F,A),(clause_b(mpred_prop(M,F,A,Type));Type=F),functor(P,F,A))),Functors).
+ findall(functor(P,F,A),((get_mp_arity(F,A),(clause_b(mpred_prop(_M,F,A,Type));Type=F),functor(P,F,A))),Functors).
 
 env_1_info(Type,[predcount(NC)|Infos]):- 
  gensym(env_1_info,Sym),flag(Sym,_,0),
@@ -319,8 +324,9 @@ env_1_info(Type,[predcount(NC)|Infos]):-
 
 env_predinfo(PIn,Infos):- functor_h(PIn,F,A),get_mp_arity(F,A),functor(P,F,A),findall(Info,pred_1_info(P,F,A,Info),Infos).
 
-pred_1_info(P,_,_,Info):- member(Info:Prop,[count(NC):number_of_clauses(NC),mf:multifile,dyn:dynamic,vol:volitile,local:local]),predicate_property(P,Prop).
-pred_1_info(_,F,A,Info):- clause_b(mpred_prop(M,F,A,Info)).
+pred_1_info(P,_,_,Info):- 
+  member(Info:Prop,[count(NC):number_of_clauses(NC),mf:multifile,dyn:dynamic,vol:volitile,local:local]),predicate_property(P,Prop).
+pred_1_info(_,F,A,Info):- clause_b(mpred_prop(_M,F,A,Info)).
 pred_1_info(_,F,A,F/A).
 
 
