@@ -1164,6 +1164,7 @@ ensure_this_pack_installed:-
 
 :- ensure_this_pack_installed.
 
+ensure_logicmoo_pack_install(X):- pack_property(X,version(_)),!.
 ensure_logicmoo_pack_install(X):- atomic_list_concat(['https://github.com/TeamSPoon/',X,'.git'],URL),pack_install(URL,[interactive(false)]).
 install_logicmoo:-
   ensure_this_pack_installed,
