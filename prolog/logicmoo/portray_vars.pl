@@ -234,10 +234,10 @@ implode_varnames_pred(P2, G):- term_variables(G,Vs),maplist(implode_varnames_pre
   
 
 guess_pretty(H):- pretty_enough(H), !.
-guess_pretty(O):- must_or_rtrace((guess_pretty1(O),guess_varnames2(O,_))).
+guess_pretty(O):- must_or_rtrace((ignore(guess_pretty1(O)),ignore(guess_varnames2(O,_)))).
 
 guess_pretty1(H):- pretty_enough(H), !.
-guess_pretty1(O):- must_or_rtrace(( pretty1(O),pretty_two(O),pretty_three(O),pretty_final(O))),!.
+guess_pretty1(O):- must_or_rtrace(( ignore(pretty1(O)),ignore(pretty_two(O)),ignore(pretty_three(O)),ignore(pretty_final(O)))),!.
 %make_pretty(I,O):- is_user_output,!,shrink_naut_vars(I,O), pretty1(O),pretty_three(O),pretty_final(O).
 %make_pretty(I,O):- I=O, pretty1(O),pretty_three(O),pretty_final(O).
 

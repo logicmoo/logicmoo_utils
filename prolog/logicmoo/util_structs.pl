@@ -29,7 +29,7 @@
             extract_struct_parameter/5,
             hooked_gvar_get/2,
             hooked_gvar_put/2,
-            if_changed/3,
+            if_changed_struct/3,
             key_match/2,
             member_arg_convert/5,
             %us:member_datatype/2,
@@ -81,7 +81,7 @@
         extract_struct_parameter/5,
         hooked_gvar_get/2,
         hooked_gvar_put/2,
-        if_changed/3,
+        if_changed_struct/3,
         key_match/2,
         member_arg_convert/5,
         %us:member_datatype/2,
@@ -125,7 +125,7 @@
   decl_argtypes/1,
   decl_struct/1,
   %us:struct_decl/1,
-  if_changed/3,
+  if_changed_struct/3,
   prop_get_nvlist/2,
   term_to_ord_term/2,
   new_struct/2,
@@ -669,11 +669,12 @@ member_arg_convert(_Type,_Named,_,UnConverted,UnConverted).
 
 %= 	 	 
 
-%% if_changed( ?VALUE1, ?VALUE2, ?VALUE3) is semidet.
+%% if_changed_struct( ?VALUE1, ?VALUE2, ?VALUE3) is semidet.
 %
 % If Changed.
 %
-if_changed(Value,NewValue,NewValueO):- must((NewValue=@=Value -> NewValueO=Value ; NewValueO=NewValue)).
+if_changed_struct(Value,NewValue,NewValueO):- must((NewValue=@=Value -> NewValueO=Value ; NewValueO=NewValue)).
+%if_changed_struct(Ex,I,O):- call(Ex,I,O)-> I\==O.
 
 
 %= 	 	 
@@ -683,7 +684,7 @@ if_changed(Value,NewValue,NewValueO):- must((NewValue=@=Value -> NewValueO=Value
 % Converted To Datatype.
 %
 to_datatype(=,Value,Value).
-to_datatype(sorted,Value,NewValueO):-term_to_ord_term(Value,NewValue),!,if_changed(Value,NewValue,NewValueO).
+to_datatype(sorted,Value,NewValueO):-term_to_ord_term(Value,NewValue),!,if_changed_struct(Value,NewValue,NewValueO).
 to_datatype(_Type,Value,Value).
 
 
