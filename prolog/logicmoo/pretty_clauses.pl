@@ -405,9 +405,19 @@ any_line_count(_,0).
 /* Print term as a tree */
 
 :- export(print_tree/1).
-:- export(print_tree/2).
+:- export(print_tree/1).
 :- export(prefix_spaces/1).
 
+
+:- export(print_tree_cmt/3).
+print_tree_cmt(Info,C,P):-
+ mention_o_s_l,
+ notrace((echo_format('~N'),  
+  with_output_to(string(S), in_cmt((
+    format('~N~w: \n\n',[Info]),
+    print_tree(P)))),
+  to_ansi(C, C0),
+  real_ansi_format(C0, '~s', [S]))).
 
 
 pt_nl:- nl.
