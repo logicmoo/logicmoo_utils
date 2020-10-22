@@ -508,7 +508,7 @@ pt0(FS, Final,T,Tab) :- fail,
    pt_args([F|FS],LC2,[R|Rest],I0).
 
 
-pt0(FS,Final,T,Tab) :- fail,  T=..[F,A,B|As], is_arity_lt1(A), !, 
+pt0(FS,Final,T,Tab) :- fail,  T.=.[F,A,B|As], is_arity_lt1(A), !, 
    prefix_spaces(Tab), format_functor(F), format('( ~@,',[portray_with_vars(A)]), pt_nl,
    I0 is Tab+2, format(atom(LC2),')~w',[Final]),
    pt_args([F|FS],LC2,[B|As],I0).
@@ -524,14 +524,15 @@ splice_off([A0,A|As],[A0|Left],[R|Rest]):-
 
 pt_args( In, Final,Var,Tab):- Var\==[], is_arity_lt1(Var), write(' | '), pt0(In,Final,Var,Tab).
 pt_args(_In, Final,[],_) :- !, write(Final).
-pt_args( FS, Final,[A|R],Tab) :- R==[], !,  write(', '), prefix_spaces(Tab), pt0(FS,Final,A,Tab).
-pt_args( FS, Final,[A0,A|As],Tab) :- 
-   splice_off([A0,A|As],[L1|Left],[R|Rest]), !, 
+pt_args( FS, Final,[A|R],Tab) :- R==[], write(', '), prefix_spaces(Tab), pt0(FS,Final,A,Tab), !.
+pt_args( FS, Final,[A0,A|As],Tab) :- is_arity_lt1(A0), is_arity_lt1(A),
+   splice_off([A|As],[L1|Left],[R|Rest]), !, 
    write(', '), prefix_spaces(Tab), write_simple(A0), write_simple_each([L1|Left]), 
    output_line_position(New), write(', '),
    nl, 
    Avr is round(((New - Tab)/2 + Tab)) + 4, !,
-   prefix_spaces(Avr), pt0([lf|FS],'',R,Avr),
+   prefix_spaces(Avr), 
+   pt0([lf|FS],'',R,Avr),
    pt_args([lf|FS],Final,Rest,Avr).  
 pt_args( FS, Final,[A|As],Tab) :- !,  write(', '), prefix_spaces(Tab), 
    pt0([lf|FS],'',A,Tab),
