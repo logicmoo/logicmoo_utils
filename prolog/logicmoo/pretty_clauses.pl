@@ -150,7 +150,7 @@ print_et_to_string(T,S,Options):-
                   ignore_ops(false),
                   no_lists(false),
                   %spacing(next_argument),
-                  portray(true)],
+                  portray(false)],
    swi_option:merge_options(Options,Old,WriteOpts),
    PrintOpts = [output(current_output)|Options],
                                  
@@ -532,17 +532,15 @@ splice_off([A0,A|As],[A0|Left],[R|Rest]):-
     Rest\==[] , %  is_list(Rest),
    ( (\+ is_arity_lt1(R)) ; (length(Left,Len),Len>=3)),!.
 
-pt_args( In, Final,Var,Tab):- Var\==[], is_arity_lt1(Var), write(' | '), pt0(In,Final,Var,Tab).
+pt_args( In, Final,Var,Tab):- Var\==[],  \+ is_list(Var), !, /* is_arity_lt1(Var), */ write(' | '), pt0(In,Final,Var,Tab).
 pt_args(_In, Final,[],_) :- !, write(Final).
 pt_args( FS, Final,[A|R],Tab) :- R==[], write(', '), prefix_spaces(Tab), pt0(FS,Final,A,Tab), !.
-pt_args( FS, Final,[A0,A|As],Tab) :- is_arity_lt1(A0), is_arity_lt1(A),
-   splice_off([A|As],[L1|Left],[R|Rest]), !, 
-   write(', '), prefix_spaces(Tab), write_simple(A0), write_simple_each([L1|Left]), 
-   output_line_position(New), write(', '),
-   nl, 
+pt_args( FS, Final,[A0,A|As],Tab) :- 
+   splice_off([A0,A|As],[_,L1|Left],Rest), !, 
+   write(', '), write_simple(A0), write_simple_each([L1|Left]), 
+   output_line_position(New), write(', '), nl, 
    Avr is round(((New - Tab)/2 + Tab)) + 4, !,
    prefix_spaces(Avr), 
-   pt0([lf|FS],'',R,Avr),
    pt_args([lf|FS],Final,Rest,Avr).  
 pt_args( FS, Final,[A|As],Tab) :- !,  write(', '), prefix_spaces(Tab), 
    pt0([lf|FS],'',A,Tab),
@@ -560,6 +558,7 @@ is_arity_lt1(S) :- is_codelist(S),!.
 
 as_is(V):- var(V).
 as_is(A) :- is_arity_lt1(A), !.
+as_is(A):- is_list(A), maplist(is_arity_lt1,A).
 as_is([A]) :- is_list(A),length(A,L),L<2,!.
 as_is(A) :- functor(A,F,_), simple_f(F).
 as_is(A) :- functor(A,F,2), simple_fs(F),arg(2,A,One),atomic(One),!.
