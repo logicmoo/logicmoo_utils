@@ -350,8 +350,9 @@ only_if_ends_with([Ext|L],File):- only_if_ends_with(Ext,File)->true;only_if_ends
 % Enumerate Files.
 %
 enumerate_files(Spec0,Result):- strip_module(Spec0,_,Spec),
-   call((atom(Spec),(exists_file(Spec);exists_directory(Spec)),prolog_to_os_filename(Result,Spec))),!,
-   absolute_file_name(Spec,Result).
+   call((atom(Spec),(exists_file(Spec);exists_directory(Spec)),prolog_to_os_filename(Result,Spec))),
+   absolute_file_name(Spec,Result),exists_file_or_dir(Result),!.
+enumerate_files(Spec,Result):-absolute_file_name(Spec,Result),exists_file_or_dir(Result),!.
 enumerate_files(M:Spec,Result):-
    call((no_repeats_old([Result],((enumerate_m_files(M,Spec,NResult),once((normalize_path(NResult,Result)->exists_file_or_dir(Result)))))))).
 
@@ -1031,4 +1032,9 @@ calc_where_to(outdir(Dir, Ext), InputName, OutputFile):-
     make_directory_path(Dir),
     absolute_file_name(OutputName, OutputFile, [relative_to(Dir)]).
 
+contains_wildcard(Spec):- sformat(S,'~q',[Spec]),
+   (sub_string(S, _, _, _, '*');sub_string(S, _, _, _, '?')),!.
+
 :- fixup_exports.
+
+

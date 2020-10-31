@@ -37,6 +37,8 @@
 :- dynamic   user:file_search_path/2.
 :- multifile user:file_search_path/2.
 
+:- pack_install(logicmoo_utils,[upgrade(true),interactive(false)]).
+
 :- if( \+ current_predicate(add_absolute_search_folder/2)).
 
 
@@ -58,14 +60,39 @@ spec_to_files(Spec,Files):-
             (   absolute_file_name(Spec,File,[ access(exist),file_type(directory),file_errors(fail),solutions(all)])
             ;   absolute_file_name(Spec,File,[ access(exist),file_errors(fail),solutions(all)])), Files).
 
+local_file_name_to_atom_(Spec, File) :-
+    atomic(Spec),
+    !,
+    atom_string(File, Spec).
+local_file_name_to_atom_(Spec, File) :-
+    segments_local_(Spec, L, []),
+    atomic_list_concat(L, /, File).
+
+segments_local_(Var, A, B) :-
+    var(Var),
+    !,
+    instantiation_error(Var),
+    B=A.
+segments_local_(A/B, C, D) :-
+    !,
+    E=C,
+    segments_local_(A, E, F),
+    segments_local_(B, F, D).
+segments_local_(A, B, C) :-
+    must_be(atomic, A),
+    D=B,
+    D=[A|C].
+%:- autoload(library(shell),[file_name_to_atom/2]).
+
 name_to_files_(Spec, Files, _) :-
  % prolog_load_context(directory,Dir),
     compound(Spec),
     compound_name_arity(Spec, _Alias, 1), !,
     spec_to_files(Spec,Files).
 name_to_files_(Spec, Files, Exists) :-
-    use_module(library(shell)),
-    shell:file_name_to_atom(Spec, S1),
+    %use_module(library(shell)),
+    %shell:file_name_to_atom(Spec, S1),
+    local_file_name_to_atom_(Spec, S1),
     expand_file_name(S1, Files0),
     (   Exists==true,
         Files0==[S1],
