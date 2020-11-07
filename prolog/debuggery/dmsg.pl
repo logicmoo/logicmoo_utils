@@ -596,6 +596,8 @@ fmt9(Msg):- new_line_if_needed, must(fmt90(Msg)),!,new_line_if_needed.
 
 fmt90(fmt0(F,A)):-on_x_fail(fmt0(F,A)),!.
 fmt90(Msg):- dzotrace(on_x_fail(((string(Msg)),format(Msg,[])))),!.
+
+fmt90(V):- mesg_color(V,C), !, catch(pprint_ecp(C, V),_,fail),!.
 fmt90(Msg):- 
  on_x_fail((with_output_to(string(S),
    on_x_fail(if_defined_local(portray_clause_w_vars(Msg),fail))),
@@ -1200,6 +1202,7 @@ dmsg00(V):- dmsg000(V),!.
 %
 % (debug)message Primary Helper Primary Helper Primary Helper.
 %
+
 dmsg000(V):-
  with_output_to_main_error(
    (dzotrace(format(string(K),'~p',[V])),
@@ -1273,6 +1276,7 @@ dmsg4(Msg):- ignore(dzotrace(show_source_location)),dmsg5(Msg).
 %
 % Dmsg5.
 %
+
 dmsg5(Msg):- to_stderror(in_cmt(fmt9(Msg))).
 
 %= 	 	 

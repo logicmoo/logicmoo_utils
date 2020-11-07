@@ -37,7 +37,6 @@
 :- dynamic   user:file_search_path/2.
 :- multifile user:file_search_path/2.
 
-:- pack_install(logicmoo_utils,[upgrade(true),interactive(false)]).
 
 :- if( \+ current_predicate(add_absolute_search_folder/2)).
 
@@ -221,15 +220,17 @@ dir_from(Rel,Y):-
 :- export(add_pack_path/1).
 add_pack_path(packs_xtra):-pack_property(logicmoo_nlu,_),!.
 add_pack_path(packs_sys):-pack_property(logicmoo_base,_),!.
-add_pack_path(Rel):- 
-   dir_from(Rel,Y),
-   (( \+ user:file_search_path(pack,Y)) ->asserta(user:file_search_path(pack,Y));true).
+add_pack_path(Rel):- ( \+ atom(Rel) ; \+ is_absolute_file_name(Rel)),!,
+   dir_from(Rel,Y), Y\==Rel, add_pack_path(Y).
+add_pack_path(Y):- attach_packs(Y),!.
+add_pack_path(Y):-  \+ user:file_search_path(pack,Y) ->asserta(user:file_search_path(pack,Y));true.
 
 
 
 :- if( \+ exists_source(library(logicmoo_common))).
-%:- add_pack_path(packs_sys).
+:- add_pack_path('../..').
 :- endif.
+
 
 %:- if( \+ exists_source(library(logicmoo_hyhtn))).
 %:- add_pack_path(packs_xtra).
@@ -1148,7 +1149,7 @@ pack_upgrade_soft(Pack) :-
                        upgrade(true),
                        interactive(false),
                        pack(Pack)
-                     ])
+                     ])                                             
     ;   print_message(informational, pack(up_to_date(Pack)))
     )).
 
@@ -1158,7 +1159,8 @@ pack_upgrade_soft(Pack) :-
 
 
 :- export(pack_upgrade_soft/0).
-pack_upgrade_soft :- pack_upgrade_soft(pfc), pack_upgrade_soft(logicmoo_utils), pack_upgrade_soft(dictoo).
+pack_upgrade_soft :- pack_upgrade_soft(pfc), pack_upgrade_soft(logicmoo_utils), pack_upgrade_soft(dictoo),
+  forall(pack_property(X,version(_)),pack_upgrade_soft(X)).
 :- system:import(pack_upgrade_soft/0).
 
 
