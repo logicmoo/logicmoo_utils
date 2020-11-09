@@ -1000,13 +1000,13 @@ resolve_local_files_1(S0,SL):- expand_file_search_path(S0,S1),S0\==S1,resolve_lo
 resolve_local_files_1(S0,SS):- atom(S0), file_base_name(S0,S1), S0\==S1, resolve_local_files(S1,SS).
 %resolve_local_files_1(S0,SL):- atom(S0), resolve_local_files(ec(S0),SL).
 
-relative_from(F):- nb_current('$ec_input_file', F).
-relative_from(D):- working_directory(D,D).
-relative_from(F):- stream_property(_,file_name(F)).
-relative_from(D):- expand_file_search_path(library('ec_planner'),D),exists_directory(D).
-relative_from(D):- expand_file_search_path(library('ec_planner/../../ext/ec_sources'),D),exists_directory(D).
+relative_from(F):- nb_current('$ec_input_file', F), atom(F), F \== [].
+relative_from(D):- working_directory(D,D),exists_directory(D).
+relative_from(F):- stream_property(_,file_name(F)),nonvar(F).
+relative_from(D):- catch( (expand_file_search_path(library('ec_planner'),D)),_,fail),exists_directory(D).
+relative_from(D):- catch( (expand_file_search_path(library('ec_planner/../../ext/ec_sources'),D)),_,fail),exists_directory(D).
 
-user:file_search_path(ec,D):- findall(D,relative_from(D),L),dedupe_files(L,S),member(D,S).
+% user:file_search_path(ec,D):- catch( (findall(D,relative_from(D),L),dedupe_files(L,S),member(D,S)),_,fail).
 /*
 resolve_file(S0,SS):- atom(S0), exists_file(S0), !, SS=S0. 
 resolve_file(S0,SS):- absolute_file_name(S0, SS, [expand(true), file_errors(fail), access(read)]), !.
