@@ -1,22 +1,23 @@
-# xlisting/xlisting_web
-Provides Cross Referenced Listing and Source Variables at Console
-Manipulate and browse prolog runtime over www
-
-
-Installation using SWI-Prolog 7.1 or later:
-
-    `?- pack_install('https://github.com/logicmoo/xlisting.git'). `
-
-Source code available and pull requests accepted at
-http://github.com/logicmoo/xlisting
+# multimodal_dcg
+Reduce floundering of DCGs by constraining and narrowing search 
 
 ```prolog
 
-?- use_module(library(xlisting)).
-true.
+ :- pack_install('https://github.com/logicmoo/multimodal_dcg.git').
 
-?- xlisting(member(X,[1,2,3])).
- 
+```
+
+
+```prolog
+
+:- use_module(library(multimodal_dcg)).
+
+
+predicate_named(Pred) --> dcgAnd(theText(Text),dcgLenBetween(1,5)).
+
+:- must(dcgAnd(dcgLenBetween(5,1),theText(_Text),[a,b,c],[])).
+:- must(predicate_named(_P,[proper,-,named],[])).
+
 
 ```
 

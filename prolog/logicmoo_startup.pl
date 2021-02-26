@@ -7,10 +7,10 @@
     Revision:      $Revision: 1.2 $
     Revised At:    $Date: 2017/06/02 21:57:28 $
     Author:        Douglas R. Miles
-    Maintainers:   TeamSPoon
+    Maintainers:   logicmoo
     E-mail:        logicmoo@gmail.com
     WWW:           http://www.prologmoo.com
-    SCM:           https://github.com/TeamSPoon/logicmoo_utils/blob/master/prolog/logicmoo_startup.pl
+    SCM:           https://github.com/logicmoo/logicmoo_utils/blob/master/prolog/logicmoo_startup.pl
     Copyleft:      1999-2015, LogicMOO Prolog Extensions
     License:       Lesser GNU Public License
 % ===================================================================
@@ -102,15 +102,31 @@ name_to_files_(Spec, Files, Exists) :-
     ).
 
 
-with_abs_paths(Pred1, Path):- is_list(Path),!,maplist(with_abs_paths(Pred1),Path).
+with_abs_paths(Pred1, Path):- is_list(Path),!, maplist(with_abs_paths(Pred1),Path).
 with_abs_paths(Pred1, Path):- 
- ((atom(Path), is_absolute_file_name(Path)) -> 
- (wdmsg(with_abs_paths(Pred1,Path)),
- call(Pred1,Path));
+ ( \+ atom(Path); \+ is_absolute_file_name(Path); \+ exists_file_or_dir(Path)), !,
+ wdmsg(resolve(with_abs_paths(Pred1,Path))), 
  (must((forall((
      (name_to_files(Path, MatchesL)*-> member(Matches,MatchesL) ; Path = Matches),
     spec_to_files(Matches,AbsPath)),
+    with_abs_paths(Pred1,AbsPath))))).
+
+with_abs_paths(Pred1, Path):- 
+  wdmsg(with_abs_paths(Pred1,Path)), 
+  call(Pred1,Path).
+
+/*
+with_abs_paths(Pred1, Path):- 
+atom(Path), is_absolute_file_name(Path), show_failure(exists_file_or_dir(Path))
+ -> 
+  (wdmsg(with_abs_paths(Pred1,Path)),
+ call(Pred1,Path))
+  ;
+  (must((forall((
+     (name_to_files(Path, MatchesL)*-> member(Matches,MatchesL) ; Path = Matches),
+    spec_to_files(Matches,AbsPath)),
     with_abs_paths(Pred1,AbsPath)))))).
+*/
 
 ain_file_search_path(Name,Path):- 
  (user:file_search_path(Name,Path) -> true ; asserta(user:file_search_path(Name,Path))).
@@ -230,6 +246,12 @@ add_pack_path(Y):-  \+ user:file_search_path(pack,Y) ->asserta(user:file_search_
 :- if( \+ exists_source(library(logicmoo_common))).
 :- add_pack_path('../..').
 :- endif.
+:- if( \+ exists_source(library(logicmoo_webui))).
+:- add_pack_path('../../../packs_web').
+:- endif.
+:- if( \+ exists_source(library(aleph))).
+:- add_pack_path('../../../packs_lib').
+:- endif.
 
 
 %:- if( \+ exists_source(library(logicmoo_hyhtn))).
@@ -283,18 +305,24 @@ add_pack_path(Y):-  \+ user:file_search_path(pack,Y) ->asserta(user:file_search_
 % Enable History
 % ==============================================
 :- if(\+ current_predicate(setup_hist0/0)).
-:- if(exists_source(library(editline))). 
-:- if(\+ current_prolog_flag(windows,true)).
+:- if(current_prolog_flag(windows, false)).
+
+:- if(exists_source(library(editline))).
 :- use_module(library(editline)).
-:- endif.
 :- else.
 :- if(exists_source(library(readline))).
-:- use_module(library(readline)).
-:- endif.
+ :- use_module(library(readline)).
+:- else.
+ :- if(exists_source(library(editline))).
+  :- use_module(library(editline)).
+ :- endif.
 :- endif.
 setup_hist0:-  '$toplevel':setup_history.
-:- setup_hist0.
+:- initialize(setup_hist0, now).
 :- endif.
+:- endif.
+:- endif.
+
    
 
 % :- predicate_inheritance:kb_global(plunit:loading_unit/4).
@@ -945,6 +973,7 @@ init_logicmoo :- ensure_loaded(library(logicmoo_repl)),init_why(during_booting,i
 :- use_module(library(prolog_history)).
 
 add_history(O):- is_list(O), member(E,O), compound(E), !, maplist(add_history,O).
+add_history(O):- !, wdmsg(not_add_history(O)),!.
 add_history(O):- 
    ignore_not_not((nonvar(O),make_historial(O,A),add_history0(A))),!.
 
@@ -1060,7 +1089,7 @@ logicmoo_base_port(Base):- app_argv1(One),\+ is_list(One),
 
 teamspoon_pack(Pack):-
   call((user:use_module(library(prolog_pack)))),
-  pack_property(Pack,home(Home)),once(sub_string(Home, _, _, _, 'github.com/TeamSPoon')).
+  pack_property(Pack,home(Home)),once(sub_string(Home, _, _, _, 'github.com/logicmoo')).
 
 logicmoo_update:-  call((user:use_module(library(prolog_pack)))),
     forall(teamspoon_pack(Pack),dmsg(warning,maybe_pack_upgrade(Pack))).
@@ -1175,7 +1204,7 @@ correct_unsatisfied_dependencies:-!.
 
 ensure_this_pack_installed_correctly:-
   % pack_upgrade(logicmoo_utils),
-  % pack_install('https://github.com/TeamSPoon/predicate_streams.git',[silent(true),git(true),interactive(false)]),
+  % pack_install('https://github.com/logicmoo/predicate_streams.git',[silent(true),git(true),interactive(false)]),
   pack_install(predicate_streams,[interactive(false)]),
   pack_install(gvar_syntax,[interactive(false)]),
   pack_install(dictoo,[interactive(false)]),
@@ -1194,7 +1223,7 @@ ensure_this_pack_installed:-
 :- ensure_this_pack_installed.
 
 ensure_logicmoo_pack_install(X):- pack_property(X,version(_)),!.
-ensure_logicmoo_pack_install(X):- atomic_list_concat(['https://github.com/TeamSPoon/',X,'.git'],URL),pack_install(URL,[interactive(false)]).
+ensure_logicmoo_pack_install(X):- atomic_list_concat(['https://github.com/logicmoo/',X,'.git'],URL),pack_install(URL,[interactive(false)]).
 install_logicmoo:-
   ensure_this_pack_installed,
   maplist(ensure_logicmoo_pack_install,[

@@ -54,7 +54,7 @@ on_begin(Tag, Attr, Parser) :- skipOver(not(inLineNum)),
         skipOver(asserta(inLineNum)),
 %        load_structure(Stream,Content,[line(Line)|PARSER_DEFAULTS]),!,
  %      skipOver( sgml_parse(Parser,[ document(Content),parse(input)])),
-        NEW = lineInfoElement(Pathname,Line:Offset, Context, element(Tag, Attr, no_content_yet)),
+        NEW = t_l:lineInfoElem(Pathname,Line:Offset, Context, element(Tag, Attr, no_content_yet)),
         %%debugFmt(NEW),
         skipOver(ignore(retract(inLineNum))),
         skipOver(asserta(in_aiml_tag(AimlAttr))),
@@ -87,7 +87,7 @@ xml_error(TAG, URL, Parser) :- !, debugFmt(xml_error(URL, TAG, Parser)).
 
 load_aiml_structure_lineno(Attributes,Ctx,L):-must_maplist(load_inner_aiml_lineno(Attributes,Ctx),L),!.
 
-:-thread_local(lineInfoElement/4).
+:-thread_local(t_l:lineInfoElem/4).
 
 load_inner_aiml_lineno(Attributes,Ctx,element(Tag,Attribs,ContentIn)):-
    appendAttributes(Ctx,Attributes,Attribs,RightAttribs),
@@ -98,7 +98,7 @@ load_inner_aiml_lineno(Attributes,Ctx,element(Tag,Attribs,ContentIn)):-
 load_inner_aiml_lineno(Attributes,Ctx,element(Tag,Attribs,ContentIn)):-
    appendAttributes(Ctx,Attributes,Attribs,RightAttribs),
    prolog_must(attributeValue(Ctx,RightAttribs,[srcfile,srcdir],File,'$error')),
-   MATCH = lineInfoElement(File,Line:Offset, Context, element(Tag, Attribs, no_content_yet)),
+   MATCH = t_l:lineInfoElem(File,Line:Offset, Context, element(Tag, Attribs, no_content_yet)),
    ignore(MATCH),                                            
    Context=[_Tag0,aiml|_More],
    ignore(Line = nonfile),
@@ -111,13 +111,13 @@ load_inner_aiml_lineno(Attributes,Ctx,element(Tag,Attribs,ContentIn)):-
 
    load_inner_aiml_lineno(Attributes,Ctx,element(Tag,Attribs,ContentIn)):-
    prolog_must(current_value(Ctx,srcfile,File)),
-   retract((lineInfoElement(File0,Line0:Offset0,graph, element(_Tag0, _Attr0, _Content0)))),
+   retract((t_l:lineInfoElem(File0,Line0:Offset0,graph, element(_Tag0, _Attr0, _Content0)))),
    prolog_must(call(OLD)),
 
-   MATCH = lineInfoElement(File,Line:Offset,Context, element(Tag, Attribs, _ContentIn)),!,
+   MATCH = t_l:lineInfoElem(File,Line:Offset,Context, element(Tag, Attribs, _ContentIn)),!,
    prolog_must((call(MATCH),!,not(not((Line:Offset)==(Line0:Offset0))),retract(OLD),
    load_aiml_structure(Ctx,element(Tag,[srcinfo=File0:Line0-Offset0|Attribs],ContentIn)),
-        NEW = lineInfoElement(File,Line:Offset,Attributes, element(Tag, Attribs, ContentIn)),
+        NEW = t_l:lineInfoElem(File,Line:Offset,Attributes, element(Tag, Attribs, ContentIn)),
         assertz(NEW))),!.
 
    */
@@ -191,7 +191,7 @@ termFileContents(_Ctx,File,element(aiml,[],XMLSTRUCTURES)):- %% another way to f
 % gather line numbers
 fileToLineInfoElements0(Ctx,F0,XMLSTRUCTURES):-
    global_pathname(F0,File),
-       retractall(lineInfoElement(File,_,_,_)),
+       retractall(t_l:lineInfoElem(File,_,_,_)),
         setup_call_cleanup((open(File, read, In, [type(binary)]),new_sgml_parser(Parser, [])),
 
           prolog_must((           
@@ -219,7 +219,7 @@ load_inner_aiml_w_lineno(SrcFile,OuterTag,Parent,Attributes,Ctx,[H|T],LL):-!,
 % % offset
 load_inner_aiml_w_lineno(SrcFile,[OuterTag|PREV],Parent,Attributes,Ctx,element(Tag,Attribs,ContentIn),element(Tag,NewAttribs,ContentOut)):-
    Context=[Tag,OuterTag|_],
-   MATCH = lineInfoElement(SrcFile,Line:Offset, Context, element(Tag, Attribs, no_content_yet)),
+   MATCH = t_l:lineInfoElem(SrcFile,Line:Offset, Context, element(Tag, Attribs, no_content_yet)),
    MATCH,!,
    ignore(Line = nonfile),
    ignore(Offset = nonfile),
