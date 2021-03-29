@@ -435,8 +435,8 @@ simplify_goal_printed(must_det_lm(M,G),GS):-!,simplify_goal_printed(M:must_det_l
 simplify_goal_printed(M:G,MS:GS):-atom(M), simplify_m(M,MS),!,simplify_goal_printed(G,GS).
 simplify_goal_printed(dinterp(_,_,I,_),O):- !,simplify_goal_printed(I,O).
 simplify_goal_printed(call_term_expansion(_,A,_,B,_),O):- !, simplify_goal_printed(call_term_expansion_5('...',A,'...',B,'...'),O).
-simplify_goal_printed(A,'/.../'(Dir,SA)):- atom(A),atom_concat('/',_,A),directory_file_path(DirL,SA,A),directory_file_path(_,Dir,DirL),!.
-simplify_goal_printed(A,'...'(SA)):- atom(A),concat_atom([_,SA1|SA2],'logicmoo_',A),!,(SA2==[]->SA=SA1;SA=SA2).
+%simplify_goal_printed(A,'/.../'(Dir,SA)):- atom(A),atom_concat('/',_,A),directory_file_path(DirL,SA,A),directory_file_path(_,Dir,DirL),!.
+%simplify_goal_printed(A,'...'(SA)):- atom(A),concat_atom([_,SA1|SA2],'logicmoo_',A),!,(SA2==[]->SA=SA1;SA=SA2).
 simplify_goal_printed(GOAL=A,AS):- goal==GOAL,!,simplify_goal_printed(A,AS).
 simplify_goal_printed(Var,Var):- \+ compound(Var),!.
 simplify_goal_printed(P,O):- compound(P),compound_name_arguments(P,F,[I]),
@@ -549,9 +549,11 @@ dtrace:- wdmsg("DUMP_TRACE/0"), (thread_self_main->(dumpST,rtrace);(dumpST(30),a
 %:- redefine_system_predicate(system:dbreak()).
 
 :- thread_local(t_l:no_dbreak/0).
-dbreak:- wdmsg("DUMP_BREAK/0"),dumpST,wdmsg("DUMP_BREAK/0"),
+%dbreak:- wdmsg("DUMP_BREAK/0"), !, break, throw(abort).
+dbreak:- wdmsg("DUMP_BREAK/0"), !, throw(abort).
+dbreak:- wdmsg("DUMP_BREAK/0"),((ignore(on_x_fail(dumpST)), break,wdmsg("DUMP_BREAK/0"))),!,
   (t_l:no_dbreak -> wdmsg("NO__________________DUMP_BREAK/0") ;
-   (thread_self_main->(dumpST,dtrace(system:break),break);true)).
+      (thread_self_main->(dumpST,dtrace(system:break),break);true)).
 
 :- thread_local(tlbugger:has_auto_trace/1).
 :-meta_predicate(dtrace(0)).

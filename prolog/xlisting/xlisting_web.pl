@@ -2457,19 +2457,17 @@ pp_i2tml_0(is_disabled_clause(H)):- pp_i2tml_0((disabled)=H).
 
 
 % pp_i2tml_0(FET):-fully_expand(change(assert,html_gen),FET,NEWFET),FET\=@=NEWFET,!,pp_i2tml_0(NEWFET).
-pp_i2tml_0(spft(_MZ,P,F,T)):- !, pp_i2tml_0(spft(P,F,T)).
+%pp_i2tml_0('$spft'(MZ,P,F,T)):- !, pp_i2tml_0('$spft'(MZ,P,F,T)).
+%pp_i2tml_0('$spft'(MZ,P,F,T)):-!, locally_tl(current_why_source(T),pp_i2tml_0('$spft'(MZ,P,F,T))).
 
-pp_i2tml_0(spft(P,F,T)):-!,
-   locally_tl(current_why_source(T),pp_i2tml_0(spft(P,F,T))).
-
-pp_i2tml_0(spft(P,U,U)):- nonvar(U),!, pp_i2tml_1(P:-asserted_by(U)).
-pp_i2tml_0(spft(P,F,T)):- atom(F),atom(T),!, pp_i2tml_1(P:-asserted_in(F:T)).
-pp_i2tml_0(spft(P,F,T)):- atom(T),!,  pp_i2tml_1(((P):-  T:'t-deduced',F)). 
-pp_i2tml_0(spft(P,F,T)):- atom(F),!,  pp_i2tml_1(((P):-  F:'f-deduced',T)). 
-pp_i2tml_0(spft(P,F,T)):- !, pp_i2tml_1((P:- ( 'deduced-from'=F,  (rule_why = T)))).
-pp_i2tml_0(nt(_,Trigger,Test,Body)) :- !, pp_i2tml_1(proplst(['n-trigger'=Trigger , bformat=Test  ,  (body = (Body))])).
-pp_i2tml_0(pt(_,Trigger,Body)):-      pp_i2tml_1(proplst(['p-trigger'=Trigger , ( body = Body)])).
-pp_i2tml_0(bt(_,Trigger,Body)):-      pp_i2tml_1(proplst(['b-trigger'=Trigger ,  ( body = Body)])).
+pp_i2tml_0('$spft'(MZ,P,U,U)):- nonvar(U),!, pp_i2tml_1(MZ:P:-asserted_by(U)).
+pp_i2tml_0('$spft'(MZ,P,F,T)):- atom(F),atom(T),!, pp_i2tml_1(MZ:P:-asserted_in(F:T)).
+pp_i2tml_0('$spft'(MZ,P,F,T)):- atom(T),!,  pp_i2tml_1(((MZ:P):-  T:'t-deduced',F)). 
+pp_i2tml_0('$spft'(MZ,P,F,T)):- atom(F),!,  pp_i2tml_1(((MZ:P):-  F:'f-deduced',T)). 
+pp_i2tml_0('$spft'(MZ,P,F,T)):- !, pp_i2tml_1((MZ:P:- ( 'deduced-from'=F,  (rule_why = T)))).
+pp_i2tml_0('$nt'(Trigger,Test,Body)) :- !, pp_i2tml_1(proplst(['n-trigger'=Trigger , bformat=Test  ,  (body = (Body))])).
+pp_i2tml_0('$pt'(MZ,Trigger,Body)):-      pp_i2tml_1(proplst(['p-trigger'=Trigger , ( body = Body)])).
+pp_i2tml_0('$bt'(Trigger,Body)):-      pp_i2tml_1(proplst(['b-trigger'=Trigger ,  ( body = Body)])).
 
 pp_i2tml_0(proplst([N=V|Val])):- is_list(Val),!, pp_i2tml_1(N:-([clause=V|Val])).
 pp_i2tml_0(proplst(Val)):-!, pp_i2tml_1(:-(proplst(Val))).
@@ -3052,10 +3050,10 @@ indent_nbsp(X,Chars):-XX is X -1,!, indent_nbsp(XX,OutP),!,sformat(Chars,'~w   '
 shared_hide_data_sp(Var):- is_ftVar(Var),!,fail.
 shared_hide_data_sp(_:F/A):- !,shared_hide_data_sp(F/A).
 shared_hide_data_sp('$si$':'$was_imported_kb_content$'/2):- !,is_listing_hidden(hideMeta).
-shared_hide_data_sp(spft/3):- !,is_listing_hidden(hideTriggers).
-shared_hide_data_sp(nt/3):- !,is_listing_hidden(hideTriggers).
-shared_hide_data_sp(pt/2):- !, is_listing_hidden(hideTriggers).
-shared_hide_data_sp(bt/2):- !, is_listing_hidden(hideTriggers).
+shared_hide_data_sp('$spft'/4):- !,is_listing_hidden(hideTriggers).
+shared_hide_data_sp('$nt'/3):- !,is_listing_hidden(hideTriggers).
+shared_hide_data_sp('$pt'/3):- !, is_listing_hidden(hideTriggers).
+shared_hide_data_sp('$bt'/2):- !, is_listing_hidden(hideTriggers).
 shared_hide_data_sp((_:-
  cwc,
         second_order(_,G19865),

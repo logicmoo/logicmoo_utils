@@ -143,7 +143,7 @@ dumpST_dbreak:- dumpST,break.
 % baseKBOnly mark_mark/3 must be findable from every module (dispite the fact that baseKB is not imported)
 % :- dynamic baseKB:mpred_prop/4.
 
-% hybrid_support (like spft/3) must be defined directly in every module and then aggregated thru genlMts (thus to baseKB)
+% hybrid_support (like '$spft'/4) must be defined directly in every module and then aggregated thru genlMts (thus to baseKB)
 /*
 is_parent_goal(G):- prolog_current_frame(F),is_parent_goal(F,G).
 % The user must ensure the checked parent goal is not removed from the stack due 
@@ -394,11 +394,11 @@ system:inherit_above(Mt,Query):-
    Query\=do_inherit_above(_,_),
    do_inherit_above(Mt,Query).
 
-never_move(spft,_).
+never_move('$spft',_).
 never_move(mpred_prop,_).
 never_move(meta_argtypes,_).
-never_move(pt,_).
-never_move(bct,_).
+never_move('$pt',_).
+never_move('$bt',_).
 never_move(tc,_).
 never_move(proven_tru,_).
 never_move(is_pfc_file,_):- dumpST,break.

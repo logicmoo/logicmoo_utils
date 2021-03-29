@@ -120,6 +120,9 @@ print_e_to_string_b(H, S):-
 
 print_e_to_string_b(H, HS):- print_e_to_string(H, HS),!.
 
+% print_e_to_string(T, _Ops, S):- with_output_to(string(S),print_tree_with_final(T,'')),!.
+
+print_e_to_string(T,_Ops, S):- string(T),!,S=T.
 print_e_to_string(T, Ops, S):- member(Infix,['<-']), member(Infix, Ops), !, 
    subst(T,Infix,(':-'),T0), 
    clause_to_string(T0,S0), !,
@@ -210,6 +213,7 @@ is_output_lang(_).
 %pprint_ec(C, P):- pprint_ec_and_f(C, P, '~n').
 
 :- export(pprint_ecp_cmt/2).
+
 pprint_ecp_cmt(C, P):-
  quietly((echo_format('~N'),  
   print_e_to_string(P, S0),
@@ -273,7 +277,7 @@ print_e_to_string(P, S):-
 
 into_space_cmt(S0,O):- 
   %normalize_space(string(S1),S0),
-  str_repl('\n','\n   ',S0, S),
+  str_repl('\n','\n     ',S0, S),
   (S0==S -> sformat(O, '~N %  ~s.~n', [S]); 
     (maybe_mention_s_l(1),sformat(O, '~n /*  ~s.~n */~n', [S]))).
 
@@ -303,14 +307,17 @@ echo_format(Fmt, Args):- real_format(Fmt, Args), ttyflush, !.
 
 is_outputing_to_file:- 
   current_output(S),
-  stream_property(S,file_name(_)).
+  stream_property_s(S,file_name(_)).
+
+stream_property_s(S,P):- on_x_fail(stream_property(S,P)).
 
 get_ansi_dest(S):- \+ is_outputing_to_file,!,current_output(S).
 get_ansi_dest(S):- S = user_error, !.
 get_ansi_dest(S):- S = user_output, !.
 
 with_output_to_ansi_dest(Goal):- 
-  get_ansi_dest(AnsiDest),with_output_to(AnsiDest,(Goal,ttyflush)),ttyflush.
+  get_ansi_dest(AnsiDest),stream_property_s(AnsiDest,output),
+  with_output_to(AnsiDest,(Goal,ttyflush)),ttyflush.
   
 
 put_out(Char):- put(Char),
@@ -348,7 +355,7 @@ maybe_o_s_l:- \+ o_s_l_diff, !.
 maybe_o_s_l:- notrace(e_source_location(F,L)),retractall(ec_reader:o_s_l(_,_)),asserta(ec_reader:o_s_l(F,L)),!.
 maybe_o_s_l.
 
-output_line_count(L):- nb_current('$ec_output_stream',Outs),is_stream(Outs),line_count(Outs,L).
+output_line_count(L):- nb_current('$ec_output_stream',Outs),is_stream(Outs),on_x_fail(line_count(Outs,L)), !.
 output_line_count(L):- line_count(current_output,L).
 
 output_line_position(L):- line_position(current_output,L).
@@ -380,26 +387,27 @@ was_s_l(B,L):- retractall(ec_reader:o_s_l(_,_)),asserta(ec_reader:o_s_l(B,L)), o
 e_source_location(F,L):- nb_current('$ec_input_stream',Ins), any_line_count(Ins,L), any_stream(F,Ins),!.
 e_source_location(F,L):- nb_current('$ec_input_file',FS), absolute_file_name(FS,F), any_stream(F,Ins), any_line_count(Ins,L),!.
 e_source_location(F,L):- current_stream(F, read, S), atom(F), atom_concat(_,'.e',F), any_line_count(S,L),!.
-e_source_location(F,L):- stream_property(S, file_name(F)),stream_property(S, input), atom_concat(_,'.e',F), any_line_count(S,L),!.
-e_source_location(F,L):- stream_property(S, file_name(F)),atom_concat(_,'.e',F), any_line_count(S,L),!.
+e_source_location(F,L):- stream_property_s(S, file_name(F)),stream_property_s(S, input), atom_concat(_,'.e',F), any_line_count(S,L),!.
+e_source_location(F,L):- stream_property_s(S, file_name(F)),atom_concat(_,'.e',F), any_line_count(S,L),!.
 
 :- export(s_l/2).
-s_l(F,L):- notrace(e_source_location(B,L2)), !, L is L2-1, absolute_file_name(B,F).
+s_l(F,L):- notrace(on_x_fail(e_source_location(B,L2))), !, L is L2-1, absolute_file_name(B,F).
 s_l(F,L):- source_location(F,L2), !, L is L2-1.
 % s_l(F,L):- ec_reader:o_s_l(F,L). 
 s_l(F,L):- any_stream(F,S), any_line_count(S,L),any_line_count(_,L), !.
 s_l(unknown,0).
 
 any_stream(F,S):- is_stream(F),var(S),!,F=S.
-any_stream(F,S):- stream_property(S, file_name(F)),stream_property(S, input).
+any_stream(F,S):- stream_property_s(S, file_name(F)),stream_property_s(S, input).
 any_stream(F,S):- current_stream(F, read, S), atom(F).
-any_stream(F,S):- stream_property(S, file_name(F)).
+any_stream(F,S):- stream_property_s(S, file_name(F)).
 any_stream(F,S):- current_stream(F, _, S), atom(F).
+
 any_line_count(_,L):- nonvar(L),!.
 any_line_count(F,L):- nonvar(F), \+ is_stream(F), any_stream(F,S), any_line_count(S,L),!.
-any_line_count(S,L):- line_count(S, L),!.
-any_line_count(S,L):- character_count(S, C), L is C * -1,!.
-any_line_count(S,L):- line_or_char_count(S, L),!.
+any_line_count(S,L):- on_x_fail(line_count(S, L)),!.
+any_line_count(S,L):- on_x_fail(character_count(S, C)), L is C * -1,!.
+any_line_count(S,L):- on_x_fail(line_or_char_count(S, L)),!.
 any_line_count(_,0).
 
 :- fixup_exports.
@@ -512,7 +520,7 @@ print_final_tree_options_tab(Final,Term, Options,Tab):-
 print_final_term_tab(Final,Term,Tab):- \+ as_is(Term), pt0([],Final, Term, Tab),!.
 print_final_term_tab(Final,Term,Tab):-  prefix_spaces(Tab), format('~@~w',[portray_with_vars(Term),Final]),!.
 
-
+prefix_spaces(Tab):- \+ integer(Tab), recalc_tab(Tab,   NewTab),!,prefix_spaces(NewTab).
 prefix_spaces(Tab):- output_line_position(Now), Now > Tab, !,nl,  format('~t~*|', [Tab]).
 prefix_spaces(Tab):- output_line_position(Now), Need is Tab - Now, format('~t~*|', [Need]).
 
@@ -554,121 +562,145 @@ recalc_tab(now-N, Tab):- output_line_position(Now), Tab is N-Now.
 recalc_tab(TabC,  Tab):- compound(TabC), Tab is TabC.
 recalc_tab(now,   Tab):- output_line_position(Tab).
 
-pt0(FS,Final,Term,TpN):- recalc_tab(TpN, New),!, pt0(FS,Final,Term, New).
-pt0(_,Final,Term,Tab) :- 
+pt0(FS,Final,Term,Tab) :-   prefix_spaces(Tab), !, pt1(FS,Final,Term,Tab).
+
+
+pt1(FS,Final,Term,TpN):- recalc_tab(TpN, New),!, pt0(FS,Final,Term, New).
+pt1(_,Final,Term,Tab) :- 
    is_arity_lt1(Term), !,
    prefix_spaces(Tab), portray_with_vars(Term),write(Final), nop(pt_nl).
 
-pt0(_,Final,Term,Tab) :- 
+pt1(_,Final,Term,Tab) :- 
    as_is(Term), !,
    prefix_spaces(Tab), portray_with_vars(Term),write(Final), nop(pt_nl).
 
-pt0(FS,Final,[T|Ts],Tab):- !,
-   pt0_list(FS,Final,[T|Ts],Tab).
+pt1(FS,Final,[T|Ts],Tab):- !, must(pt1_list(FS,Final,[T|Ts],Tab)).
 
 
-pt0(FS,Final,q(E,V,G),Tab):- atom(E), !, T=..[E,V,G],!, pt0(FS,Final,T,Tab).
+pt1(FS,Final,q(E,V,G),Tab):- atom(E), !, T=..[E,V,G],!, pt0(FS,Final,T,Tab).
 
-pt0(FS,Final,Term,Tab) :- 
-   Term=..[S,N,V],
-   ((current_op(P, xfx, S)); (S=':', atom(N))), !, % atomic(N), 
-   pt0([P|FS], ' ', N, Tab), pt0([P|FS], ' ',S,now),nl, pt0([P|FS], Final,V, Tab+ 3 ).
 
-pt0(FS,Final,Term,Tab0) :- 
+pt1(FS,Final,Term,Tab0) :- 
    is_dict(Term),
    Tab is Tab0+1,Tab2 is Tab+4,
    dict_pairs(Term, Tag, Pairs),
    format(atom(LC2),'}~w',[Final]),!,
-   prefix_spaces(Tab0),pt0([], '{',Tag,Tab),
+   prefix_spaces(Tab0),pt1([], '{',Tag,Tab),
    maplist(pair_to_colon,Pairs,Colons),
-   (Colons=[A|As]-> (pt0([dict|FS], '',A,Tab2), pt_args([dict|FS],LC2,As,Tab2)); write(LC2)).
+   (Colons=[A|As]-> (pt1([dict|FS], '',A,Tab2), pt_args([dict|FS],LC2,As,Tab2)); write(LC2)).
 
 
 /*
-pt0(FS,Final,TTs,Tab) :- 
+pt1(FS,Final,TTs,Tab) :- 
    inperent(FS,TTs,T,Ts),
    I0 is Tab-3,
    pt0(FS,Final,T,I0),   
    pt0(FS,Final,Ts,Tab).
 */
 
-pt0(FS, Final,T,Tab) :- 
+pt1(FS,Final,(NPV),Tab) :- NPV=..[P,N,V], is_colon_mark(P),pt1_package(FS,Final,P,N,V,Tab).
+
+
+pt1(FS,Final,T,Tab0) :- fail,
+   T=..[F,A,As], 
+   major_conj(F),
+   Tab is Tab0+1,
+   prefix_spaces(Tab0),write('('),
+   sformat(FinA, " ~w ~n",[F]), print_tree_with_final(A,FinA),
+   format(atom(LC2),')~w',[Final]),
+   nl,prefix_spaces(Tab0), pt0([F|FS],LC2,As,Tab).
+
+/*
+pt1(FS,Final,Term,Tab) :- 
+   Term=..[S,N,V], current_op(P, xfx, S), !,
+   pt0([P|FS], ' ', N, Tab), write('  '), writeq(S), nl, 
+   pt0([P|FS], Final,V, Tab+ 3 ).
+
+pt1(FS,Final,Term,Tab) :- 
+   Term=..[S,N,V], current_op(P, yfx, S), !,
+   write(' ( ') , pt0([P|FS], ' ', N, Tab), write('  '), writeq(S), nl, 
+   atom_concat(Final, ' ) ', NewFinal),
+   pt0([P|FS], NewFinal,V, Tab+ 3 ).
+*/
+
+pt1(FS, Final,T,Tab) :- 
    T=..[F,A0,A|As], \+ major_conj(F), is_arity_lt1(A0), append(Left,[R|Rest],[A|As]), 
     (\+ is_arity_lt1(R) ; Rest==[]), !,   
-   must_or_rtrace(pt0_functor(FS,Final,F,Tab,I0,LC2)),
+   must_or_rtrace(pt1_functor(FS,Final,F,Tab,I0,LC2)),
    write_simple(A0), write_simple_each(Left),
    pt_args([F|FS],LC2,[R|Rest],I0).
 
 
-pt0(FS, Final,T,Tab) :- 
+pt1(FS, Final,T,Tab) :- 
    T=..[F,A0], !,   
-   must_or_rtrace(pt0_functor(FS,Final,F,Tab,_I0,LC2)),
+   must_or_rtrace(pt1_functor(FS,Final,F,Tab,_I0,LC2)),
    print_tree_with_final(A0,LC2).
    %pt_args([F|FS],LC2,[],I0).
 
 /*
-pt0(_, Final,Term,Tab) :- is_simple_list(Term),
+pt1(_, Final,Term,Tab) :- is_simple_list(Term),
   prefix_spaces(Tab), mu_prolog_pprint(Tab,Term,[right_margin(6)]), write(Final).
 
-pt0(_, Final,Term,Tab) :- write_using_pprint(Term),!,
+pt1(_, Final,Term,Tab) :- write_using_pprint(Term),!,
   prefix_spaces(Tab), mu_prolog_pprint(Tab,Term,[right_margin(30)]), write(Final).
 
-pt0(_, Final,Term,Tab) :- fail, write_using_pprint_recurse(Term),
+pt1(_, Final,Term,Tab) :- fail, write_using_pprint_recurse(Term),
   prefix_spaces(Tab), 
    mu_prolog_pprint(Tab,Term,[portray_goal(print_tree_loop)]),
    write(Final).
 
 */
 
-
-
-
-pt0(FS,Final,T,Tab0) :- 
-   T=..[F,A,As], 
-   major_conj(F),
-   Tab is Tab0+1,
-   prefix_spaces(Tab0),write('('),
-   sformat(FinA, " ~w ",[F]), print_tree_with_final(A,FinA),
-   format(atom(LC2),')~w',[Final]),
-   pt0([F|FS],LC2,As,Tab).
-
-pt0(FS,Final,T,Tab) :- !,
+pt1(FS,Final,T,Tab) :- !,
    T=..[F,A|As],   
-   pt0_functor(FS,Final,F,Tab,I0,LC2),
+   pt1_functor(FS,Final,F,Tab,I0,LC2),
    pt0([F|FS],'',A,I0),
    pt_args([F|FS],LC2,As,I0).
 
-pt0_functor(FS,Final,F,Tab,I0,LC2):-
+pt1_functor(FS,Final,F,Tab,I0,LC2):-
    (((FS==F, major_conj(F) )
        -> (I0 is Tab+1,LCO='~w' )
        ; (prefix_spaces(Tab), format_functor(F),format('(',[]), I0 is Tab+3, /*pt_nl,*/ LCO=')~w'))),
      format(atom(LC2),LCO,[Final]).
 
 
-pt0_list(FS,Final,[T|Ts],Tab) :- !,
+pt1_list(FS,Final,[T|Ts],Tab) :- !,
   prefix_spaces(Tab),write('[ '),
    I2 is Tab+2,
    pt0(FS,'',T,I2),
    format(atom(NLC),' ]~w',[Final]),   
    pt_args([lf|FS],NLC,Ts,I2),!.
 
+
+is_colon_mark(':').
+is_colon_mark('::').
+is_colon_mark('::::').
+
+pt1_package(FS,Final,P,N,V,Tab) :- \+ compound(N), !,
+   prefix_spaces(Tab), pt0([P|FS], P, N, Tab), pt0([P|FS], Final, V, now ).
+
+pt1_package(FS,Final,P,N,V,Tab) :- !, write(' ( ') ,
+   prefix_spaces(Tab), pt0([P|FS], ' ) ', N, Tab), write(P),nl,
+   pt0([P|FS], Final, V, Tab+1 ).
+
+
 /*
 
-pt0(FS,Final,T,Tab) :- fail,  T=..[F,A], !,
+pt1(FS,Final,T,Tab) :- fail,  T=..[F,A], !,
    prefix_spaces(Tab), format_functor(F),format('(',[]),
    I0 is Tab+1, format(atom(LC2),')~w',[Final]),   
    pt_args([F|FS],LC2,[A],I0).
 
 
 
-pt0(FS,Final,T,Tab) :- fail,  T.=.[F,A,B|As], is_arity_lt1(A), !, 
+pt1(FS,Final,T,Tab) :- fail,  T.=.[F,A,B|As], is_arity_lt1(A), !, 
    prefix_spaces(Tab), format_functor(F), format('( ~@,',[portray_with_vars(A)]), pt_nl,
    I0 is Tab+2, format(atom(LC2),')~w',[Final]),
    pt_args([F|FS],LC2,[B|As],I0).
 */
 
 
-major_conj(F):-  (F == ',';F == ';';F=='&'),!.
+major_conj(F):-  (F == ',';F == ';' ;F=='&'),!.
 
 splice_off([A0,A|As],[A0|Left],[R|Rest]):- 
    is_arity_lt1(A0), append(Left,[R|Rest],[A|As]), 
@@ -677,15 +709,18 @@ splice_off([A0,A|As],[A0|Left],[R|Rest]):-
 
 %pt_args( [F|_], Final,[A|Args],_Tab) :- simple_f(F),!,write_simple(A), write_simple_each(Args), write(Final),!.
 pt_args( _, Final,[A],_Tab) :- number(A),  write(', '), write(A), write(Final),!.
-pt_args( In, Final,Var,Tab):- Var\==[],  \+ is_list(Var), !, /* is_arity_lt1(Var), */ write(' | '), pt0(In,Final,Var,Tab).
+pt_args( In, Final,Var,Tab):- Var\==[],  \+ is_list(Var), !, /* is_arity_lt1(Var), */ write(' | '), pt1(In,Final,Var,Tab).
 pt_args(_In, Final,[],_) :- !, write(Final).
 pt_args( FS, Final,[A|R],Tab) :- R==[], write(', '), prefix_spaces(Tab), pt0(FS,Final,A,Tab), !.
 pt_args( FS, Final,[A0,A|As],Tab) :- 
    splice_off([A0,A|As],[_,L1|Left],Rest), !, 
    write(', '), write_simple(A0), write_simple_each([L1|Left]), 
-   output_line_position(New), write(', '), nl, 
-   Avr is round(((New - Tab)/2 + Tab)) + 4, !,
-   prefix_spaces(Avr), 
+   output_line_position(New), 
+   
+   %write(', '), nl, 
+   % length(Left,LL), Avr is Tab + 2*LL,
+   Avr is round(((New - Tab)/5 + Tab)) + 2, !,
+   % prefix_spaces(Avr), 
    pt_args([lf|FS],Final,Rest,Avr).  
 pt_args( FS, Final,[A|As],Tab) :- !,  write(', '), prefix_spaces(Tab), 
    pt0([lf|FS],'',A,Tab),

@@ -695,7 +695,7 @@ is_listing_hidden_00(P):-baseKB:shared_hide_data(P),!.
 is_listing_hidden_00(_/_):-!,fail.
 is_listing_hidden_00(rnc):-!,fail.
 is_listing_hidden_00(P):- compound(P),functor(P,F,A), (is_listing_hidden_00(F/A);is_listing_hidden_00(F)).
-is_listing_hidden_00(spft):- is_listing_hidden(hideMeta),!.
+is_listing_hidden_00('$spft'):- is_listing_hidden(hideMeta),!.
 % %%% is_listing_hidden_00(P):- predicate_property(P,number_of_clauses(N)),N > 50000,\+ is_listing_hidden(showAll), \+ is_listing_hidden(showHUGE),!.
 is_listing_hidden_00(M:P):- atom(M),(is_listing_hidden(M);is_listing_hidden_00(P)).
 
@@ -998,7 +998,7 @@ sourceTextPredicateSource(_):-fail.
 %
 % plisting  Secondary Helper.
 %
-plisting_1:-plisting(spft(_,_,_,_)).
+plisting_1:-plisting('$spft'(_,_,_,_)).
 
 
 %= 	 	 
@@ -1122,6 +1122,7 @@ term_matches_hb(D,_,_,_):- D<0,!,fail.
 term_matches_hb(_,noinfo,_,info(_)):-!,fail. 
 
 term_matches_hb(D,M:HO,H,B):-!,term_matches_hb(D,(module(M),HO),H,B).
+term_matches_hb(D,(HO:-BO),H,B):- !, (nonvar(HO) -> term_matches_unify(D,HO,H) ; true),(nonvar(BO) -> term_matches_unify(D,BO,B) ; true).
 term_matches_hb(D,unify(HO),H,B):- !,term_matches_unify(D,HO,(H:-B)).
 term_matches_hb(D,[F1],H,B):-!,term_matches_hb(D,F1,H,B),!.
 term_matches_hb(D,[F1+FS],H,B):-!,term_matches_hb(D,(F1,FS),H,B).
@@ -1137,6 +1138,7 @@ term_matches_hb(_,module(M),H,_):-!,predicate_property(H,imported_from(M)).
 term_matches_hb(D,h(P),H,_):-!,term_matches_hb(D,P,H,666666).
 term_matches_hb(D,b(P),_,B):-!,term_matches_hb(D,P,B,666666).
 term_matches_hb(_,string(HO),H,B):- nonvar(HO),any_to_atom(HO,HS),!, with_output_to(string(H1B1),write_canonical((H:-B))), (sub_atom_icasechk(HS,_,H1B1);sub_atom_icasechk(H1B1,_,HS)),!.
+%term_matches_hb(_,cistring(HO),H,B):- nonvar(HO),any_to_atom(HO,HS),!, with_output_to(string(H1B1),write_canonical((H:-B))), (sub_atom_icasechk(HS,_,H1B1);sub_atom_icasechk(H1B1,_,HS)),!.
 term_matches_hb(_,depth(Depth,HO),H,B):- term_matches_hb(Depth,HO,H,B).
 term_matches_hb(D,contains(HO),H,B):- !,term_matches_hb(D,string(HO),H,B).
 term_matches_hb(D,F/A,H,B):-atom(F),var(A),!,term_matches_hb(D,functor(F),H,B).
@@ -1147,7 +1149,7 @@ term_matches_hb(D,F/A,H,B):-atom(F),integer(A),!,functor(P,F,A),!, (term_matches
 term_matches_hb(D,HO,H,B):- \+ \+ term_matches_unify(D,HO,(H:-B)).
 
 
-% ?- xlisting((h(depth(0,pt/2)),same(tBird(A)))).
+% ?- xlisting((h(depth(0,'$pt'/3)),same(tBird(A)))).
 
 :- export(term_matches_unify/3).
 
@@ -1157,15 +1159,16 @@ term_matches_hb(D,HO,H,B):- \+ \+ term_matches_unify(D,HO,(H:-B)).
 %
 % Term Matches Unify.
 %
-term_matches_unify(D,unify(HO),H,B):- nonvar(HO),!,term_matches_hb(D,HO,H,B).
+term_matches_unify(_R,M,V):- var(V),!,M==var,fail.
+term_matches_unify(_,unify(HO),V):- nonvar(HO),!,\+ HO \= V.
+term_matches_unify(_R,V1,V2):- V1=@=V2,!.
 term_matches_unify(_R,same(HO),V):-HO=@=V.
-term_matches_unify(_R,_,V):- var(V),!,fail.
-term_matches_unify(_R,V,V):-!.
 term_matches_unify(_R,A,Str):- string(Str),atom(A),!,atom_string(A,Str).
 term_matches_unify(_R,_,V):- \+ compound(V),!,fail.
 %term_matches_unify(D,F/A,HB):- atom(F),integer(A),!, compound_name_arity(P,F,A), term_matches_unify(D,P,HB).
 term_matches_unify(_R,arity(A),H):- functor(H,_,A).
 term_matches_unify(_R,functor(F),H):- functor(H,F,_).
+%term_matches_unify(R,M,O):- compound(O), sub_term(I,O), nonvar(I), term_matches_unify(R,M,I),!.
 term_matches_unify(0,_,_):-!,fail.
 term_matches_unify(R,HO,V):- RR is R -1, compound_name_arguments(V,F,ARGS),member(E,[F|ARGS]),term_matches_unify(RR,HO,E),!.
 
@@ -1439,9 +1442,10 @@ portray_hbr(M:P,M:predicate_property(P,Props),_):- (atom(P);compound(P)),
 
 portray_hbr(H,B,Ref):- var(Ref), clause_u_here(H,B,Ref), nonvar(Ref),!, portray_hbr(H,B,Ref).
 portray_hbr(H,B,in_cmt(NV)):- in_cmt(portray_hbr(H,B,NV)),!.
-portray_hbr(H,B,Ref):- nonvar(Ref),catch(clause_property(Ref,module(M)),_,fail),
-  (((prolog_listing:list_clause((M:(H:-B)),Ref,_Soure,[source(true)])));
-     ((prolog_listing:list_clause(_,Ref,_Soure,[source(true)])))),!.
+portray_hbr(H,B,Ref) :- nonvar(Ref),
+    catch(clause_property(Ref,module(M)),_,fail),
+    once(notrace(on_x_fail(((prolog_listing_list_clause((M:(H:-B)),Ref,_,[source(true)])))); 
+          notrace(on_x_fail((prolog_listing_list_clause(_,Ref,_,[source(true)])))))).          
 portray_hbr(H,B,Ref):- portray_refinfo(Ref),portray_hb1(H,B).
 
 clause_u_here(H,B,Ref):- catch(call(call,clause_u(H,B,Ref)),_,clause(H,B,Ref)).
@@ -1467,9 +1471,9 @@ portray_hb1(H,B):- B==true, !, format('~N'), portray_one_line(H),format('~N').
 portray_hb1(H,B):- format('~N'), portray_one_line((H:-B)), format('~N').
 
 
+/*
 prolog_listing:list_clause(Head, Body, Ref, Source, Options):-
   prolog_listing:list_clause((Head :- Body), Ref, Source, Options).
-/*
 prolog_listing:list_clause(M:H, B, R, Source, Options).
 
 list_clause(_Head, _Body, Ref, _Source, Options) :-
