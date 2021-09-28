@@ -3,7 +3,7 @@
 % File 'dcg_meta.pl'
 % Purpose: An Implementation in SWI-Prolog of certain debugging tools
 % Maintainer: Douglas Miles
-% Contact: $Author: dmiles $@users.sourceforge.net ;
+% Contact: $Author: logicmoo@gmail.com ;
 % Version: 'logicmoo_util_bugger.pl' 1.0.0
 % Revision:  $Revision: 1.1 $
 % Revised At:   $Date: 2002/07/11 21:57:28 $
@@ -44,13 +44,23 @@
          dcgReorder/4
 	 ]).
 
+
+/** <module> Utility LOGICMOO_DCG_META
+This module allows DCGs to use meta predicates like And Or Not. 
+
+- @author Douglas R. Miles
+- @license LGPL 
+*/
 :- set_module(class(library)).
 
 :- meta_predicate track_stream(*,0).
 :- meta_predicate read_string_until(*,*,//,?,?).
 :- meta_predicate read_string_until_pairs(*,//,?,?).
 
-
+:- system:use_module(library(listing)).
+:- system:use_module(library(lists)).
+:- system:use_module(library(time)).
+:- system:use_module(library(readutil)).
 
 
 :- dynamic(t_l:dcg_meta_reader_options/2).
@@ -62,7 +72,7 @@ get_dcg_meta_reader_options(N,V):- t_l:dcg_meta_reader_options(N,V).
 
 
 % Portray ASCII code sequences (for debugging DCGs)
-user:portray(List):- compound(List),functor([_,_],F,A),functor(List,F,A),
+user:portray(List):- compound(List),compound_name_arity([_,_],F,A),compound_name_arity(List,F,A),
     List=[H|_],integer(H),H>9,user_portray_dcg_seq(List).
 
 user_portray_dcg_seq(List):- \+ is_list(List),!,between(32,1,Len),length(Left,Len),append(Left,_,List), ground(Left),!,
@@ -172,7 +182,7 @@ decl_dcgTest_startsWith(X,Y,Z):- nonvar(Y),!,do_dcgTest(X,dcgStartsWith(Y),Z).
 getText([],[]).
 getText(L,Txt):-member([txt|Txt],L),!.
 getText([L|List],Text):-getText(L,Text1),getText(List,Text2),append(Text1,Text2,Text),!.
-getText(F,S):-functor(F,_,3),arg(2,F,S),!.
+getText(F,S):-compound_name_arity(F,_,3),arg(2,F,S),!.
 getText(S,S).
 
 
@@ -757,7 +767,7 @@ expr_with_text2(Out,DCG,O,StartPos,M,ME,EndPos,S,E):-
 
 %expr_with_text(Out,DCG,O,S,E):- 
 %   call(DCG,S,E) -> append(S,Some,E) -> get_some_with_comments(O,Some,Out,S,E),!.
-get_some_with_comments(O,_,O,_,_):- compound(O),functor(O,'$COMMENT',_),!.
+get_some_with_comments(O,_,O,_,_):- compound(O),compound_name_arity(O,'$COMMENT',_),!.
 get_some_with_comments(O,Txt,with_text(O,Str),S,_E):-append(Txt,_,S),!,text_to_string(Txt,Str).
 
 

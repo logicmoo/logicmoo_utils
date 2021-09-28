@@ -58,8 +58,7 @@
 t_l:noreorder.
 reorder.
 
-reorder_if_var(Var,A,B):- nonvar(Var),!,call(A),call(B).
-reorder_if_var(Var,A,B):- call(B),call(A).
+reorder_if_var(Var,A,B):- nonvar(Var)-> (call(A),call(B));(call(B),call(A)).
 
 can_reorderBody(_ ,true):-!,fail.
 can_reorderBody(_ ,Body):-member(M,[did,t_l:noreorder,!,call_body_reorder,call_body_reorder_compare,var,nonvar]),contains_f(M,Body),!,fail.

@@ -58,6 +58,17 @@
             my_module_sensitive_code/1
           ]).
 
+/** <module> Utility LOGICMOO HOOK DATABASE
+This module allows for the following functions: 
+when prolog data changes in database this allows for attribute variables to be put in the data base. Logicmoo_attvar_serializer uses this to add and remove attribute variable in database. It also allows PFC to have more elaborate database interaction.
+
+ and Utility LOGICMOO_HOOK_HYBRID
+Allows one to intercept asserts and retracks to the prolog database. Implement clauses that are not really in the prolog database act as if they are.
+
+@author Douglas R. Miles
+@license LGPL 
+*/
+
 :- set_module(class(library)).
 :- meta_predicate clause_asserted_i(*).
 
@@ -425,12 +436,12 @@ assert_setting(M:P):-functor(P,_,A),dupe_term(P,DP),setarg(A,DP,_),system:retrac
 :- meta_predicate assert_setting_if_missing(:).
 assert_setting_if_missing(M:P):-functor(P,_,A),dupe_term(P,DP),setarg(A,DP,_),(system:clause(M:DP,_)->true;system:asserta(M:P)).
 
-:- meta_predicate assert_if_new(*).
 
 %% assert_if_new( ?X) is semidet.
 %
 % Assert If New.
 %
+:- meta_predicate assert_if_new(:).
 assert_if_new(X):-mpred_op_prolog(pain,X).
 :- meta_predicate asserta_if_new(*).
 
@@ -440,8 +451,8 @@ assert_if_new(X):-mpred_op_prolog(pain,X).
 %
 % Asserta If New.
 %
+:- meta_predicate assertz_if_new(:).
 asserta_if_new(X):-mpred_op_prolog(paina,X).
-:- meta_predicate assertz_if_new(*).
 
 %= 	 	 
 
@@ -449,9 +460,9 @@ asserta_if_new(X):-mpred_op_prolog(paina,X).
 %
 % Assertz If New.
 %
+:- meta_predicate asserta_new(:).
 assertz_if_new(X):-mpred_op_prolog(painz,X).
 
-:- meta_predicate asserta_new(*).
 
 %= 	 	 
 
@@ -574,7 +585,7 @@ is_visible_module(user).
 is_visible_module(system).
 is_visible_module(Inherited):-'$current_source_module'(E), default_module(E,Inherited).
 %is_visible_module(Inherited):-'$current_typein_module'(E), default_module(E,Inherited).
-is_visible_module(baseKB).
+is_visible_module( baseKB).
 
 
 simple_var(Var):- var(Var),\+ attvar(Var).
@@ -694,7 +705,7 @@ put_clause_ref(Ref,V):- !, nop(dmsg(put_clause_ref(Ref,V))).
 put_clause_ref(Ref,V):-put_attr(V,cref,Ref).
 
 remove_term_attr_type(Term, Mod):- is_list(Mod),!,maplist(remove_term_attr_type(Term),Mod).
-remove_term_attr_type(Term, Mod):- quietly((term_attvars(Term,AVs),maplist(del_attr_type(Mod),AVs))).
+remove_term_attr_type(Term, Mod):- quietly((term_attvars(Term,AVs),term_attvars(AVs,AVs2),maplist(del_attr_type(Mod),AVs2))).
 
 :- op(700,xfx,'=@=').
 

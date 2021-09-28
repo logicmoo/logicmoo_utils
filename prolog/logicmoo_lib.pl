@@ -22,33 +22,6 @@
 
 :- use_module(library(logicmoo_utils)).
 
-/*
-
-:- current_prolog_flag(readline,Base),writeln(readline=Base).
-:- if(exists_source(library(editline))).
-:- set_prolog_flag(readline,editline).
-:- endif.
-% :- set_prolog_flag(readline,true).
-
-:- if(current_prolog_flag(readline,editline)).
-:- system:ensure_loaded(library(readline)).
-:- listing(prolog:history/2).
-:- abolish(prolog:history/2).
-:- system:reconsult(library(editline)).
-:- else.
-:- if(exists_source(library(readline))).
-:- if(exists_source(library(editline))).
-:- system:ensure_loaded(library(editline)).
-:- listing(prolog:history/2).
-:- abolish(prolog:history/2).
-:- endif.
-:- unload_file(library(readline)).
-:- system:consult(library(readline)).
-:- endif.
-:- endif.
-:- current_prolog_flag(readline,Base),writeln(readline=Base).
-*/        
-
 
 
 % :- multifile prolog:message//1, prolog:message_hook/3.
@@ -68,7 +41,7 @@
 :- endif.
 
 :- if(app_argv('--wamcl');app_argv('--lispsock')).
-:- user:use_module(library(wamcl_runtime)).
+:- user:use_module(library(wamclrt)).
 :- endif.
 
 %:- if(app_argv('--lispsock 3301')).
@@ -122,7 +95,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %:- '$set_typein_module'(baseKB).
-%:- '$set_source_module'(baseKB).
+%:- nop('$set_source_module'( baseKB)).
 
 :- use_module(library(plunit)).
 :- kb_global(plunit:loading_unit/4).
@@ -146,7 +119,7 @@
 %:- autoload([verbose(true)]).
 %:- reload_library_index.
 
-:- if(\+ current_module(baseKB)).
+:- if(\+ current_module( baseKB)).
 :- set_prolog_flag(logicmoo_qsave,true).
 :- else.
 :- set_prolog_flag(logicmoo_qsave,false).
@@ -161,15 +134,18 @@
 :- endif.
 */
 
+/*
 set_default_argv:- dmsg("SETTING DEFAULT ARGV!!!!"),
    set_prolog_flag(os_argv,[swipl, '-f', '/dev/null','--nonet','--unsafe','--']).
+*/
 
 set_full_argv :-
-   set_default_argv,
-   current_prolog_flag(argv,WasArgV),
+ current_prolog_flag(argv,WasArgV),
+ ignore((  
+           \+ ((member(E,WasArgV), 
+                atom_concat('--',_,E))),
    append(WasArgV,[
    '--',   
-
    '--mud', % Load MUD server
    '--world', % Load MUD server World
    %'--nonet' '--noworld',
@@ -200,12 +176,12 @@ set_full_argv :-
    '--all', % all default options (in case there are new ones!)
    '--defaults'
    ], NewArgV),
-   set_prolog_flag('argv',NewArgV),
-   current_prolog_flag('argv',Is),
-   asserta(lmconf:saved_app_argv(Is)),
-   writeq(set_prolog_flag('argv',Is)),!,nl.
+   set_prolog_flag('argv',NewArgV))),
+ current_prolog_flag(argv,Is),
+ (\+ lmconf:saved_app_argv(_) -> asserta(lmconf:saved_app_argv(Is)) ; true),
+ writeq(set_prolog_flag('argv',Is)),!,nl.
 
-:- (current_prolog_flag(os_argv,[swipl]) ; current_prolog_flag(argv,[])) -> set_full_argv; true.
+%:- (current_prolog_flag(os_argv,[swipl]) ; current_prolog_flag(argv,[])) -> set_full_argv; true.
 
 
 
@@ -291,7 +267,8 @@ libhook:maybe_save_lm:- qsave_lm(lm_repl4),!.
 :- set_prolog_flag(do_renames,restore).
 :- gripe_time(60,baseKB:ensure_loaded(library('logicmoo/plarkc/logicmoo_i_cyc_rewriting'))).
 
-logicmoo_webbot:- whenever_flag_permits(load_network,load_library_system(library(logicmoo_webbot))).
+logicmoo_webbot:- whenever_flag_permits(load_network,
+load_library_system(library(logicmoo_webbot))).
 /*
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :- dmsg("[Optional] Load the Logicmoo Web System").

@@ -1,17 +1,18 @@
 /* Part of LogicMOO Base Logicmoo Utils
 % ===================================================================
-    File:         'logicmoo_util_startuo.pl'
+    File:          'logicmoo_startup.pl'
+    Previous File: 'logicmoo_util_startuo.pl'
     Purpose:       To load the logicmoo libraries inits as needed
-    Contact:       $Author: dmiles $@users.sourceforge.net ;
+    Contact:       $Author: logicmoo@gmail.com ;
     Version:       'logicmoo_util_startuo.pl' 1.0.0
     Revision:      $Revision: 1.2 $
     Revised At:    $Date: 2017/06/02 21:57:28 $
     Author:        Douglas R. Miles
     Maintainers:   logicmoo
     E-mail:        logicmoo@gmail.com
-    WWW:           http://www.prologmoo.com
-    SCM:           https://github.com/logicmoo/logicmoo_utils/blob/master/prolog/logicmoo_startup.pl
-    Copyleft:      1999-2015, LogicMOO Prolog Extensions
+    WWW:           http://www.logicmoo.org
+    SCM:           https://github.com/logicmoo/logicmoo_utils/edit/master/prolog/logicmoo_startup.pl
+    Copyleft:      1999-2021, LogicMOO Prolog Extensions
     License:       Lesser GNU Public License
 % ===================================================================
 */
@@ -32,14 +33,74 @@
           pack_upgrade_soft/1,
           is_startup_script/1,
           init_why/2,
+          now_and_later/1,
           run_pending_inits/0]).
+
+/** <module> Utility LOGICMOO_STARTUP
+This module manages logicmoo startup (adding history and tests, etc). 
+@author Douglas R. Miles
+@license LGPL
+*/
 
 :- dynamic   user:file_search_path/2.
 :- multifile user:file_search_path/2.
 
+%:- expects_dialect(swi).
+
+:- autoload(library(lists),[member/2,append/3]).
+:- autoload(library(debug),[debug/3]).
+
+:- module_transparent(now_and_later/1).
+:- module_transparent(now_and_later/2).
+:- module_transparent(now_and_later/4).
+
+now_and_later(MGoal):- strip_module(MGoal,M,Goal), now_and_later(c,M:Goal).
+now_and_later(MC,MGoal):- strip_module(MGoal,M,Goal), '$current_typein_module'(TIM), '$current_source_module'(SM), 
+  now_and_later(MC,TIM,SM,M:Goal).
+
+now_and_later(n,TIM,SM,MGoal):- strip_module(MGoal,M,Goal), !, sys:call_now(c,TIM,SM,M:Goal).
+now_and_later(MC,TIM,SM,MGoal):- strip_module(MGoal,M,Goal), 
+  sys:call_now(c,TIM,SM,M:Goal),
+  initialization(sys:call_now(MC,TIM,SM,M:Goal),restore).
+
+:- meta_predicate(in_lm_ws(:)).
+:- export(in_lm_ws/1).
+in_lm_ws(MGoal):- 
+   strip_module(MGoal,M,Goal),
+   working_directory(X,X),
+   getenv('LOGICMOO_WS',WS),      
+   setup_call_cleanup(cd(WS),(cd(prologmud_server),call(M:Goal)),cd(X)).
+
+
+:- module_transparent(sys:call_now/4).
+%sys:call_now(n,_TIM,_SM,_MGoal):-!.
+%sys:call_now(m,_TIM,_SM,_MGoal):-!.
+sys:call_now(_,TIM,SM,MGoal):-
+  strip_module(MGoal,M,Goal),
+   maybe_writeln(sys:call_now(TIM,SM,M:Goal)),
+  sys:with_typein_and_source(TIM,SM,M:Goal).
+
+:- module_transparent(call_with_typein_and_source/3).
+call_with_typein_and_source(TIM,SM,MGoal):-
+  strip_module(MGoal,M,Goal),  
+  sys:with_typein_and_source(TIM,SM,M:Goal).
+
+:- module_transparent(sys:with_typein_and_source/3).
+sys:with_typein_and_source(TIM,SM,MGoal):-
+  strip_module(MGoal,M,Goal),
+  '$current_typein_module'(WasTIM), '$current_source_module'(WasSM),
+  setup_call_cleanup(('$set_typein_module'(TIM),'$set_source_module'(SM)),
+      M:Goal, ('$set_typein_module'(WasTIM),'$set_source_module'(WasSM))).
+
+dont_wl(X):- var(X),!,fail.
+dont_wl(all_source_file_predicates_are_exported).
+dont_wl(X):- compound(X),compound_name_arity(X,F,_),(dont_wl(F);(arg(_,X,E),dont_wl(E))).
+maybe_writeln(X):- dont_wl(X),!.
+maybe_writeln(_):- !.
+maybe_writeln(X):- writeln(X).
+
 
 :- if( \+ current_predicate(add_absolute_search_folder/2)).
-
 
 name_to_files(Spec, Files) :-
     name_to_files(Spec, Files, true).
@@ -51,6 +112,22 @@ name_to_files(Spec, Files, Exists) :-
     ;   true
     ).
 
+
+:- meta_predicate(call_safely(:)).
+call_safely(MGoal):- strip_module(MGoal,M,Goal),!,call_safely(M,Goal).
+ 
+call_safely(M,[H|T]):- !, maplist(call_safely(M),[H|T]).
+call_safely(M,(Goal,!,Goal2)):- !, call_safely(M,Goal),!,call_safely(M,Goal2).
+call_safely(M,(Goal,!)):- !, call_safely(M,Goal),!.
+call_safely(M,(Goal,Goal2)):-!, call_safely(M,Goal),call_safely(M,Goal2).
+call_safely(_,M:Goal):- !, call_safely(M,Goal).
+call_safely(M,Goal):- ignore(must_or_rtrace(in_lm_ws(M:Goal))),
+  nop(check_memory(Goal)).
+
+logicmoo_compiling_mud_server:- (current_prolog_flag(logicmoo_compiling,mud_server);compiling).
+
+:- meta_predicate(only_runtime(:)).
+only_runtime(MGoal):- strip_module(MGoal,M,Goal), (logicmoo_compiling_mud_server -> true; call_safely(M:Goal)).
 
 %    working_directory(Dir,Dir);prolog_load_context(directory,Dir)
 
@@ -136,81 +213,18 @@ add_absolute_search_folder(Name,Path):- with_abs_paths(ain_file_search_path(Name
 :- endif.
 
 :- if(false).
-:- system:use_module(library(apply)).
-:- system:use_module(library(assoc)).
-:- system:use_module(library(charsio)).
-:- system:use_module(library(codesio)).
-:- system:use_module(library(ctypes)).
-:- system:use_module(library(debug)).
-:- system:use_module(library(dialect)).
-:- system:use_module(library(doc_files)).
-:- system:use_module(library(doc_http)).
-:- system:use_module(library(edinburgh)).
-:- system:use_module(library(error)).
-:- system:use_module(library(filesex)).
-:- system:use_module(library(gensym)).
-:- system:use_module(library(http/html_head)).
-:- system:use_module(library(http/http_dispatch)).
-:- system:use_module(library(http/http_path)).
-:- system:use_module(library(http/mimetype)).
-%:- system:use_module(library(jpl)).
-:- system:use_module(library(lazy_lists)).
-:- system:use_module(library(listing)).
-:- system:use_module(library(lists)).
-:- system:use_module(library(modules)).
-:- system:use_module(library(nb_rbtrees)).
-:- system:use_module(library(occurs)).
-:- system:use_module(library(operators)).
-:- system:use_module(library(option)).
-:- system:use_module(library(ordsets)).
-:- system:use_module(library(pairs)).
-:- system:use_module(library(pldoc/doc_html)).
-:- system:use_module(library(pldoc/doc_process)).
-:- system:use_module(library(pldoc/doc_search)).
-:- system:use_module(library(pldoc/doc_util)).
-:- system:use_module(library(pldoc/man_index)).
-%:- system:use_module(library(pprint)).
-:- system:use_module(library(predicate_options)).
-:- system:use_module(library(process)).
-:- system:use_module(library(prolog_clause)).
-:- system:use_module(library(prolog_code)).
-:- system:use_module(library(prolog_codewalk)).
-:- system:use_module(library(prolog_config)).
-:- system:use_module(library(prolog_source)).
-:- system:use_module(library(prolog_stack)).
-:- system:use_module(library(prolog_xref)).
-:- system:use_module(library(pure_input)).
-:- system:use_module(library(quintus)).
-:- system:use_module(library(readutil)).
-:- system:use_module(library(sgml)).
-:- system:use_module(library(shell)).
-:- system:use_module(library(shlib)).
-:- system:use_module(library(socket)).
-:- system:use_module(library(solution_sequences)).
-:- system:use_module(library(sort)).
-:- system:use_module(library(ssl)).
-:- system:use_module(library(system)).
-:- system:use_module(library(time)).
-:- system:use_module(library(uri)).
-:- system:use_module(library(varnumbers)).
-:- system:use_module(library(when)).
-:- system:use_module(library(writef)).
-:- system:use_module(library(wfs),[call_residual_program/2,call_delays/2,delays_residual_program/2,answer_residual/2]).
-:- abolish(system:time,1).
-:- system:use_module(library(statistics)).
-:- system:use_module(library(make)).
 :- endif.
 
 :- module_transparent(enotrace/1).
 enotrace(G):- call(G),!.
 
 
-%:- use_module(library(logicmoo_utils_all)).
+%:- system:use_module(library(logicmoo_utils_all)).
 :- create_prolog_flag(dmsg_level,[never,error,warning,info,filter,always],[type(term),keep(true)]).
 
 
 :- if( \+ current_predicate(each_call_cleanup/3)).
-% :- use_module(library(each_call_cleanup)).
+% :- system:use_module(library(each_call_cleanup)).
 :- endif.
 
 % ==============================================
@@ -219,7 +233,7 @@ enotrace(G):- call(G),!.
 :- multifile(user:file_search_path/2).
 :-   dynamic(user:file_search_path/2).
 
-:- use_module(library(prolog_pack)).
+:- system:use_module(library(prolog_pack)).
 
 dir_from(Rel,Y):-
     ((getenv('LOGICMOO_WS',Dir);
@@ -253,7 +267,6 @@ add_pack_path(Y):-  \+ user:file_search_path(pack,Y) ->asserta(user:file_search_
 :- if( \+ exists_source(library(aleph))).
 :- add_pack_path('../../../packs_lib').
 :- endif.
-
 
 %:- if( \+ exists_source(library(logicmoo_hyhtn))).
 %:- add_pack_path(packs_xtra).
@@ -299,33 +312,359 @@ add_pack_path(Y):-  \+ user:file_search_path(pack,Y) ->asserta(user:file_search_
 
 
 %:- setenv('DISPLAY', '').
-% :- use_module(library(plunit)).
+% :- system:use_module(library(plunit)).
 
 
 % ==============================================
 % Enable History
 % ==============================================
+:- if( \+ getenv('keep_going','-k')).
 :- if(\+ current_predicate(setup_hist0/0)).
 :- if(current_prolog_flag(windows, false)).
 
 :- if(exists_source(library(editline))).
-:- use_module(library(editline)).
+:- system:use_module(library(editline)).
 :- else.
 :- if(exists_source(library(readline))).
- :- use_module(library(readline)).
+ :- system:use_module(library(readline)).
 :- else.
  :- if(exists_source(library(editline))).
-  :- use_module(library(editline)).
+  :- system:use_module(library(editline)).
  :- endif.
 :- endif.
 setup_hist0:-  '$toplevel':setup_history.
-:- initialize(setup_hist0, now).
+:- initialization(setup_hist0, now).
 :- endif.
 :- endif.
 :- endif.
+:- endif. % keep_going
 
-   
+:- if(false).
 
+:- system:use_module(library(aggregate)).
+%:- system:use_module(library(ansi_term)).
+:- system:use_module(library(apply)).
+:- system:use_module(library(apply_macros)).
+:- system:use_module(library(archive)).
+:- system:use_module(library(arithmetic)).
+:- system:use_module(library(assoc)).
+:- system:use_module(library(atom)).
+:- system:use_module(library(backcomp)).
+:- system:use_module(library(base32)).
+:- system:use_module(library(base64)).
+:- system:use_module(library(bdb)).
+:- system:use_module(library(broadcast)).
+:- system:use_module(library(c14n2)).
+%:- system:use_module(library(cgi)).
+:- system:use_module(library(charsio)).
+:- system:use_module(library(check)).
+:- system:use_module(library(check_installation)).
+:- system:use_module(library(checklast)).
+:- system:use_module(library(checkselect)).
+/*
+:- system:use_module(library(chr)).
+:- system:use_module(library(clp/bounds)).
+:- system:use_module(library(clp/clp_distinct)).
+:- system:use_module(library(clp/clp_events)).
+:- system:use_module(library(clp/clpb)).
+:- system:use_module(library(clp/clpfd)).
+:- system:use_module(library(clp/clpq)).
+:- system:use_module(library(clp/clpr)).
+:- system:use_module(library(clp/inclpr)).
+:- system:use_module(library(clp/simplex)).
+*/
+:- system:use_module(library(codesio)).
+:- user:use_module(library(coinduction)).
+:- system:use_module(library(console_input)).
+:- user:use_module(library(cql/cql)).
+:- system:use_module(library(crypt)).
+:- system:use_module(library(crypto)).
+:- system:use_module(library(csv)).
+:- system:use_module(library(ctypes)).
+:- system:use_module(library(date)).
+:- system:use_module(library(dcg/basics)).
+:- system:use_module(library(dcg/high_order)).
+:- system:use_module(library(debug)).
+:- system:use_module(library(dialect)).
+/*
+:- system:use_module(library(dialect/bim)).
+:- system:use_module(library(dialect/commons)).
+:- system:use_module(library(dialect/eclipse/test_util_iso)).
+:- system:use_module(library(dialect/hprolog)).
+:- system:use_module(library(dialect/hprolog/format)).
+:- system:use_module(library(dialect/ifprolog)).
+:- system:use_module(library(dialect/iso/iso_predicates)).
+:- system:use_module(library(dialect/sicstus)).
+:- system:use_module(library(dialect/sicstus4)).
+:- system:use_module(library(dialect/swi/syspred_options)).
+:- system:use_module(library(dialect/xsb)).
+:- system:use_module(library(dialect/yap)).
+*/
+:- system:use_module(library(dicts)).
+:- system:use_module(library(dif)).
+:- system:use_module(library(doc_files)).
+:- system:use_module(library(doc_http)).
+:- system:use_module(library(doc_latex)).
+:- system:use_module(library(double_metaphone)).
+:- system:use_module(library(edinburgh)).
+:- system:use_module(library(edit)).
+:- system:use_module(library(editline)).
+:- system:use_module(library(error)).
+:- system:use_module(library(explain)).
+:- system:use_module(library(fastrw)).
+:- system:use_module(library(files)).
+:- system:use_module(library(filesex)).
+:- system:use_module(library(gensym)).
+:- system:use_module(library(git)).
+:- system:use_module(library(hash_stream)).
+:- system:use_module(library(hashtable)).
+:- system:use_module(library(heaps)).
+:- system:use_module(library(help)).
+:- system:use_module(library(hotfix)).
+:- system:use_module(library(http/ax)).
+:- system:use_module(library(http/dcg_basics)).
+:- system:use_module(library(http/html_head)).
+:- system:use_module(library(http/html_quasiquotations)).
+:- user:use_module(library(http/html_write)).
+:- system:use_module(library(http/http_authenticate)).
+:- system:use_module(library(http/http_client)).
+:- system:use_module(library(http/http_cookie)).
+:- system:use_module(library(http/http_cors)).
+:- system:use_module(library(http/http_digest)).
+:- system:use_module(library(http/http_dirindex)).
+:- system:use_module(library(http/http_dispatch)).
+:- system:use_module(library(http/http_dyn_workers)).
+:- system:use_module(library(http/http_error)).
+:- system:use_module(library(http/http_exception)).
+:- system:use_module(library(http/http_files)).
+:- system:use_module(library(http/http_header)).
+:- system:use_module(library(http/http_hook)).
+:- system:use_module(library(http/http_host)).
+:- system:use_module(library(http/http_json)).
+:- system:use_module(library(http/http_load)).
+:- system:use_module(library(http/http_log)).
+:- system:use_module(library(http/http_multipart_plugin)).
+:- system:use_module(library(http/http_open)).
+:- system:use_module(library(http/http_openid)).
+:- system:use_module(library(http/http_parameters)).
+:- system:use_module(library(http/http_path)).
+:- system:use_module(library(http/http_proxy)).
+:- system:use_module(library(http/http_pwp)).
+:- system:use_module(library(http/http_redis_plugin)).
+:- user:use_module(library(http/http_server)).
+:- system:use_module(library(http/http_server_files)).
+:- system:use_module(library(http/http_session)).
+:- system:use_module(library(http/http_sgml_plugin)).
+:- system:use_module(library(http/http_ssl_plugin)).
+:- system:use_module(library(http/http_stream)).
+:- system:use_module(library(http/http_unix_daemon)).
+:- system:use_module(library(http/http_wrapper)).
+:- system:use_module(library(http/hub)).
+:- system:use_module(library(increval)).
+:- system:use_module(library(intercept)).
+:- system:use_module(library(iostream)).
+:- system:use_module(library(iri_scheme/file)).
+:- system:use_module(library(iso_639)).
+:- system:use_module(library(isub)).
+:- system:use_module(library(jpl)).
+:- user:use_module(library(latex2html/latex2html)).
+:- system:use_module(library(lazy_lists)).
+:- system:use_module(library(listing)).
+:- system:use_module(library(lists)).
+:- system:use_module(library(lynx/format)).
+:- system:use_module(library(lynx/html_style)).
+:- system:use_module(library(lynx/html_text)).
+:- system:use_module(library(lynx/pldoc_style)).
+:- system:use_module(library(main)).
+:- system:use_module(library(make)).
+:- system:use_module(library(mallocinfo)).
+:- system:use_module(library(md5)).
+:- system:use_module(library(memfile)).
+:- system:use_module(library(modules)).
+:- system:use_module(library(mqi)).
+:- system:use_module(library(nb_rbtrees)).
+:- system:use_module(library(nb_set)).
+:- system:use_module(library(obfuscate)).
+:- system:use_module(library(occurs)).
+:- system:use_module(library(odbc)).
+:- system:use_module(library(operators)).
+:- system:use_module(library(option)).
+:- system:use_module(library(optparse)).
+:- system:use_module(library(ordsets)).
+:- system:use_module(library(oset)).
+:- system:use_module(library(pairs)).
+:- system:use_module(library(paxos)).
+:- system:use_module(library(pcre)).
+:- system:use_module(library(pdt_console)).
+:- system:use_module(library(pengines)).
+:- system:use_module(library(pengines_io)).
+:- system:use_module(library(pengines_sandbox)).
+:- user:use_module(library(persistency)).
+:- system:use_module(library(pio)).
+:- system:use_module(library(pldoc)).
+:- system:use_module(library(pldoc/doc_access)).
+:- system:use_module(library(pldoc/doc_colour)).
+:- system:use_module(library(pldoc/doc_htmlsrc)).
+:- system:use_module(library(pldoc/doc_index)).
+:- system:use_module(library(pldoc/doc_library)).
+:- system:use_module(library(pldoc/doc_modes)).
+:- system:use_module(library(pldoc/doc_pack)).
+:- system:use_module(library(pldoc/doc_process)).
+:- system:use_module(library(pldoc/doc_register)).
+:- system:use_module(library(pldoc/doc_search)).
+:- system:use_module(library(pldoc/doc_util)).
+:- system:use_module(library(pldoc/doc_wiki)).
+:- system:use_module(library(pldoc/doc_words)).
+:- include(library(pldoc/hooks)).
+:- system:use_module(library(pldoc/man_index)).
+:- system:use_module(library(plunit)).
+:- system:use_module(library(porter_stem)).
+:- system:use_module(library(portray_text)).
+:- system:use_module(library(pprint)).
+:- system:use_module(library(predicate_options)).
+:- system:use_module(library(process)).
+:- system:use_module(library(prolog_autoload)).
+:- system:use_module(library(prolog_breakpoints)).
+:- system:use_module(library(prolog_clause)).
+:- system:use_module(library(prolog_code)).
+:- system:use_module(library(prolog_codewalk)).
+:- system:use_module(library(prolog_colour)).
+:- system:use_module(library(prolog_config)).
+:- system:use_module(library(prolog_debug)).
+:- system:use_module(library(prolog_deps)).
+:- system:use_module(library(prolog_format)).
+:- system:use_module(library(prolog_history)).
+:- system:use_module(library(prolog_install)).
+:- system:use_module(library(prolog_jiti)).
+:- system:use_module(library(prolog_metainference)).
+:- system:use_module(library(prolog_pack)).
+:- system:use_module(library(prolog_server)).
+:- system:use_module(library(prolog_source)).
+:- system:use_module(library(prolog_stack)).
+:- system:use_module(library(prolog_stream)).
+:- system:use_module(library(prolog_trace)).
+:- system:use_module(library(prolog_wrap)).
+:- system:use_module(library(prolog_xref)).
+:- system:use_module(library(protobufs)).
+:- system:use_module(library(protobufs/protoc_gen_prolog_pb/google/protobuf/compiler/plugin_pb)).
+:- system:use_module(library(protobufs/protoc_gen_prolog_pb/google/protobuf/descriptor_pb)).
+:- system:use_module(library(pure_input)).
+:- system:use_module(library(pwp)).
+:- system:use_module(library(qpforeign)).
+:- system:use_module(library(qsave)).
+:- system:use_module(library(quasi_quotations)).
+:- system:use_module(library(quintus)).
+:- system:use_module(library(random)).
+:- system:use_module(library(rbtrees)).
+:- system:use_module(library(rdf)).
+:- system:use_module(library(rdf_diagram)).
+:- system:use_module(library(rdf_parser)).
+:- system:use_module(library(rdf_triple)).
+:- system:use_module(library(rdf_write)).
+:- system:use_module(library(readline)).
+:- system:use_module(library(readln)).
+:- system:use_module(library(readutil)).
+:- user:use_module(library(record)).
+:- system:use_module(library(redis)).
+:- system:use_module(library(redis_streams)).
+:- user:use_module(library(rewrite_term)).
+:- system:use_module(library(rlimit)).
+:- system:use_module(library(saml)).
+:- system:use_module(library(sandbox)).
+:- user:use_module(library(semweb/rdf11)).
+:- if(false).
+/*
+:- system:use_module(library(semweb/rdf11_containers)).
+:- system:use_module(library(semweb/rdf_cache)).
+:- system:use_module(library(semweb/rdf_compare)).
+:- system:use_module(library(semweb/rdf_db)).
+:- system:use_module(library(semweb/rdf_edit)).
+:- system:use_module(library(semweb/rdf_http_plugin)).
+:- system:use_module(library(semweb/rdf_library)).
+:- system:use_module(library(semweb/rdf_litindex)).
+:- system:use_module(library(semweb/rdf_ntriples)).
+:- system:use_module(library(semweb/rdf_persistency)).
+:- system:use_module(library(semweb/rdf_portray)).
+:- system:use_module(library(semweb/rdf_prefixes)).
+:- system:use_module(library(semweb/rdf_sandbox)).
+:- system:use_module(library(semweb/rdf_turtle)).
+:- system:use_module(library(semweb/rdf_turtle_write)).
+:- system:use_module(library(semweb/rdf_zlib_plugin)).
+*/
+:- system:use_module(library(semweb/rdfa)).
+:- system:use_module(library(semweb/rdfs)).
+:- system:use_module(library(semweb/sparql_client)).
+:- system:use_module(library(semweb/turtle)).
+:- system:use_module(library(settings)).
+:- system:use_module(library(sgml)).
+:- system:use_module(library(sgml_write)).
+:- system:use_module(library(sha)).
+:- system:use_module(library(shell)).
+:- system:use_module(library(shlib)).
+:- system:use_module(library(snowball)).
+:- system:use_module(library(socket)).
+:- system:use_module(library(solution_sequences)).
+:- system:use_module(library(sort)).
+:- system:use_module(library(ssl)).
+:- system:use_module(library(statistics)).
+%:- abolish(system:time,1).
+:- user:use_module(library(jpl)).
+:- user:use_module(library(pldoc/doc_process)).
+:- user:use_module(library(pprint)).
+:- system:use_module(library(stomp)).
+:- system:use_module(library(streaminfo)).
+:- system:use_module(library(streampool)).
+:- system:use_module(library(strings)).
+:- system:use_module(library(syslog)).
+:- system:use_module(library(system)).
+:- system:use_module(library(table)).
+:- system:use_module(library(table_util)).
+%:- system:use_module(library(tables)).
+%:- system:use_module(library(tabling)).
+:- system:use_module(library(term_to_json)).
+:- system:use_module(library(terms)).
+:- system:use_module(library(test_cover)).
+:- system:use_module(library(test_wizard)).
+%:- system:use_module(library(theme/auto)).
+%:- system:use_module(library(theme/dark)).
+:- system:use_module(library(thread)).
+:- system:use_module(library(thread_pool)).
+:- system:use_module(library(threadutil)).
+:- system:use_module(library(time)).
+:- system:use_module(library(tipc/tipc)).
+:- system:use_module(library(tipc/tipc_broadcast)).
+:- system:use_module(library(tipc/tipc_linda)).
+:- system:use_module(library(tipc/tipc_paxos)).
+:- system:use_module(library(tty)).
+:- system:use_module(library(udp_broadcast)).
+:- system:use_module(library(ugraphs)).
+:- system:use_module(library(uid)).
+:- system:use_module(library(unicode)).
+%:- system:use_module(library(unicode/blocks)).
+%:- system:use_module(library(unicode/unicode_data)).
+:- system:use_module(library(unix)).
+:- system:use_module(library(uri)).
+:- system:use_module(library(url)).
+:- system:use_module(library(utf8)).
+:- system:use_module(library(uuid)).
+%w:- system:use_module(library(varnumbers)).
+:- system:use_module(library(vm)).
+:- endif.
+%:- user:use_module(library(wfs)).
+:- system:use_module(library(wfs),[call_residual_program/2,call_delays/2,delays_residual_program/2,answer_residual/2]).
+:- system:use_module(library(when)).
+%w :- system:use_module(library(win_menu)).
+:- system:use_module(library(writef)).
+:- system:use_module(library(www_browser)).
+:- system:use_module(library(xmldsig)).
+:- system:use_module(library(xmlenc)).
+%:- system:use_module(library(xpath)).
+:- system:use_module(library(xsdp_types)).
+:- system:use_module(library(yall)).
+:- system:use_module(library(yaml)).
+:- system:use_module(library(zip)).
+:- system:use_module(library(zlib)).
+:- endif.
 % :- predicate_inheritance:kb_global(plunit:loading_unit/4).
 
 
@@ -369,13 +708,16 @@ app_argv(Atom):- \+ atom(Atom),!,current_app_argv(Atom).
 app_argv(Atom):- app_argv_off(Atom),!,fail.
 app_argv(Atom):- app_argv1(Atom),!.
 app_argv(Atom):- atom_concat(Pos,'=yes',Atom),!,app_argv1(Pos).
-app_argv(Atom):- app_argv1('--all'), atom_concat('--',_Stem,Atom), \+ atom_concat('--no',_Stem2,Atom),!.
+app_argv(Atom):- \+ is_argv_neg(Atom), app_argv1('--all'), atom_concat('--',_Stem,Atom).
 
 app_argv_ok(Atom):- app_argv1(Atom),!.
 app_argv_ok(Atom):- \+ app_argv_off(Atom).
 
+is_argv_neg(Neg):- atom_concat('--no',_,Neg).
+
+app_argv_off(Neg):- is_argv_neg(Neg),!,fail.
 app_argv_off(Atom):- atom_concat('--',Pos,Atom), atom_concat('--no',Pos,Neg),app_argv1(Neg),!.
-app_argv_off(Pos):- atom_concat('--no',Pos,Neg),app_argv1(Neg),!.
+app_argv_off(Pos):-  atom_concat('--no',Pos,Neg),app_argv1(Neg),!.
 app_argv_off(Pos):- atom_concat(Pos,'=no',Neg),app_argv1(Neg),!.
 
 app_argv1(Atom):- current_app_argv(List),member(Atom,List).
@@ -414,13 +756,15 @@ erase_clause(H,B):-
 % @NOTE quietly/1 is the nondet version of notrace/1.
 
 :- meta_predicate(at_current_Y(+, :)).
-at_current_Y(_S,Goal):- maybe_notrace(Goal).
+at_current_Y(_S,Goal):- maybe_notrace(Goal),!.
 
-:- meta_predicate(maybe_notrace(0)).
-maybe_notrace(Goal):- tracing -> (debug,maybe_one(quietly(Goal), rtrace(Goal))) ; maybe_one(enotrace(Goal),rtrace(Goal)).
+:- meta_predicate(maybe_notrace(:)).
+maybe_notrace(Goal):- tracing 
+ -> (debug,maybe_one(quietly(Goal), ftrace(Goal))) 
+ ; maybe_one(enotrace(Goal),ftrace(Goal)).
 
-:- meta_predicate(maybe_one(0,0)).
-maybe_one(Goal,Else):- catch(call(Goal),_,fail)*-> true ; Else.
+:- meta_predicate(maybe_one(:,:)).
+maybe_one(Goal,Else):- catch(call(Goal),E,(dumpST,writeln(E),fail))*-> true ; (wdmsg(maybe_one(Goal,Else)),Else).
 /*maybe_one(Goal,Else):-   
   (catch(Goal,E1,(wdmsg(error_maybe_zotrace(E1,Goal)),Else)) 
    -> ! 
@@ -472,7 +816,7 @@ before_phase(P1,P2):- number_phase(N1,P1), number_phase(N2,P2), N1 < N2.
 
 :- set_prolog_flag(current_phase, load).
 
-%% before_boot(:Goal) is semidet.
+%% loadtime_boot(:Goal) is semidet.
 % 
 % Run a +Goal as soon as possible
 %
@@ -551,12 +895,12 @@ number_phase(5,runtime). % when running
 
 
 init_why(Phase, Why):- 
-  %dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),
-  %dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),
+  %dmsg("%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%%"),
+  %dmsg("%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%%"),
   dmsg(init_why(Phase, Why)),
   set_prolog_flag(current_phase, Phase),
-  %dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),
-  %dmsg("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"),!,
+  %dmsg("%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%%"),
+  %dmsg("%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%%"),!,
   run_pending_inits(Phase).
 
 :- module_transparent(run_pending_inits/0).
@@ -614,7 +958,7 @@ user:expand_answer(_Bindings, _ExpandedBindings):- run_pending_inits,fail.
 user:expand_query(_Goal, _Expanded, _Bindings, _ExpandedBindings):-  run_pending_inits,fail.
 :- endif.
 
-%:- use_module(logicmoo_utils_all).
+%:- system:use_module(logicmoo_utils_all).
 %:- fixup_exports.
 
 :- if( app_argv1('--upgrade') ).
@@ -622,8 +966,8 @@ user:expand_query(_Goal, _Expanded, _Bindings, _ExpandedBindings):-  run_pending
 :- endif.
 
 
-%:- use_module(library(logicmoo/each_call)).
-%:- use_module(library(logicmoo_startup)).
+%:- system:use_module(library(logicmoo/each_call)).
+%:- system:use_module(library(logicmoo_startup)).
 
 :- meta_predicate if_debugging(*,0).
 
@@ -654,7 +998,7 @@ fav_debug:-
  %set_prolog_flag(debug,true),
  set_prolog_flag(debug_on_error,true),
  set_prolog_flag(debugger_show_context,true),
- set_prolog_flag(debugger_write_options,[quoted(true), portray(true), max_depth(10), attributes(write)]),
+ %set_prolog_flag(debugger_write_options,[quoted(true), portray(true), max_depth(10), attributes(write)]),
  set_prolog_flag(report_error,true),
  set_prolog_flag(runtime_debug, 3), % 2 = important but dont sacrifice other features for it
  set_prolog_flag(runtime_safety, 3),  % 3 = very important
@@ -667,6 +1011,25 @@ fav_debug:-
 
 %setup_hist:-  '$toplevel':setup_history.
 %:- setup_hist.
+
+:- dynamic(goal_main_interval/2).
+:- meta_predicate(do_each_main_interval(:, +)).
+do_each_main_interval(Goal, Interval):- 
+ term_to_atom(Goal, Name),
+ retractall(goal_main_interval(Name,_)), 
+ asserta(goal_main_interval(Name,Interval)),
+ (((thread_property(T,alias(Name)),
+     thread_property(T,status(running))))
+    -> true ; 
+    thread_create(do_each_main_interval(Goal, Name, Interval),_ID,
+       [detached(true),alias(Name)])).
+
+do_each_main_interval(Goal, Name, Interval):- 
+  repeat,
+  thread_signal(main,call(Goal)),
+  (goal_main_interval(Name,DInterval)->true;DInterval=Interval),
+  sleep(DInterval),
+  fail.
 
 
 bt:-
@@ -703,7 +1066,7 @@ is_loads_file(_:SFile,File):-!,is_loads_file(SFile,File).
 %
 :- meta_predicate(if_file_exists(:)).
 if_file_exists(M:Call):- arg(1,Call,MMFile),strip_module(MMFile,_,File),
- (exists_source(File)-> must(M:Call);dmsg(warning,not_installing(M,Call))),!.
+ (exists_source(File)-> must(M:Call);nop(dmsg(warning,not_installing(M,Call)))),!.
 
 
 
@@ -746,7 +1109,8 @@ iff_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
           all_source_file_predicates_are_transparent/0,
           all_source_file_predicates_are_transparent/2,
           all_source_file_predicates_are_exported/0,
-          all_source_file_predicates_are_exported/2)).
+          all_source_file_predicates_are_exported/2,
+          all_source_file_predicates_are_exported/4)).
 
 :- meta_predicate(ignore_not_not(0)).
 
@@ -785,9 +1149,9 @@ absolute_directory(Dir,Dir):- atom(Dir),is_absolute_file_name(Dir),exists_direct
 absolute_directory(Dir,ABS):- absolute_file_name(Dir,ABS,[file_type(directory),solutions(all),expand(true),case_sensitive(false),access(read),file_errors(fail)]),exists_directory(ABS),!.
 absolute_directory(Dir,ABS):- absolute_file_name(library(Dir),ABS,[file_type(directory),solutions(all),case_sensitive(false),expand(true),access(read),file_errors(fail)]),exists_directory(ABS),!.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%~%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DEFAULT PROLOG FLAGS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%~%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  % :- set_prolog_flag(subclause_expansion,default).
  % :- set_prolog_flag(subclause_expansion,false).
 :- set_prolog_flag(dialect_pfc,default).
@@ -871,8 +1235,7 @@ maybe_export(LC,M,F,A):-
 
 :- set_prolog_flag(logicmoo_import_to_system, baseKB).
 
-all_source_file_predicates_are_exported(S,LC)
- :- 
+all_source_file_predicates_are_exported(S,LC):- 
  (ignore(source_location(S,_);prolog_load_context(source,S))),
   ignore(prolog_load_context(module,LC)),
  
@@ -881,10 +1244,12 @@ all_source_file_predicates_are_exported(S,LC)
    \+ atom_concat(_,'__aux_',F),
   %(module_property(M,exports(List))-> \+ member(F/A,List); true),
   % M:public(M:F/A),
-  enotrace(catch(maybe_export(M,M,F,A),_,fail)),
-  maybe_export(LC,M,F,A),
-  (current_prolog_flag(logicmoo_import_to_system, BaseKB)-> maybe_export(BaseKB,M,F,A) ; true),
-  maybe_export(system,M,F,A)))).
+  now_and_later(all_source_file_predicates_are_exported(LC,M,F,A))))).
+
+all_source_file_predicates_are_exported(LC,M,F,A):-
+  enotrace(catch(maybe_export(M,M,F,A),_,fail)), maybe_export(LC,M,F,A),
+ (current_prolog_flag(logicmoo_import_to_system, BaseKB)-> maybe_export(BaseKB,M,F,A) ; true),
+  maybe_export(system,M,F,A).
 
 :- export(con_x_fail/1).
 :- meta_predicate(con_x_fail(:)).
@@ -909,11 +1274,14 @@ all_source_file_predicates_are_transparent:-
  forall((TIM\==LC,TIM\==user,module_property(TIM,file(S))),all_source_file_predicates_are_transparent(S,TIM)).
 
 :- module_transparent(all_source_file_predicates_are_transparent/2).
-all_source_file_predicates_are_transparent(S,_LC):- 
+all_source_file_predicates_are_transparent(S,_LC):-
  forall(source_file(M:H,S),
  (functor(H,F,A),
-  ignore(((\+ predicate_property(M:H,transparent), \+ lmconfig:never_export_named(M,F,A), module_transparent(M:F/A), 
-  \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A])))))).
+   now_and_later(ensure_transparent(M,F,A)))).
+
+ensure_transparent(M,F,A):- functor(H,F,A),
+  ignore(((\+ predicate_property(M:H,transparent), \+ lmconfig:never_export_named(M,F,A), module_transparent(M:F/A),
+  \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A])))).
 
 dont_mess_with(baseKB:isa/2).
 
@@ -971,10 +1339,10 @@ init_logicmoo :- ensure_loaded(library(logicmoo_repl)),init_why(during_booting,i
 
 % invert_varname(NV):-  ignore(((NV=(N=V), V='$VAR'(N)))).
 
-:- use_module(library(prolog_history)).
+:- system:use_module(library(prolog_history)).
 
 add_history(O):- is_list(O), member(E,O), compound(E), !, maplist(add_history,O).
-add_history(O):- !, wdmsg(not_add_history(O)),!.
+%add_history(O):- !, wdmsg(not_add_history(O)),!.
 add_history(O):- 
    ignore_not_not((nonvar(O),make_historial(O,A),add_history0(A))),!.
 
@@ -983,22 +1351,46 @@ ignore_not_not(G):- ignore((catch((( \+ \+ (ignore(once(G))))),_,fail))),!.
 make_historial(M:O,A):- (M==user),!, make_historial(O,A).
 make_historial(whenever_flag_permits(_,O),A):-!,make_historial(O,A).
 make_historial(add_history(O),A):-!,make_historial(O,A).
-make_historial(O,A):-ground(O),format(string(A), '~W', [O, [fullstop(true),portrayed(true),quoted(true),numbervars(true)]]),!.
+make_historial(O,A):-ground(O),
+  without_color(format(string(A), '~W', [O, [fullstop(true),portrayed(true),quoted(true),numbervars(true)]])),!.
 make_historial(O,A):-
     prolog_load_context(variable_names, Bindings),
-    format(string(A), '~W', [O, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]]).
+    without_color(format(string(A), '~W', [O, [fullstop(true),portray(true),quoted(true),variable_names(Bindings)]])).
 
 %:- multifile prolog:history/2.
+:- nb_setval('$without_color',[]).
+without_color(G):- locally_tl(print_mode(plain),with_b_setval('$without_color',true,G)).
+with_color(G):- with_b_setval('$without_color',false,G).
+with_b_setval(Name,Value,Goal):-
+ (nb_current(Name,Was)->true;Was=[]),
+ (Was == [] -> New=Value ; New=Value),
+  scce_orig(
+    b_setval(Name,New),
+    Goal,
+    b_setval(Name,Was)).
 
-add_history0(_):- notrace(app_argv('--nohistory')),!.
-add_history0(A):- current_input(S),
+
+default_history_file(File):- 
+   catch(prolog_history:dir_history_file('.', File), E,
+            (print_message(warning, E),fail)),!.
+ 
+:- set_prolog_flag(history, 5000).
+
+carelessly(G):- ignore(notrace(catch(G,E,(nop(dmsg(E)),!,fail)))).
+add_history0(_):- notrace(app_argv('--no-history')),!.
+add_history0(A):-
+   carelessly(prolog_history:prolog_history(enable)),
+   current_input(S),
+   (current_prolog_flag(readline,editline) -> User_input = libedit_input; User_input = user_input),
    forall(retract('$history':'$history'(_,A)),true),
-                  prolog:history(S,add(A)),
+                  carelessly(prolog:history(S,add(A))),
                   ignore((
                      stream_property(UI,file_no(0)),
                      ( \+ same_streams(S,UI)),
-                        ignore(retract('$history':'$history'(_,A))), 
-                        prolog:history(user_input,add(A)))),!.
+                        forall(retract('$history':'$history'(_,A)),true),
+                        carelessly(prolog:history(User_input,add(A))))),!,
+   carelessly((default_history_file(File),prolog:history(User_input, save(File)))).
+
 
 
 nb_linkval_current(N,V):-duplicate_term(V,VV),V=VV,nb_linkval(N,VV),nb_current(N,V).
@@ -1042,7 +1434,7 @@ fixup_exports_system:-   (prolog_load_context(source,SF)-> reexport(SF) ; true).
 
 %:- logicmoo_startup:use_module(library(option),[options/3]).
 
-logicmoo_base_port(Base):- getenv_or('LOGICMOO_BASE_PORT',Base,3000),!.
+logicmoo_base_port(Base):- getenv_or('LOGICMOO_BASE_PORT',Base,4000),!.
 logicmoo_base_port(Base):- app_argv1(One),\+ is_list(One),
    (atom(One)-> (atomic_list_concat([_,Atom],'port=',One),atom_number(Atom,Base20))),!,Base is Base20 -20,
    setenv('LOGICMOO_BASE_PORT',Base).
@@ -1062,6 +1454,7 @@ logicmoo_base_port(Base):- app_argv1(One),\+ is_list(One),
 % ==============================================
 % System metapredicates
 % ==============================================
+/*
 :- meta_predicate '$syspreds':bit(2,?,?).
 :- meta_predicate '$bags':findnsols_loop(*,*,0,*,*).
 %:- meta_predicate '$bags':findall_loop(*,0,*,*).
@@ -1076,7 +1469,7 @@ logicmoo_base_port(Base):- app_argv1(One),\+ is_list(One),
 % :- meta_predicate '$attvar':uhook(*,0,*,*).
 % :- meta_predicate '$attvar':uhook(*,0,*).
 %:- meta_predicate '$toplevel':'$execute_goal2'(0,*).
-
+*/
 
 
 
@@ -1142,7 +1535,7 @@ update_packs:-
    initialization(attach_packs,now).
 
 % :- update_packs.
-:- use_module(library(prolog_pack)).
+:- system:use_module(library(prolog_pack)).
 :- export(pack_upgrade_soft/1).
 pack_upgrade_soft(Which) :- which_pack(Which,Pack)-> Which\==Pack,!, pack_upgrade_soft(Pack).
 pack_upgrade_soft(Pack) :-
@@ -1226,6 +1619,7 @@ ensure_this_pack_installed:-
 ensure_logicmoo_pack_install(X):- pack_property(X,version(_)),!.
 ensure_logicmoo_pack_install(X):- atomic_list_concat(['https://github.com/logicmoo/',X,'.git'],URL),pack_install(URL,[interactive(false)]).
 install_logicmoo:-
+  use_module(library(prolog_pack)),
   ensure_this_pack_installed,
   maplist(ensure_logicmoo_pack_install,[
     body_reordering,lps_corner,predicate_streams,eggdrop,pfc,logicmoo_ec,gvar_syntax,logicmoo_base,
@@ -1241,11 +1635,46 @@ install_logicmoo:-
 
 
 
+:-system:use_module(library(filesex)).
+:-system:use_module(library(qsave)).
 
-%:- use_module(library(logicmoo/each_call)).
+qsave_bin(_):- current_prolog_flag(logicmoo_compiling,mud_server),!.
+qsave_bin(_):- current_prolog_flag(logicmoo_compiling,done),!.
+qsave_bin(_):- current_prolog_flag(os_argv,List), \+ member('-t',List), !.
+qsave_bin(Clif):- current_prolog_flag(logicmoo_compiling,Clif),!.
 
-%:- use_module(library(debuggery/dmsg)).
-%:- use_module(library(must_sanity)).
+qsave_bin(Clif):-
+  (current_prolog_flag(logicmoo_compiling,Was);Was=false),
+  setup_call_cleanup(
+    set_prolog_flag(logicmoo_compiling,Clif),
+    qsave_bin_now(Clif),
+    set_prolog_flag(logicmoo_compiling,Was)).
+
+qsave_bin_now(Clif):-
+  atom_concat('lmoo-',Clif,Lmoo),
+  directory_file_path('bin',Lmoo,Bin),
+  getenv('LOGICMOO_WS',Dir),
+  directory_file_path(Dir,Bin,Path),
+  writeln(qsave_bin(Clif)=Path),
+  current_prolog_flag(stack_limit,Stack_limit),
+  qsave_program(Path,
+    [ class(development),
+      % verbose(true),
+      stack_limit(Stack_limit),
+      toplevel(prolog),
+      goal(true),
+      undefined(ignore),
+      op(save),
+      % map('logicmoo_server.map'),
+      foreign(no_save),
+      autoload(true),
+      stand_alone(false)]).
+
+
+%:- system:use_module(library(logicmoo/each_call)).
+
+%:- system:use_module(library(debuggery/dmsg)).
+%:- system:use_module(library(must_sanity)).
 
 % ( GFE = Girl-Friend Experience )
 
@@ -1253,7 +1682,54 @@ install_logicmoo:-
 %=======================================
 
 %=======================================
+:- user:use_module(library(http/term_html)).
+:- system:use_module(library(http/http_session)).
+:- system:use_module(library(apply)).
+:- system:use_module(library(dcg/basics)).
+:- system:use_module(library(debug)).
+:- system:use_module(library(error)).
+:- system:use_module(library(filesex)).
+:- system:use_module(library(http/html_head)).
+:- user:use_module(library(http/html_write)).
+:- system:use_module(library(http/http_dispatch)).
+:- system:use_module(library(http/http_path)).
+:- system:use_module(library(http/http_wrapper)).
+:- system:use_module(library(http/jquery)).
+:- system:use_module(library(http/js_grammar)).
+:- system:use_module(library(http/js_write)).
+:- system:use_module(library(http/mimepack)).
+:- system:use_module(library(http/mimetype)).
+:- system:use_module(library(http/thread_httpd)).
+:- system:use_module(library(http/websocket)).
+:- system:use_module(library(http/yadis)).
+:- user:use_module(library(http/json)).
+:- user:use_module(library(http/json_convert)).
+:- system:use_module(library(listing)).
+:- system:use_module(library(lists)).
+:- system:use_module(library(lists)).
+:- system:use_module(library(occurs)).
+:- system:use_module(library(option)).
+:- system:use_module(library(pairs)).
+:- system:use_module(library(prolog_source)).
+:- system:use_module(library(prolog_stack)).
+:- system:use_module(library(prolog_xref)).
+:- system:use_module(library(pure_input)).     % syntax_error//1
+:- system:use_module(library(readutil)).
+:- system:use_module(library(solution_sequences)).
+:- system:use_module(library(time)).
+:- system:use_module(library(uri)).
 
+:- user:use_module(library(pldoc)).
+:- user:use_module(library(pldoc/doc_html)).
+/*
+:- system:use_module(library(pldoc/doc_index)).
+:- system:use_module(library(pldoc/doc_man)).
+:- system:use_module(library(pldoc/doc_modes)).
+:- system:use_module(library(pldoc/doc_process)).
+:- system:use_module(library(pldoc/doc_search)).
+:- system:use_module(library(pldoc/doc_util)).
+:- system:use_module(library(pldoc/doc_wiki)).
+*/
 :- system:reexport(library(logicmoo/predicate_inheritance)).
 
 :- system:reexport(library(debuggery/first)).
@@ -1287,7 +1763,8 @@ install_logicmoo:-
 :- system:reexport(library(logicmoo/virtualize_source)).
 :- system:reexport(library(file_scope)).
 :- system:reexport(library(script_files)).
-%:- system:reexport(library(logicmoo/retry_undefined)).
+
+%:- user:reexport(library(logicmoo/retry_undefined)).
 
 
 
@@ -1307,12 +1784,18 @@ install_logicmoo:-
 %= REGISTER FOR INIT EVENTS
 %=======================================
 
-%= Register a hook after restore
-:- initialization(init_why(during_boot,restore),restore).
+% These are mainly so we can later understand the restore phasing
+:- initialization(nop(dmsg(init_phase(program))),program).
+:- initialization((dmsg(init_phase(after_load))),after_load).
+:- initialization(nop(dmsg(init_phase(restore))),restore).
+:- initialization((dmsg(init_phase(restore_state))),restore_state).
+:- initialization(nop(dmsg(init_phase(prepare_state))),prepare_state).
 
+
+%= Register a hook after restore
+:- initialization(nop(init_why(during_boot,restore)),restore).
 %= Register a hook
 :- initialization(init_why(after_boot,program),program).
-
 %= Register a hook
 %:- initialization(init_why(runtime,main),main).
 

@@ -3,7 +3,7 @@
 % File '$FILENAME.pl'
 % Purpose: An Implementation in SWI-Prolog of certain debugging tools
 % Maintainer: Douglas Miles
-% Contact: $Author: dmiles $@users.sourceforge.net ;
+% Contact: $Author: logicmoo@gmail.com;
 % Version: '$FILENAME.pl' 1.0.0
 % Revision: $Revision: 1.1 $
 % Revised At:  $Date: 2002/07/11 21:57:28 $
@@ -39,6 +39,7 @@
             bugger_term_expansion/2,
             bugger_term_expansion/3,
             buggeroo/0,
+            if_debug_module/1,
             call_or_list/1,
             call_skipping_n_clauses/2,
             caller_module/1,
@@ -215,108 +216,110 @@
      op(1150,fx,(baseKB:kb_shared))
 
           ]).
-:- meta_predicate with_skip_bugger(*).
+
+/** <module> Utility LOGICMOO_DEBUGGERY
+This module supplies support for utilities, like DCG_must and must_trace, that allow for easier debugging.
+
+ - @author Douglas R. Miles
+ - @license LGPL 
+*/
+:- meta_predicate with_skip_bugger(:).
 :- meta_predicate 
-    do_ref_job(*,*),
+    do_ref_job(:,:),
         bugger_atom_change(:, -),
         bugger_atom_change(:, 0, +, +, -, -),
-        bugger_expand_goal(*, -),
-        bugger_expand_term(*, -),
+        bugger_expand_goal(:, -),
+        bugger_expand_term(:, -),
         bugger_goal_expansion(:, -),
         bugger_goal_expansion(+, +, -),
         bugger_t_expansion(+, +, -),
         bugger_term_expansion(:, -),
         bugger_term_expansion(+, +, -),
-         logOnFailureEach(*),
-         debugOnFailureEach(*),
-         on_x_rtraceEach(*),
-        callsc(*),
-        cli_ntrace(*),
+         logOnFailureEach(:),
+         debugOnFailureEach(:),
+         on_x_rtraceEach(:),
+        callsc(:),
+        cli_ntrace(:),
         
-        on_x_debug_cont(*),
-        on_f_debug(*),
-        on_f_debug(*),
-   debugCallWhy(+, 0),
-        forall_member(?, ?, 0),
-        gmust(*, 0),
-        gripe_time(+, 0),
+        on_x_debug_cont(:),
+        on_f_debug(:),
+        on_f_debug(:),
+   debugCallWhy(+, :),
+        forall_member(?, ?, :),
+        gmust(:, :),
+        gripe_time(+, :),
         hideTrace(:, -),
         hidetrace(:),
-        ifThen(*, 0),
-        if_interactive(*),
-        if_interactive(*,0),
-        if_prolog(?, 0),
-        on_x_cont(*),
-        beenCaught(*),
+        ifThen(:, :),
+        if_interactive(:),
+        if_interactive(:,0),
+        if_prolog(?, :),
+        on_x_cont(:),
+        beenCaught(:),
         ignore_each(1),
-        on_f_log_fail(*),
-        on_f_debug_ignore(*),
-        logOnFailure0(*),
-        logOnFailure(*),
-        on_f_log_ignore(*),
-        meta_interp(*, +),
-        must_each(*),
+        on_f_log_fail(:),
+        on_f_debug_ignore(:),
+        logOnFailure0(:),
+        logOnFailure(:),
+        on_f_log_ignore(:),
+        meta_interp(:, +),
+        must_each(:),
         must_maplist_det(:, ?),
         must_maplist_det(:, ?, ?),
         must_maplist_det(:, ?, ?, ?),
-        nodebugx(*),
-        once_if_ground(*),
-        once_if_ground(*, -),
-        one_must(*, 0, 0),
+        nodebugx(:),
+        once_if_ground(:),
+        once_if_ground(:, -),
+        one_must(:, 0, :),
         printPredCount(?, 0, ?),
-        programmer_error(*),
-        prolog_call(*),
-        with_each(?, 1, 0),
-        with_each(?, 0),
-        with_each(*),
-        prolog_ecall_fa(?, 1, ?, ?, 0),
-        prolog_must(*),
+        programmer_error(:),
+        prolog_call(:),
+        with_each(?, 1, :),
+        with_each(?, :),
+        with_each(:),
+        prolog_ecall_fa(?, 1, ?, ?, :),
+        prolog_must(:),
         prolog_must_l(?),
-        prolog_must_not(*),
+        prolog_must_not(:),
         push_def(:),
-        randomVars(*),
-        real_builtin_predicate(*),
-        rmust_det(*),
-        set_gui_debug(*),
-        showProfilerStatistics(*),
-        show_and_do(*),        
-        dcall0(*),
-        bugger_t_expansion(:,0,*),
-        bugger_goal_expansion(:,0,*),
-       prolog_must_l(*),
-       test_tl(*,*,*),
-       bugger_term_expansion(:,0,*),
+        randomVars(:),
+        real_builtin_predicate(:),
+        rmust_det(:),
+        set_gui_debug(:),
+        showProfilerStatistics(:),
+        show_and_do(:),        
+        dcall0(:),
+        bugger_t_expansion(:,0,:),
+        bugger_goal_expansion(:,0,:),
+       prolog_must_l(:),
+       test_tl(:,*,:),
+       bugger_term_expansion(:,0,:),
 
 
-   show_call(+,0),
-   show_entry(+,0),
-   show_failure(+,0),
-   show_success(+,0),
-
-   show_call(*),
-   show_entry(*),
-   show_failure(*),
-   show_success(*),
+   show_call(:),
+   show_entry(:),
+   show_failure(:),
+   show_success(:),
 
         test_tl(+),
         test_tl(1, +),
         test_tl(+, +, +),
-        test_tl(*, +, +),
-        on_f_throw(*),
-        time_call(*),
-        traceIf(*),
+        test_tl(:, +, +),
+        on_f_throw(:),
+        time_call(:),
+        traceIf(:),
         dtrace_msg(?),
-        traceok(*),
-        tryCatchIgnore(*),
-        will_debug_else_throw(*, 0),
-        with_no_term_expansions(*),
+        traceok(:),
+        tryCatchIgnore(:),
+        will_debug_else_throw(:, :),
+        with_no_term_expansions(:),
         hideTraceMFA(+,+,+,+),
         hideTraceMFAT(+,+,+,+),
         doHideTrace(+,+,+,+),
-        dont_make_cyclic(*),
-        with_skip_bugger(*).
+        dont_make_cyclic(:),
+        with_skip_bugger(:).
 
- :- meta_predicate do_ref_job(*,*).
+ :- meta_predicate do_ref_job(:,:).
 
 :- module_transparent
           debug_logicmoo/1,
@@ -460,10 +463,15 @@
 :- ifprolog:import(date:day_of_the_week/2).
 :- ifprolog:import(date:day_of_the_year/2).
 */
+:- meta_predicate(if_debug_module(:)).
+if_debug_module(MG):- strip_module(MG,M,_),(debugging(M)-> MG; true).
 
 
+% bugger:isa(_,_).
 
-not_debugging:- \+ tracing, \+ current_prolog_flag(debug,true).
+not_debugging:- \+ ( nb_current('$inprint_message', Messages), Messages\==[] ), 
+ \+ tracing, 
+ \+ current_prolog_flag(debug,true).
 
 /*
 %% all_source_file_predicates_are_transparent() is det.
@@ -578,7 +586,7 @@ set_bugger_flag(F,V):-create_prolog_flag(F,V,[keep(true),tCol(ftTerm)]),!.
 
 
 
-:- meta_predicate(call_count(*,?)).
+:- meta_predicate(call_count(:,?)).
 call_count(C,N):-findall(C,C,L),nth1(N,L,C).
 
 
@@ -600,9 +608,9 @@ ignore_each((A,B)):-ignore_each(A),ignore_each(B),!.
 ignore_each(A):-ignore(A).
 
 :- meta_predicate 
-	must_maplist(*, ?),
-	must_maplist(*, ?, ?),
-        must_maplist(*, ?, ?, ?).
+	must_maplist(:, ?),
+	must_maplist(:, ?, ?),
+        must_maplist(:, ?, ?, ?).
 
 %% 	must_maplist(:Goal, ?List)
 %
@@ -744,7 +752,7 @@ test_for_release_problems(File):-
       list_undefined,
       nop(after_boot(if_defined(gxref,true))),!.
 
-%= :- meta_predicate  if_interactive(*).
+%= :- meta_predicate  if_interactive(:).
 
 
 
@@ -754,6 +762,10 @@ test_for_release_problems(File):-
 % If Interactive.
 %
 if_interactive(Goal):-if_interactive(Goal,true),!.
+
+if_interactive(_Goal,Else):- keep_going, !,
+   terminal_ansi_goal(current_output,[fg(red)],(format("~n(NOT INTERACTIVE (~q))~n",[Else]))),!,
+   terminal_ansi_goal(current_output,[fg(yellow)],(call(Else))).
 
 if_interactive(Goal,Else):- 
   thread_self(main),
@@ -789,6 +801,7 @@ if_interactive(Goal,Else):-
     C = 't' -> (dmsg("(... trace )~n",[]),nb_setarg(1,WantTrace,trace),fail);
     true -> fail))).
 
+
 if_interactive(_Goal,Else):- 
    (dmsg("~n(NOT INTERACTIVE (~q))~n",[Else]),!,call(Else)).
 
@@ -804,7 +817,7 @@ if_interactive(_Goal,Else):-
 % :- export( tlbugger:bugger_prolog_flag/2).
 
 
-% = %= :- meta_predicate (callsc(*)).
+% = %= :- meta_predicate (callsc(:)).
 
 
 
@@ -887,7 +900,7 @@ bad_idea:- current_prolog_flag(bad_idea,true).
 % Bugger Term Expansions
 % ===================================================================
 
-%=  :- mpred_trace_childs(must(*)).
+%=  :- mpred_trace_childs(must(:)).
 
 
 :- ensure_loaded(dmsg).
@@ -898,7 +911,7 @@ bad_idea:- current_prolog_flag(bad_idea,true).
 % Prolog Call.
 %
 prolog_call(Call):-call(Call).
-% :- mpred_trace_childs(prolog_call(*)).
+% :- mpred_trace_childs(prolog_call(:)).
 
 :- export(hidetrace/1).
 
@@ -909,7 +922,7 @@ prolog_call(Call):-call(Call).
 % Hide Trace.
 %
 hidetrace(X):- X.
-% :- mpred_trace_none(hidetrace(*)).
+% :- mpred_trace_none(hidetrace(:)).
 
 :- export( tlbugger:use_bugger_expansion/0).
 :- dynamic( tlbugger:use_bugger_expansion/0).
@@ -1033,7 +1046,7 @@ bugger_goal_expansion(CM:T,TT):-  tlbugger:use_bugger_expansion,!,bugger_goal_ex
 %
 bugger_goal_expansion(CM,T,T3):- once(bugger_t_expansion(CM,T,T2)),T\==T2,!,on_x_fail(expand_term(T2,T3)).
 
-% = %= :- meta_predicate (bugger_expand_goal(*,-)).
+% = %= :- meta_predicate (bugger_expand_goal(:,-)).
 
 
 
@@ -1043,7 +1056,7 @@ bugger_goal_expansion(CM,T,T3):- once(bugger_t_expansion(CM,T,T2)),T\==T2,!,on_x
 %
 bugger_expand_goal(T,_):- fail,dmsg(bugger_expand_goal(T)),fail.
 
-% = %= :- meta_predicate (bugger_expand_term(*,-)).
+% = %= :- meta_predicate (bugger_expand_term(:,-)).
 
 
 
@@ -1091,8 +1104,8 @@ bugger_term_expansion(CM,T,T3):- once(bugger_t_expansion(CM,T,T2)),T\==T2,!,nop(
 
 
 :- export(traceok/1).
-%=  = %= :- meta_predicate (quietly(*)).
-% = %= :- meta_predicate (traceok(*)).
+%=  = %= :- meta_predicate (quietly(:)).
+% = %= :- meta_predicate (traceok(:)).
 
 
 
@@ -1144,7 +1157,7 @@ nodebugx(X):-
  locally(set_prolog_flag(nodebugx,true),
   locally(-tlbugger:ifCanTrace,
    locally(tlbugger:ifWontTrace,
-    locally(tlbugger:show_must_go_on,
+    locally(tlbugger:show_must_go_on(true),
        locally(tlbugger:ifHideTrace,quietly(X)))))).
 
 debugging_logicmoo(Mask):- logicmoo_topic(Mask,Topic),prolog_debug:debugging(Topic, TF, _),!,TF=true.
@@ -1266,7 +1279,7 @@ meta_interp(CE,A):- show_call(why,call(CE,meta_call(A))).
 
 % ===================================================
 
-% = %= :- meta_predicate (once_if_ground(*)).
+% = %= :- meta_predicate (once_if_ground(:)).
 
 
 
@@ -1277,7 +1290,7 @@ meta_interp(CE,A):- show_call(why,call(CE,meta_call(A))).
 once_if_ground(Call):-not(ground(Call)),!,Call.
 once_if_ground(Call):- once(Call).
 
-% = %= :- meta_predicate (once_if_ground(*,-)).
+% = %= :- meta_predicate (once_if_ground(:,-)).
 
 
 
@@ -1375,7 +1388,7 @@ show_entry(Why,Call):-debugm(Why,show_entry(Call)),show_call(Why,Call).
 %
 show_entry(Call):-show_entry(mpred,Call).
 
-%= :- meta_predicate  dcall0(*).
+%= :- meta_predicate  dcall0(:).
 
 
 
@@ -1454,7 +1467,7 @@ debugm10(Why,Msg):- dmsg(debugm(Why,Msg)), debug(Why,'~N~p~n',[Msg]),!.
 %
 show_success(Goal):- strip_module(Goal,Why,_),show_success(Why,Goal).
 
-%= :- meta_predicate  on_f_log_fail(*).
+%= :- meta_predicate  on_f_log_fail(:).
 :- export(on_f_log_fail/1).
 
 
@@ -1548,7 +1561,7 @@ set_no_debug_thread:-
    asserta(tlbugger:ifWontTrace))),!.
 
 :- if(prolog_dialect:exists_source(library(gui_tracer))).
-%= :- meta_predicate  set_gui_debug(*).
+%= :- meta_predicate  set_gui_debug(:).
 
 
 
@@ -2135,7 +2148,7 @@ beenCaught(Goal):- catchv(once(Goal),E,(dmsg(caugth(Goal,E)),beenCaught(Goal))),
 beenCaught(Goal):- traceAll,dmsg(tracing(Goal)),debug,dtrace,Goal.
 
 
-% = %= :- meta_predicate (with_no_term_expansions(*)).
+% = %= :- meta_predicate (with_no_term_expansions(:)).
 
 
 
@@ -2187,7 +2200,7 @@ local_predicate(P,F/N):-functor_safe(P,F,N),!,fail.
 %
 atom_contains666(F,C):- quietly((atom(F),atom(C),sub_atom(F,_,_,_,C))).
 
-% = %= :- meta_predicate (real_builtin_predicate(*)).
+% = %= :- meta_predicate (real_builtin_predicate(:)).
 
 
 
@@ -2436,7 +2449,7 @@ must_each0([]):-!.
 must_each0([E|List]):-E,must_each0(List).
 
 %=  :- mpred_trace_childs(one_must/2).
-:- meta_predicate one_must(*,0,0).
+:- meta_predicate one_must(:,0,0).
 
 
 
@@ -2549,7 +2562,7 @@ if_prolog(swi,G):-call(G). % Run B-Prolog Specifics
 if_prolog(_,_):-!. % Dont run SWI Specificd or others
 
 
-% = %= :- meta_predicate (time_call(*)).
+% = %= :- meta_predicate (time_call(:)).
 
 
 
@@ -3170,8 +3183,7 @@ disabled_this:- asserta((user:prolog_exception_hook(Exception, Exception, Frame,
 % :- '$hide'(tlbugger:_/_).
 % :- '$hide'(tlbugger:A/0).
 
-% :- '$hide'(dmsg/1).
-% :-'$hide'(system:notrace/1). 
+:-'$hide'(system:notrace/1). 
 
 
 

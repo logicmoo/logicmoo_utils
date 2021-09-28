@@ -13,7 +13,7 @@
     Author:        Douglas R. Miles
     Maintainers:   logicmoo
     E-mail:        logicmoo@gmail.com
-    WWW:           http://www.prologmoo.com
+    WWW:           http://www.logicmoo.org
     SCM:           https://github.com/logicmoo/PrologMUD/tree/master/pack/logicmoo_base
     Copyleft:      1999-2015, LogicMOO Prolog Extensions
 
@@ -38,7 +38,11 @@
     invalidate any other reasons why the executable file might be covered by
     the GNU General Public License.
 */
-
+/** <module> Common Util MISC_TERMS
+This module includes random predicate utilities that manipulate terms for substitution, decomposes, recomposes, composes, etc.
+@author Douglas R. Miles
+@license free or GNU 2
+*/
 :- module(logicmoo_util_terms,
         [
 at_start/1,
@@ -362,15 +366,16 @@ pred1_juncts_to_list(Pred1,AB,ABL):-AB=..[F,A,B],
   pred1_juncts_to_list(Pred1,A,AL),
   pred1_juncts_to_list(Pred1,B,BL),
   append(AL,BL,ABL).
-pred1_juncts_to_list(Pred1,AB,AL):-AB=..[F,A],!,
-  call(Pred1,F),
+pred1_juncts_to_list(Pred1,AB,AL):-AB=..[F,A],
+  call(Pred1,F),!,
   pred1_juncts_to_list(Pred1,A,AL).
 
-pred1_juncts_to_list(Pred1,AB,ABL):-AB=..[F,A|ABB],call(Pred1,F),
+pred1_juncts_to_list(Pred1,AB,ABL):-AB=..[F,A|ABB],
+  call(Pred1,F),
   pred1_juncts_to_list(Pred1,A,AL),
   B=..[F|ABB],  
   pred1_juncts_to_list(Pred1,B,BL),
-  append(AL,BL,ABL).
+  append(AL,BL,ABL),!.
 pred1_juncts_to_list(_Pred1,Lit,[Lit]).
 
 %= 	 	 
@@ -409,11 +414,25 @@ list_to_conjuncts(_,V,V):- var(V),!.
 list_to_conjuncts(_,[],true):-!.
 list_to_conjuncts(_,V,V):-not(compound(V)),!.
 list_to_conjuncts(OP,[H],HH):-list_to_conjuncts(OP,H,HH),!.
+
+list_to_conjuncts(OP,[H|T],Body):- current_op(_,yfx,OP),!,
+    list_to_conjuncts_yfx(OP,H,T,Body).
+
 list_to_conjuncts(OP,[H|T],Body):-!,
     list_to_conjuncts(OP,H,HH),
     list_to_conjuncts(OP,T,TT),
     conjoin_op(OP,HH,TT,Body),!.
 list_to_conjuncts(_,H,H).
+
+
+list_to_conjuncts_yfx(_,H,[],H):-!.
+list_to_conjuncts_yfx(OP,Ac,[H|T],Body):- !,
+   conjoin_op(OP,Ac,H,MBody),
+   list_to_conjuncts_yfx(OP,MBody,T,Body).
+list_to_conjuncts_yfx(OP,Ac,T,Body):-
+   conjoin_op(OP,Ac,T,Body).
+
+
 
 
 %= 	 	 
@@ -444,7 +463,8 @@ conjoin(A,B,(A,B)).
 conjoin_op(_,TRUE,X,X) :- TRUE==true, !.
 conjoin_op(_,X,X,TRUE) :- TRUE==true, !.
 conjoin_op(_,X,Y,Z) :- X==Y,Z=X,!.
-conjoin_op(OP,C1,C2,C):-C =..[OP,C1,C2].
+conjoin_op(OP,C1,C2,C):- current_op(_,yfx,OP),functor(OP,C2,2),C =..[OP,C2,C1],!.
+conjoin_op(OP,C1,C2,C):- C =..[OP,C1,C2].
 
 % =================================================================================
 % Utils
@@ -654,6 +674,7 @@ apply_term(T,LST,HEAD):- (LST==[] -> HEAD= T ; (HEAD= T -> LST=[] )).
 %
 % Append Termlist.
 %
+append_termlist(M:Call,EList,Out):- nonvar(M),!,append_termlist(Call,EList,CallE),M:CallE=Out.
 append_termlist(Call,EList,CallE):- var(Call),must(is_list(EList)),!,must((append([t,Call],EList,ListE), CallE=..ListE)).
 append_termlist(Call,EList,CallE):-must(is_list(EList)),!,must((Call=..LeftSide, append(LeftSide,EList,ListE), CallE=..ListE)).
 

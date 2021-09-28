@@ -2,10 +2,10 @@
 % File 'logicmoo_util_strings.pl'
 % Purpose: Common Logicmoo library Functions for Strings
 % Maintainers: Douglas Miles/Annie Ogborn/Kino Coursey
-% Contact: $Author: dmiles $@users.sourceforge.net ;
+% Contact: $Author: logicmoo@gmail.com;
 % Version: 'logicmoo_util_strings.pl' 1.0.0
 % Revision:  $Revision: 1.7 $
-% Revised At:   $Date: 2002/07/11 21:57:28 $
+% Revised At:   $Date: 2021/07/11 21:57:28 $
 % ===================================================================
 
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_strings.pl
@@ -138,6 +138,11 @@
             vars_to_ucase/2,
             vars_to_ucase_0/2
           ]).
+/** <module> Utility LOGICMOO_UTIL_STRINGS
+This module introduces string replacements for find replacement in strings, capitalization, etc for text normalization.  
+@author Douglas R. Miles
+@license LGPL
+*/
 % autoloading user:portray_clause_pi/2 from /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_first
 :- multifile 
         double_quotes_was_strings/1,
@@ -313,6 +318,11 @@ get_text_restore_pred(_,any_to_string).
 any_to_string(Atom,String):-   any_to_string1(Atom,StringS),!,StringS=String.
 % any_to_string(Atom,String):- with_err_to_pred(nop, (must(any_to_string1(Atom,StringS)),!,must(StringS=String))),!.
 
+maybe_keep_postion(Stream,Goal):-
+  setup_call_cleanup(
+    stream_property(Stream,position(Pos)),
+    Goal,
+    (stream_property(Stream,reposition(true))->set_stream_position(Stream,Pos);true)).
 
 %= 	 	 
 
@@ -320,11 +330,15 @@ any_to_string(Atom,String):-   any_to_string1(Atom,StringS),!,StringS=String.
 %
 % Any Converted To String Secondary Helper.
 %
+any_to_string1(Atom,String):- atomic(Atom),is_stream(Stream),
+ stream_property(Stream,reposition(true)),!,
+ maybe_keep_postion(Stream,read_stream_to_codes(Stream,Codes)),!,any_to_string1(Codes,String).
+any_to_string1(Atom,String):- atomic(Atom),is_stream(Stream), maybe_keep_postion(Stream,read_stream_to_codes(Stream,Codes)),!,any_to_string1(Codes,String).
 any_to_string1(Atom,String):- var(Atom),show_call((term_string(Atom,String))),!.
 any_to_string1(Atom,String):- var(Atom),!,=(Atom,String).
 any_to_string1(Atom,String):- string(Atom),!,Atom=String.
 any_to_string1(Atom,String):- is_s_string(Atom),!,convert_to_string(Atom,String).
-any_to_string1(_,_):- stack_depth(X),X>2000,!,sanity(fail),fail.
+%any_to_string1(_,_):- stack_depth(X),X>2000,!,sanity(fail),fail.
 any_to_string1(s(Atom),String):- !, any_to_string1(Atom,String). 
 % any_to_string1(Atom,String):- is_string(Atom),!,text_to_string(String).
 
@@ -333,6 +347,8 @@ any_to_string1(Atom,String):- atomic(Atom),!,convert_to_string(Atom,String),!.
 any_to_string1(Empty,""):- empty_str(Empty),!.
 
 any_to_string1(string(Atom),String):- !, any_to_string1(Atom,String). 
+any_to_string1(atom(Atom),String):- !, any_to_string1(Atom,String). 
+any_to_string1(text(Atom),String):- !, any_to_string1(Atom,String). 
 any_to_string1(fmt(Fmt,Args),String):-!,must(sformat(String,Fmt,Args)).
 any_to_string1(txtFormatFn(Fmt,Args),String):-!,must(sformat(String,Fmt,Args)).
 % any_to_string1([Atom],String):-  !, any_to_string1(Atom,String).
@@ -629,8 +645,8 @@ any_to_atom(Any,A):- any_to_string(Any,T), format(atom(A),'~w',[T]).
 %
 % Any Converted To String Or Variable.
 %
-any_to_string_or_var(StringO,String):- (var(StringO);var(String)),!,String=StringO.
-any_to_string_or_var(StringO,String):- any_to_string(StringO,StringOS1),any_to_string(String,StringOS2),!,StringOS1=StringOS2.
+any_to_string_or_var(StringO,String):- notrace(((var(StringO);var(String)),!,String=StringO)),!.
+any_to_string_or_var(StringO,String):- notrace((any_to_string(StringO,StringOS1),any_to_string(String,StringOS2),!,StringOS1=StringOS2)).
 
 
 %= 	 	 
@@ -648,7 +664,7 @@ atomic_list_concat_safe([D1,Atom|Bonus],V):-var(D1),atomic(Atom),sub_string_or_a
 atomic_list_concat_safe([V],V):-!.
 
 string_or_atom_concat(A,B,C):- \+ string(A),\+ string(B),\+ string(C),!, atom_concat(A,B,C).
-string_or_atom_concat(A,B,C):-string_concat(A,B,C).
+string_or_atom_concat(A,B,C):- string_concat(A,B,C).
 
 sub_string_or_atom(V, NBefore, Len, NumAfter, Atom):- (atom(V);atom(Atom)),!,sub_atom(V, NBefore, Len, NumAfter, Atom).
 sub_string_or_atom(V, NBefore, Len, NumAfter, Atom):- assertion(string(V);string(Atom)),sub_string(V, NBefore, Len, NumAfter, Atom).
@@ -661,13 +677,15 @@ sub_string_or_atom(V, NBefore, Len, NumAfter, Atom):- assertion(string(V);string
 % Atomic List Concat Safely Paying Attention To Corner Cases.
 %
 atomic_list_concat_safe(List,Sep,StringO):- (Sep==[];Sep=='';Sep==""),!,atomic_list_concat_safe(List,StringO).
-atomic_list_concat_safe(List,Sep,Str):-ground(Sep:Str), \+ (atom_contains(Str,Sep)),!,List=[Str0],any_to_string_or_var(Str,Str0).
-atomic_list_concat_safe(List,Sep,StringO):- ground(List:Sep),!,atomics_to_string(List,Sep,String),any_to_string_or_var(StringO,String).
 atomic_list_concat_safe(List,_,V):- (V=='';V==""),!,List=[].
-atomic_list_concat_safe(List,Sep,StringO):-ground(StringO),ground(Sep), \+ (atom_contains(StringO,Sep)),!,List=[D1O],any_to_string_or_var(StringO,D1O).
+atomic_list_concat_safe(List,_,V):- List==[],!,any_to_string_or_var('',V).
+atomic_list_concat_safe(List,Sep,Str):- ground(Sep:Str), !, atomic_list_concat(List1,Sep,Str),!,maplist(any_to_string_or_var,List,List1).
+atomic_list_concat_safe(List,Sep,StringO):- ground(List:Sep),!,atomics_to_string(List,Sep,String),any_to_string_or_var(StringO,String).
+%atomic_list_concat_safe(List,Sep,V):- maplist(unify_atomics,['',''],List).
 atomic_list_concat_safe([Atom,A2|Bonus],Sep,V):-atomic(Atom),atomic(A2),atomic_list_concat_safe([Atom,Sep,A2],A3),atomic_list_concat_safe([A3|Bonus],Sep,V),!.
-atomic_list_concat_safe([Atom|Bonus],Sep,V):-atomic(Atom),atomic(V),atomic_list_concat_safe([Atom,Sep,NV],V),!,atomic_list_concat_safe(Bonus,NV).
-atomic_list_concat_safe([D1,PostAtom|Bonus],Sep,V):-var(D1),atomic(V),atomic(Sep),string_concat(Sep,PostAtom,Atom),
+atomic_list_concat_safe([Atom|Bonus],Sep,V):-   atomic(Atom),atomic(V),atomic_list_concat_safe([Atom,Sep,NV],V),!,atomic_list_concat_safe(Bonus,NV).
+atomic_list_concat_safe([D1,PostAtom|Bonus],Sep,V):-var(D1),atomic(V),atomic(Sep),
+  string_concat(Sep,PostAtom,Atom),
   % We calc D1
   sub_string(V, NBefore, _Len, NumAfter, Atom),sub_string(V, 0, NBefore, _, D1O),
   sub_string(V,_,NumAfter,0,NewV),atomic_list_concat_safe(Bonus,Sep,NewV),!,
@@ -1082,7 +1100,7 @@ unquoteAtom(Atom,New):-concat_atom_safe(LIST,'"',Atom),concat_atom_safe(LIST,'',
 is_charlist([A]):-  !, is_charlist_char(A).
 is_charlist([A|L]):- is_charlist_char(A),is_charlist(L).
 
-is_charlist_char(C):- atom(C), atom_length(C,1).
+is_charlist_char(C):- atom(C), atom_length(C,1), name(C,[Code]),swish_render_codes_charset_code(_,Code).
 
 any_to_charlist(A,C):- is_charlist(A),!,A=C.
 any_to_charlist(A,C):- any_to_string(A,S),atom_chars(S,C).
@@ -1095,9 +1113,22 @@ any_to_charlist(A,C):- any_to_string(A,S),atom_chars(S,C).
 % If Is A Codelist.
 %
 is_codelist([A]):-  !, is_codelist_code(A).
-is_codelist([A|L]):- is_codelist_code(A),is_codelist(L).
+is_codelist([A|L]):- is_codelist_code(A)->is_codelist(L). 
 
-is_codelist_code(A):- integer(A),!,A>8,A<129.
+is_codelist_code(H):- integer(H), swish_render_codes_charset_code(_,H),!.
+
+swish_render_codes_charset_code(_,9).
+swish_render_codes_charset_code(_,10).
+swish_render_codes_charset_code(_,13).
+swish_render_codes_charset_code(_,27).
+swish_render_codes_charset_code(ascii, C) :- 
+    between(32, 126, C).
+swish_render_codes_charset_code(iso_latin_1, C) :-
+    (   between(32, 126, C)
+    ;   between(160, 255, C)
+    ).
+
+
 
 any_to_codelist(A,C):- is_codelist(A),!,A=C.
 any_to_codelist(A,C):- any_to_string(A,S),atom_codes(S,C).

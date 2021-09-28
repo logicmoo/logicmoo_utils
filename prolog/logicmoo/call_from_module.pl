@@ -164,7 +164,7 @@ maybe_delete_import_module(From,To):- writeln_safely(ignore(system:delete_import
 :- baseKB:export(baseKB:is_declared_global_module/1).
 :- system:import(baseKB:is_declared_global_module/1).
 
-baseKB:is_declared_global_module(baseKB).
+baseKB:is_declared_global_module( baseKB).
 baseKB:is_declared_global_module(eggdrop).
 baseKB:is_declared_global_module(parser_all).
 baseKB:is_declared_global_module(parser_chat80).
@@ -942,6 +942,7 @@ warn_if_static(F,A):-
   functor(Goal,F,A),
   is_static_predicate(F/A),
   listing(Goal),
+  if_interactive(break),
   trace_or_throw(warn(pfcPosTrigger,Goal,static)))).
 
 

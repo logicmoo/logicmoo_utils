@@ -14,9 +14,15 @@
    with_vars_lock_else/2,
    skip_varlocks/0]).
 
+/** <module> Utility LOGICMOO LOCKABLE VARS
+This module prevents bugs due accidental tampering, allows one to write code that keeps free variables from being accidently tampered with unification one way.
+ 
+@author Douglas R. Miles
+@license LGPL 
+*/ 
 :- set_module(class(library)).
 
-:- use_module(util_varnames,[get_var_name/2]).
+%:- use_module(util_varnames,[get_var_name/2]).
 
 
 %% lock_vars( :TermVar) is semidet.
@@ -26,7 +32,8 @@
 
 lock_vars(Term):-lock_vars(lockable_vars:just_fail,Term).
 
-just_fail(_):- notrace( \+ skip_varlocks).
+just_fail(_):- notrace( \+ skip_varlocks),!.
+just_fail(_).
 %skip_varlocks:- !.
 skip_varlocks:- current_prolog_flag(skip_varlocks , TF),!,TF==true.
 skip_varlocks:- current_prolog_flag(unsafe_speedups , true) ,!.
@@ -48,29 +55,33 @@ lock_these_vars_now(Notify,N0,[Var|Vars],PVs):-!,
    lock_these_vars_now(Notify,N,Vars,PVs).
 lock_these_vars_now(_,_,[],_).
 
-vl:attr_unify_hook(InSLock,Value):- with_vars_unlocked(vl_attr_unify_hook(InSLock,Value)).
+vl:attr_unify_hook(InSLock,Value):-
+  current_prolog_flag(skip_varlocks,true)-> true;
+  with_vars_unlocked(vl_attr_unify_hook(InSLock,Value)).
 
-vl_attr_unify_hook(InSLock,Value):- InSLock = slock(InLock,Else,Sorted),!,
+vl_attr_unify_hook(InSLock,Value):- compound(InSLock), InSLock = slock(InLock,Else,Sorted),!,
   check_slock(InLock,Else,InSLock,Sorted,Value).
 vl_attr_unify_hook(A,B):- vlauh(A,B),!.
 
 vlauh(when_rest(Notify,N,_Var,VVs),VarValue):- 
     arg(NN,VVs,Was),Was==VarValue,
-    NN\==N,    
+    NN\==N,!,
     dmsg(collide_locked_var(Notify,VarValue)),
     call(Notify,VarValue).
 
 %vlauh(when_rest(_,_,Var,_),VarValue):- unify_name_based0(Var, VarValue).
 %vlauh(_,VarValue):- locking_verbatum_var(VarValue),!,variable_name_or_ref(VarValue,_),!.
 
+vlauh(_,_):- current_prolog_flag(skip_varlocks,true),!.
+
 vlauh(_,_):- on_x_fail(( \+ thread_self_main)),!,fail.
 %vlauh(_,_):- thread_self_main,!.
 vlauh(when_rest(Notify,N,Var,VVs),VarValue):- 
   \+ (var(VarValue);locking_verbatum_var(VarValue)),!,               
-  dmsg(error_locked_var(when_rest(Notify,N,Var,VVs),VarValue)),
-  dumpST,
-  dmsg(error_locked_var(when_rest(Notify,N,Var,VVs),VarValue)),
-  break,
+  dmsg(error_locked_var1(when_rest(Notify,N,Var,VVs),VarValue)),
+  (current_prolog_flag(debugg,true)->((dumpST,
+  dmsg(error_locked_var2(when_rest(Notify,N,Var,VVs),VarValue))));true),
+  (current_prolog_flag(debugg,true)->break;true),
   call(Notify,VarValue),!.
 
 vlauh(when_rest(Notify,N,Var,VVs),VarValue):- var(VarValue),!,

@@ -17,7 +17,9 @@
             locally_tl/2,
             locally_hide/2,
             locally_hide_each/2,
-            local_override/2
+            local_override/2,
+            w_o_c/1,
+            w_o_c/2
           ]).
 
 :- meta_predicate
@@ -27,6 +29,12 @@
         locally_hide_each((:),(:)),
         wtl(+,*,0,3),
         wtl_how(3,0,0,0,0).        
+
+/** <module> Utility LOGICMOO_REDO_LOCALLY
+This module allows drastic changes to prolog data to happen very temporarily. (to be reset or temporarily changed.)
+@author Douglas R. Miles
+@license LGPL
+*/
 
 % :- system:use_module(library(logicmoo_startup)).
 % % % OFF :- system:use_module(library(must_sanity)).
@@ -71,6 +79,16 @@ locally_hide(Fact,Cm:Call):-
 locally_hide_each(Fact,Cm:Call):-  
   quietly(module_effect((Fact :- !,fail),M,BareEffect)) ->
     wtl(M,BareEffect,Cm:Call,Cm:each_call_cleanup).
+
+:- meta_predicate(w_o_c(:)).
+
+w_o_c(G):- tracing,!,call(G).
+w_o_c(G):- catch(w_o_c(error, G),E,
+  (wdmsg(w_o_c(error=E, G)),dumpST,wdmsg(w_o_c(error=E, G)),break,trace,G)).
+
+:- meta_predicate(w_o_c(+,:)).
+w_o_c(How, G):- 
+   locally(set_prolog_flag(occurs_check,How),G).
 
 
 %% locally_each( :Effect, :Call) is nondet.

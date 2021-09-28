@@ -26,6 +26,7 @@
             main_self/1,
             set_main_error/0,
             find_main_eror/1,
+            call_each/2,
             set_mains/0,
             current_why/1,
             thread_self_main/0,
@@ -100,7 +101,7 @@
             must_det_l/1,
             must_det_l_pred/2,
             call_must_det/2,
-            call_each/2,
+            call_each_det/2,
             p_call/2,
 
             nd_dbgsubst/4,
@@ -147,6 +148,16 @@
           ]).
 
 
+:- thread_local tlbugger:show_must_go_on/1.
+
+keep_going:- notrace(keep_going0).
+
+keep_going0:- getenv(keep_going,'-k').
+keep_going0:- non_user_console.
+keep_going0:- tlbugger:show_must_go_on(X)->X==true,!.
+keep_going0:- current_prolog_flag(runtime_must,keep_going),!.
+keep_going0:- current_prolog_flag(debug_on_error,true), !, fail.
+
 
 % % % OFF :- system:use_module((dmsg)).
 % % % OFF :- system:use_module(library(must_sanity)).
@@ -162,7 +173,7 @@ main_self(W):-atom(W),atom_concat('pdt_',_,W),!.
 main_self(W):-atom(W),atom_concat('client',_,W),!.
 main_self(W):-lmcache:thread_main(user,W),!.
 
-thread_self_main:- zotrace((thread_self(W),!,main_self(W))).
+thread_self_main:- notrace((thread_self(W),!,main_self(W))).
 
 %% hide_non_user_console is semidet.
 %
@@ -173,6 +184,8 @@ hide_non_user_console:-current_input(In),stream_property(In,tty(true)),!,fail.
 hide_non_user_console:-current_prolog_flag(debug_threads,true),!,fail.
 hide_non_user_console:-current_input(In),stream_property(In, close_on_abort(true)).
 hide_non_user_console:-current_input(In),stream_property(In, close_on_exec(true)).
+
+
 
 
 /*
@@ -213,8 +226,9 @@ hide_non_user_console:-current_input(In),stream_property(In, close_on_exec(true)
 
         must_det_l(0),
         must_det_l_pred(1,+),
-        call_must_det(1,+),
-        call_each(*,+),
+        call_must_det(1,+),       
+        call_each_det(1,+),
+        call_each(1,+),
         p_call(*,+),
 
         must_l(0),
@@ -312,6 +326,7 @@ hide_non_user_console:-current_input(In),stream_property(In, close_on_exec(true)
 
 :- set_module(class(library)).
 
+%:- prolog_listing:use_module(library(listing)).
 
 :- use_module(library(occurs)).
 :- use_module(library(gensym)).
@@ -341,7 +356,13 @@ hide_non_user_console:-current_input(In),stream_property(In, close_on_exec(true)
 :- use_module(library(prolog_source)).
 :- use_module(library(date)).
 %:- use_module(library(editline)).
-:- use_module(library(listing)).
+%:- system:use_module(library(listing)).
+%:- unload_file(library(listing)).
+:- multifile(prolog_listing:or_layout/1).
+:- dynamic(prolog_listing:or_layout/1).
+:- multifile(prolog_listing:clause_term/4).
+:- dynamic(prolog_listing:clause_term/4).
+
 
 
 /** <module> logicmoo_util_catch - catch-like bocks
@@ -364,7 +385,7 @@ hide_non_user_console:-current_input(In),stream_property(In, close_on_exec(true)
 
 :-meta_predicate(skip_failx_u(*)).
 skip_failx_u(G):- must_det_l(G).
-% skip_failx_u(G):-call_each([baseKB:call_u,on_xf_log_cont,notrace],G).
+% skip_failx_u(G):-call_each_det([baseKB:call_u,on_xf_log_cont,notrace],G).
 
 
 
@@ -410,6 +431,40 @@ with_main_error_to_output(Goal):-
 with_current_io(Goal):-
   current_input(IN),current_output(OUT),get_thread_current_error(Err),
   scce_orig(set_prolog_IO(IN,OUT,Err),Goal,set_prolog_IO(IN,OUT,Err)).
+
+:- thread_local(t_l:hide_dmsg/0).
+
+% with_no_output(Goal):- !, Goal.
+with_no_output(Goal):-
+ locally_tl(hide_dmsg,
+  with_output_to(string(_), 
+     with_some_output_to(main_error,
+      current_output,
+       with_user_error_to(current_output,
+        locally_tl(thread_local_error_stream(current_output),
+         with_user_output_to(current_output, 
+          with_dmsg_to_main(Goal))))))).
+
+with_user_error_to(Where,Goal):-
+  with_some_output_to(user_error,Where,Goal).
+
+with_user_output_to(Where,Goal):-
+  with_some_output_to(user_output,Where,Goal).
+
+into_stream_alias(Some,Alias):- into_stream(Some,S),stream_property(S,alias(Alias)),!.
+into_stream_alias(Some,Some).
+
+with_some_output_to(SomeAlias,Where,Goal):- 
+   into_stream_alias(SomeAlias,Alias), 
+   with_alias_output_to(Alias,Where,Goal).
+
+with_alias_output_to(Alias,Where,Goal):- 
+   stream_property(ErrWas,alias(Alias)),
+   new_memory_file(MF), open_memory_file(MF,write,Stream),
+   scce_orig(set_stream(Stream,alias(Alias)),Goal,set_stream(ErrWas,alias(Alias))),
+   close(Stream),
+   memory_file_to_string(MF,Data),
+   with_output_to(Where,write(Data)).
 
 
 
@@ -494,6 +549,8 @@ thread_call_blocking_one(Thread,G):- thread_self(Self),
 %
 % Format Converted To Error.
 %
+format_to_error(F,A):-F==error,!,format_to_error('~q',A).
+format_to_error(F,A):- \+ is_list(A),!,format_to_error(F,[A]).
 format_to_error(F,A):-get_thread_current_error(Err),!,format(Err,F,A).
 
 %=
@@ -545,7 +602,7 @@ current_error_stream_ucatch(Err):-
 %
 % Save Streams.
 %
-save_streams(_):-!.
+%save_streams(_):-!.
 save_streams(ID):-
   retractall((lmcache:thread_current_input(ID,_))),
   retractall((lmcache:thread_current_error_stream(ID,_))),
@@ -613,6 +670,7 @@ ddmsg(F,A):- format_to_error(F,A),!.
 % Ddmsg Call.
 %
 ddmsg_call(D):- ( (ddmsg(ddmsg_call(D)),call(D),ddmsg(ddmsg_exit(D))) *-> true ; ddmsg(ddmsg_failed(D))).
+:- module_transparent(ddmsg_call/1).
 
 
 
@@ -621,9 +679,11 @@ ddmsg_call(D):- ( (ddmsg(ddmsg_call(D)),call(D),ddmsg(ddmsg_exit(D))) *-> true ;
 % Doall And Fail.
 %
 doall_and_fail(Call):- time_call(once(doall(Call))),fail.
+:- module_transparent(doall_and_fail/1).
+
 
 quietly_must(G):- quietly(must(G)).
-
+:- module_transparent(quietly_must/1).
 
 :- module_transparent((if_defined/1,if_defined/2)).
 
@@ -632,6 +692,7 @@ quietly_must(G):- quietly(must(G)).
 % If Defined.
 %
 if_defined(Goal):- if_defined(Goal,((dmsg(warn_undefined(Goal)),!,fail))).
+:- module_transparent(if_defined/1).
 
 %% if_defined( ?Goal, :GoalElse) is semidet.
 %
@@ -639,6 +700,7 @@ if_defined(Goal):- if_defined(Goal,((dmsg(warn_undefined(Goal)),!,fail))).
 %
 if_defined((A,B),Else):-!, if_defined(A,Else),if_defined(B,Else).
 if_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
+:- module_transparent(if_defined/2).
 % if_defined(M:Goal,Else):- !, current_predicate(_,OM:Goal),!,OM:Goal;Else.
 %if_defined(Goal,  Else):- current_predicate(_,OM:Goal)->OM:Goal;Else.
 
@@ -740,7 +802,7 @@ input_key(K):-thread_self(K).
 %
 % Show New Src Location.
 %
-show_new_src_location(FL):-input_key(K),show_new_src_location(K,FL).
+show_new_src_location(FL):-input_key(K),!,show_new_src_location(K,FL).
 
 
 %=
@@ -751,7 +813,7 @@ show_new_src_location(FL):-input_key(K),show_new_src_location(K,FL).
 %
 show_new_src_location(_,F:_):-F==user_input,!.
 show_new_src_location(K,FL):- t_l:last_src_loc(K,FL),!.
-show_new_src_location(K,FL):- retractall(t_l:last_src_loc(K,_)),format_to_error('~N% ~w ',[FL]),!,asserta(t_l:last_src_loc(K,FL)).
+show_new_src_location(K,FL):- retractall(t_l:last_src_loc(K,_)),format_to_error('~N%~~ ~w ~n',[FL]),!,asserta(t_l:last_src_loc(K,FL)).
 
 
 :- thread_local(t_l:current_why_source/1).
@@ -929,11 +991,15 @@ source_variables_l(AllS):-
  quietly((
   (prolog_load_context(variable_names,Vs1);Vs1=[]),
   (get_varname_list(Vs2);Vs2=[]),
-  quietly(catch((parent_goal('$toplevel':'$execute_goal2'(_, Vs3),_);Vs3=[]),E,(writeq(E),Vs3=[]))),
+  uexecute_goal_vs(Vs3),
   ignore(Vs3=[]),
-  append(Vs1,Vs2,Vs12),append(Vs12,Vs3,All),!,list_to_set(All,AllS),
-  set_varname_list( AllS))).
+  append([Vs1,Vs2,Vs3],All),list_to_set(All,AllS),
+  set_varname_list(AllS))).
 
+uexecute_goal_vs(Vs):- uexecute_goal_vs0(Vs),!.
+uexecute_goal_vs([]).
+uexecute_goal_vs0(Vs):- notrace(catch(parent_goal('$toplevel':'$execute_goal2'(_,Vs,_)),_,fail)).
+uexecute_goal_vs0(Vs):- notrace(catch(parent_goal('$toplevel':'$execute_goal2'(_,Vs)),_,fail)).
 
 
 %=
@@ -948,10 +1014,20 @@ source_variables_l(AllS):-
 :-export( show_source_location/0).
 show_source_location:- current_prolog_flag(dmsg_level,never),!.
 %show_source_location:- quietly((tlbugger:no_slow_io)),!.
-show_source_location:- get_source_location(FL),show_new_src_location(FL),!. 
+show_source_location:- get_source_location(FL)->show_new_src_location(FL),!. 
 show_source_location:- if_interactive((dumpST,dtrace)).
 
-show_current_source_location:- get_source_location(FL),format_to_error('~N% ~w ',[FL]). 
+:- thread_local(t_l:last_shown_current_source_location/1).
+
+show_current_source_location:- ignore((get_source_location(FL),!, show_current_source_location(FL))).
+show_current_source_location(FL):- t_l:last_shown_current_source_location(FL),!,
+                                   retractall(t_l:last_shown_current_source_location(_)),
+                                   public_file_link(FL,FLO),
+                                   format_to_error('~N%~~ FILE: ~w ~N',[FLO]),!.
+show_current_source_location(FL):- retractall(t_l:last_shown_current_source_location(_)),
+                                   asserta(t_l:last_shown_current_source_location(FL)),!,
+                                   public_file_link(FL,FLO),
+                                   format_to_error('~N%~~ FIlE: ~w ~N',[FLO]),!. 
 
 get_source_location(FL):- current_source_file(FL),nonvar(FL),!.
 get_source_location(F:L):- source_location(F,L),!.
@@ -959,6 +1035,28 @@ get_source_location(get_source_location_unknown).
 
 
 % :- ensure_loaded(hook_database).
+
+:- dynamic(lmconf:http_file_stem/2).
+lmconf:http_file_stem('lib/swipl',"https://logicmoo.org:2082/gitlab/logicmoo/logicmoo_workspace/-/tree/master/docker/rootfs/usr/local/lib/swipl").
+lmconf:http_file_stem('swi-prolog/pack',"https://logicmoo.org:2082/gitlab/logicmoo/logicmoo_workspace/-/edit/master/packs_sys").
+lmconf:http_file_stem(logicmoo_workspace,"https://logicmoo.org:2082/gitlab/logicmoo/logicmoo_workspace/-/edit/master").
+lmconf:http_file_stem('~',"https://logicmoo.org:2082/gitlab/logicmoo/prologmud_server/-/tree/master").
+
+:- export(ensure_compute_file_link/2).
+:- export(public_file_link/2).
+:- export(maybe_compute_file_link/2).
+
+ensure_compute_file_link(S,URL):- \+ ( nb_current('$inprint_message', Messages), Messages\==[] ), maybe_compute_file_link(S,URL),!.
+ensure_compute_file_link(S,S).
+
+maybe_compute_file_link(S,O):- atom(S),!, lmconf:http_file_stem(F,R),atomic_list_concat([_,A],F,S),!,atom_concat(R,A,O).
+maybe_compute_file_link(S:L,O):- integer(L),!,maybe_compute_file_link(S,F),format(atom(O),'~w#L~w',[F,L]).
+
+public_file_link(S,O):-   \+ ( nb_current('$inprint_message', Messages), Messages\==[] ), maybe_compute_file_link(S,M),into_link(S,M,O).
+public_file_link(MG,MG).
+
+into_link(_,M,O):- format(atom(O),'* ~w ',[M]),!.
+into_link(S,M,O):- format(atom(O),'<pre><a href="~w">~q</a></pre>',[M,S]).
 
 :-export( as_clause_no_m/3).
 
@@ -1012,7 +1110,7 @@ not_ftCompound(A):- \+ is_ftCompound(A).
 %
 % If Is A Format Type Variable.
 %
-is_ftVar(V):- zotrace(is_ftVar0(V)).
+is_ftVar(V):- notrace(is_ftVar0(V)).
 is_ftVar0(V):- \+ compound(V),!,var(V).
 is_ftVar0('$VAR'(_)).
 is_ftVar0('aVar'(_,_)).
@@ -1098,7 +1196,7 @@ bad_functor(L) :- arg(_,v('|',[],':','/'),L). % .
 %
 % Warn Bad Functor.
 %
-warn_bad_functor(L):-ignore((zotrace(bad_functor(L)),!,dtrace,call(ddmsg(bad_functor(L))),break)).
+warn_bad_functor(L):-ignore((notrace(bad_functor(L)),!,dtrace,call(ddmsg(bad_functor(L))),break)).
 
 :- export(strip_f_module/2).
 
@@ -1461,7 +1559,9 @@ for obvious reasons.
 %
 trace_or_throw(E):- hide_non_user_console,quietly((thread_self(Self),wdmsg(thread_trace_or_throw(Self+E)),!,throw(abort),
                     thread_exit(trace_or_throw(E)))).
-trace_or_throw(E):- wdmsg(trace_or_throw(E)),trace,break,dtrace((dtrace,throw(E))).
+
+
+trace_or_throw(E):- wdmsg(trace_or_throw(E)),if_interactive((trace,break),true),dtrace((dtrace,throw(E))).
 
  %:-interactor.
 
@@ -1489,7 +1589,7 @@ on_x_log_fail(Goal):- catchv(Goal,E,(dmsg(E:Goal),fail)).
 
 on_xf_log_cont(Goal):- (on_x_log_cont(Goal)*->true;dmsg(on_f_log_cont(Goal))).
 
-on_xf_log_cont_l(Goal):- call_each(on_xf_log_cont,Goal).
+on_xf_log_cont_l(Goal):- call_each_det(on_xf_log_cont,Goal).
 
 % -- CODEBLOCK
 
@@ -1655,22 +1755,27 @@ one_must_det(_Call,OnFail):-OnFail,!.
 %
 % Must Be Successfull Deterministic (list Version).
 %
-must_det_l(Goal):- call_each(must_det_u,Goal).
+must_det_l(Goal):- call_each_det(must_det_u,Goal).
 
 must_det_l_pred(Pred,Rest):- tlbugger:skip_bugger,!,call(Pred,Rest).
-must_det_l_pred(Pred,Rest):- call_each(call_must_det(Pred),Rest).
+must_det_l_pred(Pred,Rest):- call_each_det(call_must_det(Pred),Rest).
 
 call_must_det(Pred,Arg):- must_det_u(call(Pred,Arg)),!.
 
 is_call_var(Goal):- strip_module(Goal,_,P),var(P).
 
-call_each(Pred,Goal):- (is_call_var(Pred);is_call_var(Goal)),!,trace_or_throw(var_call_each(Pred,Goal)),!.
-call_each(Pred,[Goal]):- !, dmsg(trace_syntax(call_each(Pred,[Goal]))),!,call_each(Pred,Goal).
-call_each(Pred,[Goal|List]):- !, dmsg(trace_syntax(call_each(Pred,[Goal|List]))), !, call_each(Pred,Goal),!,call_each(Pred,List).
-% call_each(Pred,Goal):-tlbugger:skip_bugger,!,p_call(Pred,Goal).
-call_each(Pred,M:(Goal,List)):-!, call_each(Pred,M:Goal),!,call_each(Pred,M:List).
-call_each(Pred,(Goal,List)):- !, call_each(Pred,Goal),!,call_each(Pred,List).
-call_each(Pred,Goal):- p_call(Pred,Goal),!.
+
+call_each(Pred,Goal):- call_each_det(Pred,Goal).
+
+call_each_det(Pred,Goal):- (is_call_var(Pred);is_call_var(Goal)),!,trace_or_throw(var_call_each(Pred,Goal)),!.
+call_each_det(Pred,[Goal]):- !, dmsg(trace_syntax(call_each_det(Pred,[Goal]))),!,call_each_det(Pred,Goal).
+call_each_det(Pred,[Goal|List]):- !, dmsg(trace_syntax(call_each_det(Pred,[Goal|List]))), !, call_each_det(Pred,Goal),!,call_each_det(Pred,List).
+% call_each_det(Pred,Goal1):-tlbugger:skip_bugger,!,p_call(Pred,Goal1).
+call_each_det(Pred,M:(Goal1,!,Goal2)):-!, call_each_det(Pred,M:Goal1),!,call_each_det(Pred,M:Goal2).
+call_each_det(Pred,M:(Goal1,Goal2)):-!, call_each_det(Pred,M:Goal1),!,call_each_det(Pred,M:Goal2).
+call_each_det(Pred,(Goal1,!,Goal2)):- !, call_each_det(Pred,Goal1),!,call_each_det(Pred,Goal2).
+call_each_det(Pred,(Goal1,Goal2)):- !, call_each_det(Pred,Goal1),!,call_each_det(Pred,Goal2).
+call_each_det(Pred,Goal):- p_call(Pred,Goal),!.
 
 % p_call(Pred,_:M:Goal):-!,p_call(Pred,M:Goal).
 p_call([Pred1|PredS],Goal):-!,p_call(Pred1,Goal),p_call(PredS,Goal).
@@ -1723,7 +1828,8 @@ slow_sanity(Goal):- ( tlbugger:skip_use_slow_sanity ; must(Goal)),!.
 
 :- meta_predicate(hide_trace(0)).
 
-hide_trace(G):- \+ tracing,!,call(G).
+hide_trace(G):- %JUNIT \+ tracing,
+ !,call(G).
 hide_trace(G):- !,call(G).
 hide_trace(G):- skipWrapper,!,call(G).
 hide_trace(G):-
@@ -1782,7 +1888,7 @@ need_speed:-current_prolog_flag(unsafe_speedups , true) .
 is_release:- current_prolog_flag(unsafe_speedups, false) ,!,fail.
 is_release:- !,fail.
 is_release:- current_prolog_flag(unsafe_speedups , true) ,!.
-is_release:- zotrace((\+ flag_call(runtime_debug == true) , \+ (1 is random(4)))).
+is_release:- notrace((\+ flag_call(runtime_debug == true) , \+ (1 is random(4)))).
 
 
 
@@ -1793,9 +1899,6 @@ is_release:- zotrace((\+ flag_call(runtime_debug == true) , \+ (1 is random(4)))
 :- export(not_is_release/0).
 not_is_release:- \+ is_release.
 
-
-
-:- thread_local tlbugger:show_must_go_on/0.
 
 %=
 
@@ -1838,7 +1941,7 @@ y_must(Y,Goal):- catchv(Goal,E,(wdmsg(E:must_xI__xI__xI__xI__xI_(Y,Goal)),fail))
 %=
 
 
-dumpST_error(Msg):- zotrace((ddmsg(error,Msg),dumpST,wdmsg(error,Msg))).
+dumpST_error(Msg):- notrace((ddmsg(error,Msg),dumpST,wdmsg(error,Msg))).
 
 
 :- thread_self_main->true;writeln(user_error,not_thread_self_main_consulting_ucatch).

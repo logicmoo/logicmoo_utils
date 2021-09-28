@@ -4,11 +4,11 @@
 % File '$FILENAME.pl'
 % Purpose: An Implementation in SWI-Prolog of certain debugging tools
 % Maintainer: Douglas Miles
-% Contact: $Author: dmiles $@users.sourceforge.net ;
+% Contact: $Author: dmiles logicmoo@gmail.com ;
 % Version: '$FILENAME.pl' 1.0.0
 % Revision: $Revision: 1.1 $
-% Revised At:  $Date: 2002/07/11 21:57:28 $
-% Licience: LGPL
+% Revised At:  $Date: 2021/07/11 21:57:28 $
+% License: LGPL
 % ===================================================================
 */
 
@@ -30,6 +30,12 @@ virtualize_ereq/2,
 virtualize_source/3,
 vwc/0
 ]).
+/** <module> Utility LOGICMOO VIRTUALIZE SOURCE
+Source code transformation - Uses Hook Database and Hook Hybrid to rewrite source code to better interact with hybrid database. 
+
+- @author Douglas R. Miles
+- @license LGPL 
+*/
 
 :- autoload(library(apply),[maplist/2]).
 :- autoload(library(lists),[member/2,append/3]).
@@ -545,8 +551,8 @@ virtualize_ereq_plz_move_dmiles(prologPTTP,1).
 virtualize_ereq_plz_move_dmiles(use_ideep_swi,0).
 virtualize_ereq_plz_move_dmiles(meta_argtypes,1).
 virtualize_ereq_plz_move_dmiles(coerce_hook,_).
-virtualize_ereq_plz_move_dmiles(agent_text_command,_).
-virtualize_ereq_plz_move_dmiles(agent_command,_).
+virtualize_ereq_plz_move_dmiles(baseKB:agent_text_command,_).
+virtualize_ereq_plz_move_dmiles(baseKB:agent_command,_).
 virtualize_ereq_plz_move_dmiles(isa,2).
 virtualize_ereq_plz_move_dmiles(genls,2).
 virtualize_ereq_plz_move_dmiles(nameString,2).

@@ -119,6 +119,22 @@ set_pred_attrs(MP,List):- maplist(set_pred_attrs(MP),List).
 :- thread_local(tlbugger:ifHideTrace/0).% WAS OFF  :- system:reexport(library(logicmoo/util_varnames)).
 % % % OFF :- system:use_module(library(lists)).
 
+:- export(reset_IO/0).
+reset_IO:-
+ stream_property(In,file_no(0)),stream_property(Out,file_no(1)),stream_property(Err,file_no(2)),
+  set_stream(In,buffer(line)),set_stream(Out,buffer(false)),set_stream(Err,buffer(false)),
+  set_stream(In,alias(current_input)),set_stream(Out,alias(current_output)),set_stream(Err,alias(current_error)),
+  set_stream(current_input,buffer(line)),set_stream(current_output,buffer(false)),set_stream(current_error,buffer(false)),
+  set_stream(In,alias(user_input)),set_stream(Out,alias(user_output)),set_stream(Err,alias(user_error)),
+  set_stream(user_input,buffer(line)),set_stream(user_output,buffer(false)),set_stream(user_error,buffer(false)),
+  set_output(Out),
+  set_system_IO(In,Out,Err),
+  set_prolog_IO(In,Out,Err),
+  writeln(Out,Out),
+  writeln(user_output,user_output),
+  wdmsg(reset_IO),
+  writeln(user_error,user_error).
+
 
 :- export(cnas/3).
 
@@ -473,7 +489,7 @@ add_var_to_env(NameS,Var):-
   % (NewName\==Name -> put_attr(Var, vn, NewName) ; true),
    (NewVar \==Var  -> put_attr(NewVar, vn, Name) ; true),
    (NewVs  \==VsIn -> put_variable_names(NewVs) ; true).
-   
+
 
 %% add_var_to_list(Name,Var,Vs,NewName,NewVar,NewVs) is det.
 add_var_to_list(Name,Var,Vs,NewName,NewVar,NewVs):- member(N0=V0,Vs), Var==V0,!,
@@ -496,6 +512,7 @@ add_var_to_list(Name,Var,Vs,NewName,NewVar,NewVs):-
 unnumbervars(X,Y):- must(zotrace(unnumbervars_and_save(X,Y))).
 
 zotrace(G):- call(G).
+:- module_transparent(zotrace/1).
 %zotrace(G):- notrace(tracing)->notrace(G);call(G).
 :- '$hide'(zotrace/1).
 :- 'old_set_predicate_attribute'(zotrace/1, hide_childs, true).
@@ -508,7 +525,8 @@ first_scce_orig(Setup0,Goal,Cleanup0):-
      Cleanup,
      (notrace(DET == true) -> ! ; (true;(Setup,notrace(fail)))).
 
-zzotrace(G):- notrace(\+ tracing)->call(G) ; first_scce_orig(notrace,G,trace).
+zzotrace(G):-  
+  notrace(\+ tracing) ->call(G) ; first_scce_orig(notrace,G,trace).
 :- '$hide'(zzotrace/1).
 
 put_variable_names(NewVs):-  check_variable_names(NewVs,Checked),call(b_setval,'$variable_names',Checked).
@@ -542,6 +560,7 @@ unnumbervars_and_save(X,YO):-
 %
 % Unnumbervars And Save.
 %
+
 unnumbervars4(Var,Vs,Vs,Var):- \+ compound(Var), !.
 unnumbervars4(Var,Vs,Vs,Var):- compound_name_arity(Var,_,0), !.
 unnumbervars4((I,TermIn),VsIn,NewVs,(O,TermOut)):- !,unnumbervars4(I,VsIn,VsM,O),unnumbervars4(TermIn,VsM,NewVs,TermOut).
@@ -552,9 +571,35 @@ unnumbervars4('$VAR'(Name),VsIn,NewVs,Var):- nonvar(Name),!, (member(Name=Var,Vs
 unnumbervars4(PTermIn,VsIn,NewVs,PTermOut):- compound_name_arguments(PTermIn,F,TermIn),
   unnumbervars4(TermIn,VsIn,NewVs,TermOut),
   compound_name_arguments(PTermOut,F,TermOut).
-   
 
+
+oc_sub_term(X, X).
+oc_sub_term(X, Term) :-
+     compound(Term),
+     arg(_, Term, Arg),
+     oc_sub_term(X, Arg).
  
+
+maybe_fix_varnumbering(MTP,_NewMTP):- term_attvars(MTP,Vs),Vs\==[],!,fail.
+maybe_fix_varnumbering(MTP,NewMTP):- ground(MTP), oc_sub_term(E,MTP),compound(E), E = '$VAR'(N),atomic(N),!, format(string(S),' ~q .',[(MTP)]),
+ notrace(catch( atom_to_term(S,(NewMTP),Vs),E,((ignore(source_location(F,L)),writeq(S->E=F:L),fail)))), \+ ground(NewMTP),
+  (prolog_load_context(variable_names,SVs);SVs=[]),!,
+   align_variables(Vs,SVs,ExtraVs),
+   append(SVs,ExtraVs,NewVs),
+   put_variable_names(NewVs).
+
+fix_varnumbering(MTP,NewMTP):- notrace(maybe_fix_varnumbering(MTP,NewMTP)),!.
+fix_varnumbering(MTP,NewMTP):- MTP=NewMTP.
+
+
+align_variables([],_,[]):- !.
+align_variables([N=V|Vs],SVs,ExtraVs):- 
+  member([SN=SV],SVs),N==SN,V=SV,!,
+  align_variables(Vs,SVs,ExtraVs).
+align_variables([NV|Vs],SVs,[NV|ExtraVs]):- 
+  align_variables(Vs,SVs,ExtraVs).
+
+
 
 /*
 
@@ -1117,9 +1162,9 @@ quiet_all_module_predicates_are_transparent(ModuleName):-
                    (module_transparent(ModuleName:F/A))))).
 
 
-:- multifile(user:term_expansion/2).
-:- dynamic(user:term_expansion/2).
-:- module_transparent(user:term_expansion/2).
+%:- multifile(user:term_expansion/2).
+%:- dynamic(user:term_expansion/2).
+%:- module_transparent(user:term_expansion/2).
 % user:term_expansion( (:-export(FA) ),(:- export_if_noconflict(M,FA))):-  current_prolog_flag(subclause_expansion,true),prolog_load_context(module,M).
 
 

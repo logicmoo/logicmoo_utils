@@ -44,7 +44,7 @@ do_import/4,
 
 :- create_prolog_flag(retry_undefined, none,[type(term),keep(true)]).
 
-:- use_module(library(logicmoo/no_loops),[is_parent_goal/1,is_parent_goal/2]).
+:- use_module(library(logicmoo/no_loops),[is_parent_goal/1,is_parent_goal/2, lco_goal_expansion/2]).
 
 :- meta_predicate decl_as(*,+).
 :- meta_predicate decl_as_rev(+,*).
@@ -68,6 +68,9 @@ check_mfa/4,
 create_predicate_inheritance/4,
 now_inherit_above/4,
 decl_as/2,
+decl_az/2,
+decl_as/4,
+decl_az/4,
 do_import/4,
 (kb_local)/1,
 (kb_global)/1,
@@ -378,10 +381,11 @@ now_inherit_above(Reason,CallerMt,F,A):-
 
 % get_inherit_above_clause(CallerMt,Goal,Head,Body)
 
-system:get_inherit_above_clause(From,Goal,IAHead,IABody):-
+system:get_inherit_above_clause(From,Goal,IAHead,IABody):- 
    (nonvar(Goal)->(strip_module(Goal,_,Call), functor(Call,F,A),functor(Head,F,A)) ; Goal=Head),
-   IAHead = From:Head,
-   IABody = (zwc,inherit_above(From,Head)).
+   IAHead = From:Head,   
+   IABody = (zwc,inherit_above(From,Head)),
+   nop(wdmsg(IABody)).
 
 %awc:-true.
 %zwc:-true.
@@ -411,6 +415,8 @@ never_move(is_pfc_file,_):- dumpST,break.
 system:do_inherit_above(Mt,_):- t_l:exact_kb(Mt),!,fail.
 %system:do_inherit_above(user,G):- !, fail, baseKB:call(G).
 
+system:do_inherit_above(_Mt,_QueryIn):- !, fail.
+
 system:do_inherit_above(Mt,QueryIn):- 
    functor(QueryIn,F,A),\+ never_move(F,A),
    predicate_property(QueryIn,number_of_clauses(N)),
@@ -438,42 +444,125 @@ system:do_call_inherited(MtAbove,Query):-
    \+ current_predicate(_,MtAbove:Query),
    functor(Query,F,A) -> create_predicate_inheritance(do_call_inherited(MtAbove,Query),MtAbove,F,A) -> fail.
 
+system:do_call_inherited(_Mt,_QueryIn):- !, fail.
 system:do_call_inherited(MtAbove,Query):- !, on_x_debug(MtAbove:Query).
 system:do_call_inherited(MtAbove,Query):- on_x_debug(call(call,ireq(MtAbove:Query))).
   
 
-
-export_everywhere(system,F,A):- !, system:export(system:F/A).
-export_everywhere(user,F,A):- !,user:export(user:F/A),system:import(user:F/A),baseKB:import(user:F/A).
-export_everywhere(baseKB,F,A):- !, baseKB:export(baseKB:F/A),system:import(baseKB:F/A),user:import(baseKB:F/A).
-export_everywhere(M,F,A):- M:export(M:F/A),system:import(M:F/A),user:import(M:F/A),baseKB:import(M:F/A).
+export_everywhere(M,F,A):- now_and_later(n,export_everywhere_now(M,F,A)).
+export_everywhere_now(system,F,A):- !, system:export(system:F/A).
+export_everywhere_now(user,F,A):- !,user:export(user:F/A),system:import(user:F/A),baseKB:import(user:F/A).
+export_everywhere_now(baseKB,F,A):- !, baseKB:export(baseKB:F/A),system:import(baseKB:F/A),user:import(baseKB:F/A).
+export_everywhere_now(M,F,A):- M:export(M:F/A),system:import(M:F/A),user:import(M:F/A),baseKB:import(M:F/A).
 
 %make_as_dynamic(M,F,A):- make_as_dynamic(make_as_dynamic,M,F,A).
 
-make_as_dynamic(Reason,M,F,A):- Reason= kb_global(_),!,make_as_dynamic_realy(Reason,M,F,A),export_everywhere(M,F,A).
-make_as_dynamic(Reason,M,F,A):- Reason= kb_local(_),!,make_as_dynamic_realy(Reason,M,F,A),!. 
-make_as_dynamic(Reason,M,F,A):- Reason= decl_kb_type(_,_),!,make_as_dynamic_realy(Reason,M,F,A),!. 
-make_as_dynamic(Reason,M,F,A):- F== is_pfc_file, break, make_as_dynamic_realy(Reason,M,F,A).
-make_as_dynamic(Reason,M,F,A):- dmsg(make_as_dynamic(Reason,M,F,A)),!,make_as_dynamic_realy(Reason,M,F,A),!. 
+make_as_dynamic(Reason,M,F,A):- now_and_later(n,make_as_dynamic_now(Reason,M,F,A)).
+
+make_as_dynamic_now(Reason,M,F,A):- Reason= kb_global(_),!,make_as_dynamic_really(Reason,M,F,A),export_everywhere(M,F,A).
+make_as_dynamic_now(Reason,M,F,A):- Reason= kb_local(_),!,make_as_dynamic_really(Reason,M,F,A),!. 
+make_as_dynamic_now(Reason,M,F,A):- Reason= decl_kb_type(_,_),!,make_as_dynamic_really(Reason,M,F,A),!. 
+make_as_dynamic_now(Reason,M,F,A):- F== is_pfc_file, break, make_as_dynamic_really(Reason,M,F,A).
+make_as_dynamic_now(Reason,M,F,A):- dmsg(make_as_dynamic(Reason,M,F,A)),!,make_as_dynamic_really(Reason,M,F,A),!. 
 
 :- multifile(user:message_hook/3).
 :- dynamic(user:message_hook/3).
 %user:message_hook(import_private(Module, Private),_,_):- Module==system,!, nop(dmsg(import_private(Module, Private))).
 %user:message_hook(import_private(Module, Private),_,_):- current_prolog_flag(runtime_message_hook, true), dmsg(import_private(Module, Private)).
 
-make_as_dynamic_realy(Reason,M,F,A):- 
- must_det_l((
-   functor(PI,F,A),
-   M:multifile(M:F/A),
-   M:discontiguous(M:F/A),
-   M:module_transparent(M:F/A),
-   (is_static_predicate(M:PI) -> true ; (predicate_property(M:PI,dynamic) -> true ; must(M:dynamic(M:F/A)))),   
+make_as_dynamic_really(Reason,M,F,A):- functor(PI,F,A), make_as_dynamic_really(Reason,M,PI,F,A).
+
+
+make_as_dynamic_really(Reason,M,PI,F,A):- 
+  ignore((is_static_predicate(M:PI),really_remake_as_dynamic(Reason,M,PI,F,A))),
+  ignore((is_static_predicate(M:PI),really_remake_as_dynamic_no_props(Reason,M,PI,F,A))),
+  make_as_dynamic_really_two(Reason,M,PI,F,A).
+
+
+make_as_dynamic_really_two(Reason,M,PI,F,A):- 
+  notrace(catch((public(M:F/A),fail),_,true)),
+  predicate_property(M:PI,imported_from(OM)),!,
+  make_as_dynamic_really(Reason,OM,PI,F,A).
+
+make_as_dynamic_really_two(Reason,M,PI,F,A):-
+  notrace(catch((public(M:F/A),fail),_,true)),
+  really_remake_as_dynamic_no_props(Reason,M,PI,F,A),
+  make_as_dynamic_really_two(Reason,M,PI,F,A).
+
+  
+make_as_dynamic_really_two(Reason,M,PI,F,A):-
+ must_det_l((   
+   (is_static_predicate(M:PI) -> true ; (predicate_property(M:PI,dynamic) -> true ; must(M:dynamic(M:F/A)))),      
    public(M:F/A),
-   nop(on_f_throw( (M:F/A)\== (baseKB:loaded_external_kbs/1))),
-   nop(assertz_if_new(( M:PI :- (fail,infoF(createdFor(Reason)))))))).
+   nop(on_f_throw( (M:F/A)\== (baseKB:loaded_external_kbs/1))),   
+   nop((is_static_predicate(M:PI) -> true ; (ignore(source_location(S,L)),assertz_if_new(( M:PI :- (fail,infoF(make_as_dynamic_really(Reason,S,L)))))))),
+   M:module_transparent(M:F/A),
+   M:discontiguous(M:F/A),
+   M:multifile(M:F/A))).
 
 
 do_inherit(_SM,_M,_F,_A).
+
+
+/*
+ * Copy all clauses whose head unifies Arg3 from module Arg1 to 
+ * module Arg2 without deleting the original clauses.
+ */   
+copy_module_predicate(InpMod, OutMod, Head) :-
+   copy_predicate_clauses(InpMod:Head, OutMod:Head).  % SWI-PL
+
+copy_module_predicate_no_props(InpMod, OutMod, Head) :-
+   copy_predicate_clauses_no_props(InpMod:Head, OutMod:Head).  % SWI-PL
+
+copy_predicate_clauses_no_props(From, To) :-
+        copy_predicate_clauses_too_head(From, MF:FromHead),
+        copy_predicate_clauses_too_head(To, MT:ToHead),
+        FromHead =.. [_|Args],
+        ToHead =.. [_|Args],
+        forall(clause(MF:FromHead, Body),
+               assertz(MT:ToHead, Body)).
+
+copy_predicate_clauses_too_head(From, M:Head) :-
+        strip_module(From, M, Name/Arity),
+        functor(Head, Name, Arity).
+
+
+
+really_remake_as_dynamic_no_props(Reason,M,PI,F,A):- 
+  predicate_property(M:PI,imported_from(OM)),
+  dmsg(warn(really_remake_as_dynamic_no_props(OM:PI,for(M,Reason)))),
+  really_remake_as_dynamic_no_props(Reason,OM,PI,F,A).
+
+really_remake_as_dynamic_no_props(Reason,M,PI,F,A):- 
+  dmsg(warn(really_remake_as_dynamic_no_props2(M:PI,bc(Reason)))),
+  % must((predicate_property(M:PI,module(Was)),Was=M)),
+  ignore(delete_import_module(make_as_dynamic,system)),
+  ignore(delete_import_module(make_as_dynamic,user)),
+  ignore(delete_import_module(make_as_dynamic,M)),
+  dynamic(make_as_dynamic:F/A),
+  copy_module_predicate_no_props(M,make_as_dynamic,PI),
+  abolish(M:F/A),
+  copy_module_predicate_no_props(make_as_dynamic,M,PI),
+  abolish(make_as_dynamic:F/A).
+
+
+
+really_remake_as_dynamic(Reason,M,PI,F,A):- 
+  predicate_property(M:PI,imported_from(OM)),
+  dmsg(warn(really_remake_as_dynamic(OM:PI,for(M,Reason)))),
+  really_remake_as_dynamic(Reason,OM,PI,F,A).
+really_remake_as_dynamic(Reason,M,PI,F,A):- 
+  dmsg(warn(really_remake_as_dynamic2(M:PI,bc(Reason)))),
+  % must((predicate_property(M:PI,module(Was)),Was=M)),
+  ignore(delete_import_module(make_as_dynamic,system)),
+  ignore(delete_import_module(make_as_dynamic,user)),
+  ignore(delete_import_module(make_as_dynamic,M)),
+  dynamic(make_as_dynamic:F/A),
+  copy_module_predicate(M,make_as_dynamic,PI),
+  abolish(M:F/A),
+  copy_module_predicate(make_as_dynamic,M,PI),
+  abolish(make_as_dynamic:F/A).
+
 
 % TODO uncomment these out!
 %do_import(system,M,F,A):-throw(unexpected(do_import(system,M,F,A))).
@@ -486,32 +575,34 @@ do_import(TM,M,F,A):-
 %
 % Declare as Types.
 %
-decl_as(Types,Var):-var(Var),!,trace_or_throw(var_decl_shared(Types,Var)).
-decl_as(Types,M:FA):- if_defined(defaultAssertMt(M),fail),!,decl_as(Types,FA),!.
-decl_as(Types,abox:FA):-!,decl_as(Types,FA),!.
-decl_as(Types,MM:G1):- (MM= (_:M)), !,decl_as(Types,M:G1),!.
+decl_as(Types,Goal):- now_and_later(n,decl_az(Types,Goal)).
 
-decl_as(Types,(G1,G2)):-!,decl_as(Types,G1),!,decl_as(Types,G2),!.
-decl_as(Types,[G1]):-!,decl_as(Types,G1),!.
-decl_as(Types,[G1|G2]):-!,decl_as(Types,G1),!,decl_as(Types,G2),!.
-decl_as(Types,M:(G1,G2)):-!,decl_as(Types,M:G1),!,decl_as(Types,M:G2),!.
-decl_as(Types,M:[G1]):-!,decl_as(Types,M:G1),!.
-decl_as(Types,M:[G1|G2]):-!,decl_as(Types,M:G1),!,decl_as(Types,M:G2),!.
-decl_as(Types,M:F):-atom(F),!,decl_as(Types,M,F,_).
-decl_as(Types,F):-atom(F),!,decl_as(Types,_,F,_).
-decl_as(Types,M:'//'(F,Am2)):-!,A is Am2+2, decl_as(Types,M,F,A).
-decl_as(Types,M:F/A):-!,decl_as(Types,M,F,A).
-decl_as(Types,'//'(F,Am2)):-!,A is Am2+2, decl_as(Types,_,F,A).
-decl_as(Types,F/A):-!,decl_as(Types,_,F,A).
-decl_as(Types,M:Goal):-compound(Goal),!,functor(Goal,F,A),decl_as(Types,M,F,A).
-decl_as(Types,Goal):-compound(Goal),!,functor(Goal,F,A),decl_as(Types,_,F,A).
-decl_as(Types,Goal):-trace_or_throw(bad_decl_as(Types,Goal)).
+decl_az(Types,Var):-var(Var),!,trace_or_throw(var_decl_shared(Types,Var)).
+decl_az(Types,M:FA):- if_defined(defaultAssertMt(M),fail),!,decl_az(Types,FA),!.
+decl_az(Types,abox:FA):-!,decl_az(Types,FA),!.
+decl_az(Types,MM:G1):- (MM= (_:M)), !,decl_az(Types,M:G1),!.
 
+decl_az(Types,(G1,G2)):-!,decl_az(Types,G1),!,decl_az(Types,G2),!.
+decl_az(Types,[G1]):-!,decl_az(Types,G1),!.
+decl_az(Types,[G1|G2]):-!,decl_az(Types,G1),!,decl_az(Types,G2),!.
+decl_az(Types,M:(G1,G2)):-!,decl_az(Types,M:G1),!,decl_az(Types,M:G2),!.
+decl_az(Types,M:[G1]):-!,decl_az(Types,M:G1),!.
+decl_az(Types,M:[G1|G2]):-!,decl_az(Types,M:G1),!,decl_az(Types,M:G2),!.
+decl_az(Types,M:F):-atom(F),!,decl_az(Types,M,F,_).
+decl_az(Types,F):-atom(F),!,decl_az(Types,_,F,_).
+decl_az(Types,M:'//'(F,Am2)):-!,A is Am2+2, decl_az(Types,M,F,A).
+decl_az(Types,M:F/A):-!,decl_az(Types,M,F,A).
+decl_az(Types,'//'(F,Am2)):-!,A is Am2+2, decl_az(Types,_,F,A).
+decl_az(Types,F/A):-!,decl_az(Types,_,F,A).
+decl_az(Types,M:Goal):-compound(Goal),!,functor(Goal,F,A),decl_az(Types,M,F,A).
+decl_az(Types,Goal):-compound(Goal),!,functor(Goal,F,A),decl_az(Types,_,F,A).
+decl_az(Types,Goal):-trace_or_throw(bad_decl_as(Types,Goal)).
 
-decl_as(Types,M,F,A):- var(M),if_defined(defaultAssertMt(M),M=baseKB),!,decl_as(Types,M,F,A).
-decl_as(Types,M,F,A):- var(A),!,forall(between(1,12,A),decl_as(Types,M,F,A)).
-decl_as(M:Types,M,F,A):-!, decl_as(Types,M,F,A).
-decl_as(Types,M,F,A):-!, decl_as_rev(M:F/A,Types).
+decl_as(Types,M,F,A):- now_and_later(n,decl_az(Types,M,F,A)).
+decl_az(Types,M,F,A):- var(M),if_defined(defaultAssertMt(M),M=baseKB),!,decl_az(Types,M,F,A).
+decl_az(Types,M,F,A):- var(A),!,forall(between(1,12,A),decl_az(Types,M,F,A)).
+decl_az(M:Types,M,F,A):-!, decl_az(Types,M,F,A).
+decl_az(Types,M,F,A):-!, decl_as_rev(M:F/A,Types).
 
 decl_as_rev(MFA,(G1,G2)):-!,decl_as_rev(MFA,G1),!,decl_as_rev(MFA,G2),!.
 decl_as_rev(MFA,[G1]):-!,decl_as_rev(MFA,G1),!.
