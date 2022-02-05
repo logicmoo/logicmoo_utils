@@ -912,6 +912,24 @@ get_matcher_code(Match,H,B,MATCHER):-  MATCHER = notrace(term_matches_term(Match
 
 %= 	 	 
 
+trans_mask(cyc,kb0988).
+trans_mask(wn,wnframes).
+trans_mask(sys,'$syspreds').
+
+mymatch_excludes_module(MM,M,MM):- nonvar(M),!.
+mymatch_excludes_module(L+all,M2,O):- !,del_attr(M2,freeze),mymatch_excludes_module(L,M2,O).
+mymatch_excludes_module(L+M1,M2,O):- trans_mask(M1,M), !,mymatch_excludes_module(L+M,M2,O).
+mymatch_excludes_module(L-M1,M2,O):- trans_mask(M1,M), !,mymatch_excludes_module(L-M,M2,O).
+
+mymatch_excludes_module(L-M1,M2,L2-M1):- !,mymatch_excludes_module(L,M2,L2),freeze(M2,M1\==M2),!.
+mymatch_excludes_module(L+M1,M2,L2+M1):- !, mymatch_excludes_module(L,M2,L2),
+  ignore((frozen(M2,Goals),subst(Goals,M1\==M2,true,NewGoals),del_attr(M2,freeze),freeze(M2,NewGoals))),!.  
+
+mymatch_excludes_module(MM,M2,MM):- dif(kb0988,M2),dif(wnframes,M2),dif(tmp,M2),dif('$syspreds',M2).
+
+pre_init_matcher(_Match,M:_H,_B):-   
+  current_module(M).
+
 
 %% xlisting_inner( :PRED3Pred, +Match, +SkipPI) is semidet.
 %
@@ -920,11 +938,14 @@ get_matcher_code(Match,H,B,MATCHER):-  MATCHER = notrace(term_matches_term(Match
 xlisting_inner(_,portray_phbr(PW,Match),SkipPI):-!,
   xlisting_inner(portray_phbr(PW),Match,SkipPI).
  
-xlisting_inner(Printer,Match,SkipPI):-  
+xlisting_inner(Printer,Match0,SkipPI):-  
  must_det_l((
-   get_matcher_code(Match,H,B,MATCHER),!,
+   ignore(mymatch_excludes_module(Match0,M,Match)),
+   H=M:_,
+   get_matcher_code(Match,H,B,MATCHER),!,   
    PRINT = must(ignore((once(call(Printer,H,B,Ref))))),   
-   PREDZ = ( (synth_clause_for(H,B,Ref,Size,SYNTH)), \+member(H,SkipPI), \+is_listing_hidden(H)),
+   PREDZ = ( (pre_init_matcher(Match,H,B),
+              synth_clause_for(H,B,Ref,Size,SYNTH)), \+member(H,SkipPI), \+is_listing_hidden(H)),
    forall(PREDZ,
      must(( 
       (is_listing_hidden(wholePreds),integer(Size),Size<100)
@@ -1028,13 +1049,15 @@ plisting_1:-plisting('$spft'(_,_,_,_)).
 
 %= 	 	 
 
-%% synth_clause_for( ?G, ?B, :GoalRef, :PRED222Size, ?SYNTH) is semidet.
+%% synth_clause_for(MyMatch, ?G, ?B, :GoalRef, :PRED222Size, ?SYNTH) is semidet.
 %
 % Synth Clause For.
 %
 :- multifile(xlisting_config:xlisting_always/1).
-:- dynamic(xlisting_config:xlisting_always/1).
-synth_clause_for(G,true,0,222, SYNTH):- G=M:H, xlisting_config:xlisting_always(G),
+:- dynamic(xlisting_config:xlisting_always/1).  
+
+synth_clause_for(G,true,0,222, SYNTH):- 
+   G=M:H, xlisting_config:xlisting_always(G),
    SYNTH = m_clause(M,H,_B,_Ref).
    %SYNTH = on_x_fail(G).
 
@@ -1347,6 +1370,7 @@ real_collect_undef(Grouped) :-
     check:group_pairs_by_key(Sorted, Grouped).
 
 
+:- export(real_list_undefined/1).
 real_list_undefined(Options) :-
     merge_options(Options, [module_class([user])], WalkOptions),
     call_cleanup(prolog_walk_code(
@@ -1431,18 +1455,51 @@ update_changed_files1 :-
 %
 % Remove Undef Search.
 %
-remove_undef_search:- !.
-remove_undef_search:- ((
+
+% remove_undef_search:- !.
+remove_undef_search:- 
+ once((
  '@'(use_module(library(check)),'user'),
  redefine_system_predicate(check:list_undefined(_)),
  abolish(check:list_undefined/1),
  assertz((check:list_undefined(A):- \+ thread_self_main ,!, ignore(A=[]))),
  %assert((check:list_undefined(A):- dmsg(check:list_undefined(A)),!)),
  assertz((check:list_undefined(A):- check:reload_library_index,  update_changed_files, call(thread_self_main),!, ignore(A=[]))),
- assertz((check:list_undefined(A):- ignore(A=[]),scansrc_list_undefined(A),!)))).
+ assertz((check:list_undefined(A):- ignore(A=[]),scansrc_list_undefined(A),!)),
+ redefine_system_predicate(check:list_void_declarations),
+ abolish(check:list_void_declarations/0),
+ asserta(check:list_void_declarations))).
 
 % :- remove_undef_search.
-
+/*
+:- multifile(check:list_undefined/1).
+:- dynamic(check:list_undefined/1).
+:- system:use_module(library(make)), system:use_module(library(check)), 
+   redefine_system_predicate(check:list_undefined/1).
+:- asserta((check:list_undefined(Stuff):- Stuff==[], dmsg(list_undefined(Stuff)),!)).
+*/
+:- export(real_list_void_declarations/0).
+real_list_void_declarations :-
+ check:(
+    P=_:_,
+    (   predicate_property(P, undefined),
+        (   '$get_predicate_attribute'(P, meta_predicate, Pattern),
+            print_message(warning,
+                          check(void_declaration(P,
+                                                 (meta_predicate Pattern))))
+        ;   void_attribute(Attr),
+            '$get_predicate_attribute'(P, Attr, 1),
+            print_message(warning, check(void_declaration(P, Attr)))
+        ),
+        fail
+    ;   predicate_property(P, discontiguous),
+        \+ ( predicate_property(P, number_of_clauses(N)),
+             N>0
+           ),
+        print_message(warning, check(void_declaration(P, discontiguous))),
+        fail
+    ;   true
+    )).
 
 
 %= 	 	 

@@ -783,11 +783,12 @@ nop_format(G):- nop(format(G)).
 :- create_prolog_flag(retry_undefined,default,[type(term),keep(true)]).
 
 
-write_expandable(Showing,Goal):- %ensure_colapsable_styles,
+write_expandable(Showing,Goal):- %ensure_colapable_styles,
  (Showing -> PX='128'; PX='0'),
+ (Showing -> Exp=''; Exp='colapsed'),
  inline_html_format([
    '<pre><button type="button" class="collapsible">',writeq(Goal),' (click to un/expand)</button>',
-   '<div class="colapsed" style="max-height: ',PX,'px">',
+   '<div class="',write(Exp),'" style="max-height: ',PX,'px">',
     weto(ignore(Goal)),
    '</div></pre>']).
 
@@ -877,6 +878,7 @@ handler_logicmoo_cyclone000(Request):-
   ((ignore( \+ ((  
     get_param_req(cmd,Call),
     url_decode_term(Call,Prolog),
+    current_predicate(_,Prolog),
     dmsg(cmd=Prolog),
     ignore((nonvar(Prolog),asserta_new(offer_testcase(Prolog)))), 
      weto(write_expandable(true,Prolog))))))),
@@ -1874,7 +1876,7 @@ bok((pkif :-
 
 
 %make_here:- ttyflush,notrace(ignore(weto(wo_messages((make_here0,ttyflush))))).
-
+make_here:- !.
 make_here:-  notrace(make_here0).
 make_here0:- with_output_to(string(_),weto(ignore(make))),!.
 make_here0:- with_output_to(string(_),make),!.
@@ -2115,6 +2117,7 @@ embed_test(URL,Width,Height):-
   format( '<div width="~w" height="~w" ><object data="~w"  width="100%" height="~w" type="text/html"><embed src="~w" width="100%" height="100%" onerror="alert(`URL invalid ~w !!`);"/></object></div>',
                 [     Width,     Height,              URL,                      Height,                        URL,        URL                  ]).
 
+slow_frame(Goal):- !,call(Goal).
 slow_frame(Goal):- slow_frame('300',Goal).
 slow_frame(_,Goal):- thread_self(main), \+ toplevel_pp(bfly),!, call(Goal).
 slow_frame(Height,Goal):- 
@@ -2274,6 +2277,8 @@ find_cl_ref((H:-B),Ref):-!, clause(H,B,Ref),clause(HH,BB,Ref),H=@=HH,B=@=BB,!.
 find_cl_ref(H,Ref):- clause(H,true,Ref),clause(HH,true,Ref),H=@=HH,!.
 
 
+
+:- dynamic('$si$':'$was_imported_kb_content$'/2).
 
 
 %% find_ref( :TermARG1, ?ARG2) is det.
@@ -2572,6 +2577,7 @@ locally_pp_i2tml_now(C):-on_x_fail(writeq(C)),!.
 %
 % Functor Converted To Color.
 %
+
 functor_to_color(wid(_,_,G),C):-!,functor_to_color(G,C).
 functor_to_color(G,C):-compound(G),functor(G,F,A),functor_to_color(G,F,A,C),!.
 functor_to_color(_G,green):-!.
@@ -2703,12 +2709,17 @@ must_run0(Goal):- tracing,!,
   ((Goal) *-> true ; wdmsg(assertion_failed(fail, Goal))),
   flush_output_safe.
 must_run0((G1,G2)):- !, call_cleanup(must_run0(G1),must_run0(G2)),!.
+
+%must_run0(Goal):- ignore(catch(no_undefined_preds(Goal),_,true)),!.
 must_run0(Goal):- flush_output_safe, 
-  (catch(must_or_rtrace(Goal),E,(dumpST,display(E=Goal),fail)) -> true ; wdmsg(assertion_failed(fail, Goal))),
+  (catch(must_or_rtrace(no_undefined_preds(Goal)),E,(wdmsg(E),www_dumpST,wdmsg(E=Goal),fail)) -> true ; wdmsg(assertion_failed(fail, Goal))),
   flush_output_safe.
 
+no_undefined_preds(G):- locally(set_prolog_flag(unknown,fail),G).
 
-
+:- multifile(prolog_debug:assertion/1).
+:- abolish(prolog_debug:assertion/1).
+:- asserta(prolog_debug:assertion(_)).
 
 %% call_for_terms( ?ARG1) is det.
 %
@@ -2717,7 +2728,7 @@ must_run0(Goal):- flush_output_safe,
 call_for_terms(Call):- 
    must_run_html((
         setup_call_cleanup(format('<pre>',[]),        
-        ignore((locally_tl(print_mode(html),with_search_filters(catch(ignore((Call)),E,dmsg(E)))))),
+        ignore((locally_tl(print_mode(html),with_search_filters(catch(ignore(with_no_xdbg(Call)),E,dmsg(E)))))),
         format('</pre>',[])),
         show_pcall_footer)),!.
 
@@ -2742,9 +2753,9 @@ with_search_filters0(C):-
 with_search_filters0(C):- must_run_html(C).
 
 
-call_with_time_limit_notrace(_,Goal):- (thread_self(main);pengines:pengine_self(_)), !, call(Goal).
+call_with_time_limit_notrace(_,Goal):- (thread_self(main);pengines:pengine_self(_)), !, with_no_xdbg(Goal).
 %call_with_time_limit_notrace(Time,Goal):- call_with_time_limit(Time,Goal).
-call_with_time_limit_notrace(_,Goal):- call(Goal).
+call_with_time_limit_notrace(_,Goal):- with_no_xdbg(Goal).
 
 
 
@@ -2771,9 +2782,10 @@ xlisting_html_c(T,Obj):-
 fast_and_mean:- true.
 
 try_or_rtrace(G):- tracing,!,dmsg(try(G)),call(G).
-try_or_rtrace(G):- fast_and_mean, !, call(G).
-try_or_rtrace(G):- catch(G,E,(E==time_limit_exceeded->throw(time_limit_exceeded);(ignore((dmsg(G=E),dumpST,dmsg(G=E),thread_self(main),rtrace(G),dumpST,dmsg(G=E),break))))).
+try_or_rtrace(G):- fast_and_mean, !, with_no_xdbg(G).
+try_or_rtrace(G):- catch(G,E,(E==time_limit_exceeded->throw(time_limit_exceeded);(ignore((dmsg(G=E),www_dumpST,dmsg(G=E),thread_self(main),rtrace(G),www_dumpST,dmsg(G=E),break))))).
 
+www_dumpST:- write('<pre>'),dumpST,write('</pre>').
 % :- prolog_xref:assert_default_options(register_called(all)).
 
 %i2tml_hbr_trace(H,B,R):- rtrace(i2tml_hbr(H,B,R)).
@@ -3121,7 +3133,7 @@ term_to_pretty_string(H,Vs,HS):- with_output_to(string(HS),print_pretty_string(H
 print_pretty_string(H,_):- \+ compound(H),!,write(H).
 print_pretty_string(H,Vs):- into_textarea(print_tree(H,[variable_names(Vs),right_margin(40)])).
 
-into_textarea(G):- with_pp(ansi,locally_tl(print_mode(plain),G)). 
+into_textarea(G):- with_pp(plain,G).
 
 
 
@@ -3304,7 +3316,7 @@ Do you say* then that LMs taken to the extreme fundamentally cannot achieve AGI?
 [11:58 AM] dmiles: With the  cyc/logicmoo way .. when we have access to the same information as the language model did when training, answering such questions would not be a problem
 [12:01 PM] dmiles: identifying and changing that information is much easier to when it is wrong (language model obfuscates the storage a bit too much i think for the system to update itself)
 [12:05 PM] dmiles: note, the cyc way, even if it does beat LMs at Q&A, still doesnt go towards what they would need for AGI
-[12:09 PM] dmiles: what is needed for AGI is a type of process that models a handful of concurrent informationally incompatible hill-climbs (simplistic even) and then maps a single non-simplistic hill-climb process and a system to keep cohesion between that one and the set.
+[12:09 PM] dmiles: what is needed for AGI is a type of process that models a handful of concurrent informationally in-compatible hill-climbs (simplistic even) and then maps a single non-simplistic hill-climb process and a system to keep cohesion between that one and the set.
 [12:11 PM] dmiles: What Cyc and LMs do is models the hills but without modeling the climbing process
 [12:13 PM] dmiles: The LM stores multiple final results of climbs and hopes the next usecase will be a search to find the right climbed hill.. the best-case is it will have hopefully blended a climb together
 [12:16 PM] dmiles: Cyc's problem (the gold standard of GOFAI and mostly Logicmoo's) is that sometimes blending is so rigid .. the blending falls short
