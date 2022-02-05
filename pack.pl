@@ -8,5 +8,5 @@ maintainer( 'logicmoo', 'https://github.com/logicmoo/' ).
 home( 'https://github.com/logicmoo/logicmoo_utils' ).
 download( 'https://github.com/logicmoo/logicmoo_utils/release/*.zip' ).
 requires(predicate_streams).
-requires(dictoo).
+% requires(dictoo).
 autoload(true).
