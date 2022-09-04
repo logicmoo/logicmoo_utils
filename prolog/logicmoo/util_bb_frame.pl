@@ -8,7 +8,7 @@
 % Revised At:   $Date: 2002/07/11 21:57:28 $
 % ===================================================================
 % ===================================================================
-:- module(logicmoo_util_bb_frame, []).
+:- module(logicmoo_util_bb_frame, [all_different_bindings/1]).
 
 :- use_module(pretty_clauses).
 
@@ -265,9 +265,10 @@ frmprint0(I) :-
     reverse(FrameA, FrameO),
     frmprint_e(FrameO).
 frmprint_e(I) :- 
+ pretty_clauses:((
   catch(make_pretty(I, Frame), _, I=Frame),
     guess_pretty(Frame),
- with_output_to(atom(A),print_tree_nl(Frame)), format('~N~w~n', [A]).
+ with_output_to(atom(A),print_tree_nl(Frame)), format('~N~w~n', [A]))).
 
 sortDeref(P, PP):- \+ compound(P), !, P=PP.
 %sortDeref(isa(X, Y), visa(X, Y)):-!.

@@ -11,10 +11,14 @@
 % ===================================================================
 */
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_preddefs.pl
-:- module(call_from,
+:- module(call_from,[]).
+
+:- define_into_module(
+
           [ call_if_defined/1,
             convert_to_dynamic/1,
             convert_to_dynamic/3,
+            fix_baseKB_imports/0,
             current_predicate_module/2,
             context_module_of_file/1,
           call_from_module/2,
@@ -123,6 +127,7 @@
 % % % OFF :- system:reexport(lockable_vars).
 % % % OFF :- system:reexport(library(hook_database)).
 
+%:- module(system).
 
 :- meta_predicate(with_no_mpred_expansions(*)).
 %% with_no_mpred_expansions( :Goal) is det.
@@ -199,7 +204,7 @@ promiscuous_module(M):-
 :- promiscuous_module(mu).
 :- promiscuous_module(baseKB).
 
-fix_baseKB_imports:- !.
+fix_baseKB_imports:- fix_baseKB_imports_now,!.
 fix_baseKB_imports_now:- 
   % ignore(delete_import_module(system,baseKB)),
   % ignore(add_import_module(baseKB,system,start)),
@@ -933,6 +938,9 @@ with_pred_head(Pred,F//A2):-A is A2+2, !,atom(F),current_predicate(F/A),!,functo
 with_pred_head(Pred,F):- F\=(_:_),!,prolog_load_context(module,M),!,call(Pred,M:F).
 with_pred_head(Pred,F):- call(Pred,F). 
 
+:- export(is_static_predicate/1).
+:- export(with_pred_head/2).
+
 is_static_predicate(F):- with_pred_head(is_static_predicate0,F).
 
 
@@ -946,6 +954,7 @@ warn_if_static(F,A):-
   trace_or_throw(warn(pfcPosTrigger,Goal,static)))).
 
 
+:- export(is_static_predicate0/1).
 
 is_static_predicate0(M:F):-atom(F),predicate_property(M:F,static),!,predicate_property(F,number_of_clauses(_)),\+ predicate_property(F,dynamic).
 is_static_predicate0(FA):- predicate_property(FA,dynamic),!,fail.
@@ -961,7 +970,7 @@ is_static_predicate0(FA):- once(predicate_property(FA,_)),
     \+ predicate_property(FA,dynamic),
     catch(multifile(FA),_,true).
 
-
+:- fixup_exports.
 
 :- export((((dynamic_safe)/1))).
 % = :- meta_predicate(dynamic_safe(+)).
@@ -1142,4 +1151,5 @@ rebuild_pred_into(OMC,NMC,AssertZ,OtherTraits):-
   ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A]))))))))).
 
 :- create_prolog_flag(mpred_te,true,[keep(true)]).
- 
+
+:- fixup_exports.

@@ -12,8 +12,9 @@
 % ===================================================================
 */
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_body_file_scope.pl
-:- module(file_scope,
-          [
+:- module(file_scope,[]).
+:- use_module(logicmoo_startup).
+:- define_into_module([
           loading_source_file/1,
           assert_until_eof/2,
           assert_until_eof/1,
@@ -34,9 +35,11 @@
           signal_eof/0,
           signal_eom/1, 
           check_skip_id/3,
+          set_skip_file_expansion/2,
           filescope_did/1,
           contains_f/2,
           contains_eq/2,
+          %cfunctor/3,
           term_expansion_option/3,
           add_did_id/3,
           notice_file/3
@@ -75,8 +78,46 @@ Thread.
 % :-must((asserta((user:term_expansion(A,B):-cyc_to_clif_notify(A,B),!),CLREF),asserta(at_eof_action(erase(CLREF))))).
 
 :- set_module(class(library)).
-:- meta_predicate l_once(0).
 
+/*
+:- multifile '$exported_op'/3. 
+:- dynamic '$exported_op'/3. 
+:- discontiguous '$exported_op'/3. 
+'$exported_op'(_,_,_):- fail.
+*/
+
+:- multifile '$pldoc'/4. 
+:- dynamic '$pldoc'/4. 
+:- discontiguous '$pldoc'/4. 
+'$pldoc'(_,_,_):- fail.
+
+:- multifile '$autoload'/3. 
+:- discontiguous '$autoload'/3.
+:- dynamic '$autoload'/3.
+'$autoload'(_,_,_):- fail.
+
+%:- system:reexport(library(debug),[debug/3]).
+%:- system:reexport(library(debuggery/bugger)).
+
+%:- system:reexport(library(must_sanity)).
+:- if( \+ current_predicate(nop/1)).
+system:nop(_).
+:- export(system:nop/1).
+:- endif.
+:- meta_predicate l_once(0).
+system:qdmsg(_):- current_prolog_flag(dmsg_level,never),!.
+system:qdmsg(M):-compound(M),cfunctor(M,F,_),!,debug(logicmoo(F),'~q',[M]).
+system:qdmsg(M):-debug(logicmoo(M),'QMSG: ~q',[M]).
+:- export(system:qdmsg/1).
+
+
+
+/*
+cfunctor(A,B,C):- compound(A)->compound_name_arity(A,B,C);functor(A,B,C).
+:- system:import(cnas/3).
+:- system:import(cfunctor/3).
+:- system:export(cfunctor/3).
+*/
 
 is_current_source_term(H):- notrace(is_current_source_term0(H)).
 is_current_source_term0((H:-B)):- !, (is_current_source_term1((H:-B))->true; (B==true -> is_current_source_term1(H))),!.
@@ -85,9 +126,6 @@ is_current_source_term1(In):-
     prolog_load_context('term',Term), % dmsg(Term=In),
     (Term==In ; Term=@=In).
 
-
-:- system:reexport(library(debug),[debug/3]).
-:- use_module(library(must_sanity)).
  
 :- use_module(library(occurs)).
 
@@ -209,8 +247,8 @@ signal_eom(Module):- must(prolog_load_context(module,Module)),
   % dmsg(info(load_mpred_file_complete(Module:File))),
    GETTER=t_l:eof_hook(_File,TODO),
    must((forall(clause(GETTER,Body,Ref),(qdmsg(found_eom_hook(GETTER:-Body)),
-        doall((forall(Body,  ((qdmsg(do_eof_hook(Module:on_f_log_ignore(GETTER))),
-        show_failure(eom_action(Module),Module:on_f_log_ignore(TODO))))))),ignore(erase(Ref)))))),fail.
+        doall((forall(Body,  ((qdmsg(do_eof_hook(on_f_log_ignore(Module,GETTER))),
+        show_failure(eom_action(Module),on_f_log_ignore(Module,TODO))))))),ignore(erase(Ref)))))),fail.
 signal_eom(Module):- nop(dmsg(signal_eom(Module))),!.
 
 
@@ -223,16 +261,16 @@ do_eof_actions(Module,File):-
    qdmsg(info(load_mpred_file_complete(Module:File))),
    GETTER=user:global_eof_hook(WasM,File,TODO),   
    must((forall(clause(GETTER,Body,_Ref),(qdmsg(found_eof_hook(GETTER:-Body)),
-        doall((forall(Body,  ((qdmsg(call_eof_hook(Module:on_f_log_ignore(GETTER))),
-        show_failure(signal_eom(Module),Module:on_f_log_ignore(WasM:TODO))))))))))),fail.
+        doall((forall(Body,  ((qdmsg(call_eof_hook(on_f_log_ignore(Module,GETTER))),
+        show_failure(signal_eom(Module),on_f_log_ignore(WasM,TODO))))))))))),fail.
 
 do_eof_actions(Module,File):- must(prolog_load_context(module,Module)),
    qdmsg(info(load_mpred_file_complete(Module:File))),
     GETTER=t_l:eof_hook(File,TODO),
 
     must((forall(clause(GETTER,Body,Ref),(qdmsg(found_eof_hook(GETTER:-Body)),
-         doall((forall(Body,  ((qdmsg(call_eof_hook(Module:on_f_log_ignore(GETTER))),
-         show_failure(signal_eom(Module),Module:on_f_log_ignore(TODO))))))),ignore(erase(Ref)))))),fail.
+         doall((forall(Body,  ((qdmsg(call_eof_hook(on_f_log_ignore(Module,GETTER))),
+         show_failure(signal_eom(Module),on_f_log_ignore(Module,TODO))))))),ignore(erase(Ref)))))),fail.
 do_eof_actions(Module,File):- nop(dmsg(do_eof_actions(Module,File))),!.
 
 

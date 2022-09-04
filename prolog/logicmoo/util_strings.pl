@@ -20,10 +20,12 @@
             any_to_string_or_var/2,
             append_ci/3,
             append_ci0/3,
+            any_to_charlist/2,
             as_atom/2,
             as_nc_str/2,
             atomSplit/2,
             atomSplit/3,
+            get_text_restore_pred/2,
             atomSplit2_unused/3,
             atomSplitEasy_unused/2,
             atom_contains/2,
@@ -81,6 +83,7 @@
             map_tree_to_list/3,
           must_assign/1,
           must_assign/2,
+          any_to_codelist/2,
             member_ci/2,
             merge_vars/3,
             must_nonvar/1,
@@ -300,7 +303,7 @@ This module introduces string replacements for find replacement in strings, capi
 
 atom_concat_or_rtrace(X,Y,Z):- tracing->atom_concat(X,Y,Z);catch(atom_concat(X,Y,Z),_,break).
 :- export(atom_concat_or_rtrace/3).
-
+%:- reexport(library(logicmoo/pretty_clauses)).
 
 get_text_restore_pred(Text,any_to_string):- string(Text),!.
 get_text_restore_pred(Text, any_to_atom):- atom(Text),!.
@@ -760,6 +763,7 @@ isSlot(V):- is_ftVar(V).
 noCaseChange(VAR):- is_ftVar(VAR),!.
 % noCaseChange(VAR):- if_defined(isSlot(VAR)),!.
 noCaseChange([]):-!.
+noCaseChange(MiXed):-number(MiXed),!.
 noCaseChange(MiXed):-atom(MiXed),atom_concat('#$',_,MiXed),!.
 noCaseChange(c(_)):-!.
 
@@ -836,8 +840,9 @@ toCamelcase(I,O):-toCaseSplit('',first_char_to_upper,I,O).
 %
 % Un Camelcase.
 %
-unCamelcase(I,O):- \+ atom(I),I=O.
-unCamelcase(I,O):- upcase_atom(I,O),downcase_atom(I,O),!.
+
+%unCamelcase(I,O):- \+ string(I),any_to_string(I,S),
+%unCamelcase(I,O):- upcase_atom(I,O),downcase_atom(I,O),!.
 unCamelcase(I,O):-toCaseSplit('_',first_char_to_lower,I,O).
 
 
@@ -859,11 +864,14 @@ toPropercase(I,O):-toCaseSplit(_Same,to_titlecase,I,O).
 %
 toCase(_Pred,MiXed,MiXed):-noCaseChange(MiXed),!.
 toCase(_Pred,95,45):-!.
+toCase(_Pred,N,N):-integer(N),!.
 toCase( Pred,MiXed,CASED):-atom(MiXed),!,call(Pred,MiXed,CASED),!.
 toCase( Pred,D3,DD3):- text_to_string_safe(D3,S),!,string_to_atom(S,A3),toCase(Pred,A3,DD3).
-toCase( Pred,D3,DD3):- is_list(D3),atomic_list_concat(D3,' ',Str),maplist(toCase( Pred),Str,DD3),!.
+toCase( Pred,D3,DD3):- is_list(D3),catch(atomic_list_concat(D3,' ',Str),_,fail),maplist(toCase( Pred),Str,DD3),!.
 toCase( Pred,D3,DD3):- is_list(D3),!,must_maplist(toCase( Pred),D3,DD3).
-toCase( Pred,MiXed,CASED):-compound(MiXed),MiXed=..MList,must_maplist(toCase(Pred),MList,UList),!,CASED=..UList.
+toCase( Pred,MiXed,CASED):-compound(MiXed),MiXed=..MList,
+  must_maplist(toCase(Pred),MList,UList),!,
+  CASED=..UList.
 
 
 
@@ -876,6 +884,7 @@ toCase( Pred,MiXed,CASED):-compound(MiXed),MiXed=..MList,must_maplist(toCase(Pre
 %
 toCaseSplit(_,_,[Empty],[]):-nonvar(Empty), (empty_str(Empty);camelSplitters(Empty)),!.
 toCaseSplit(_,_,Empty,''):- (empty_str(Empty);camelSplitters(Empty)),!.
+
 toCaseSplit(_,_,MiXed,MiXed):-noCaseChange(MiXed),!.
 toCaseSplit(Rejoin,Pred,D3,DD3):-atom(D3),!,
   ((camelSplitters(V),concat_atom([L,I|ST],V,D3))->
@@ -884,7 +893,10 @@ toCaseSplit(Rejoin,Pred,D3,DD3):-atom(D3),!,
 toCaseSplit(Rejoin,Pred,D3,DD3):-text_to_string_safe(D3,S),!,string_to_atom(S,A3),toCaseSplit(Rejoin,Pred,A3,DD3).
 toCaseSplit(Rejoin,Pred,LI,OUT):-is_list(LI),!,maplist(toCaseSplit(Rejoin,Pred),LI,LO),ignore(VV=Rejoin),ignore(VV=''),concat_atom(LO,VV,OUT).
 toCaseSplit(Rejoin,Pred,[CX|Y],[D3|YY]):-!,toCaseSplit(Rejoin,Pred,CX,D3),toCaseSplit(Rejoin,Pred,Y,YY).
-toCaseSplit(_     ,Pred,MiXed,UPPER):-must((compound(MiXed),MiXed=..MList,toCaseSplit(' ',Pred,MList,UList),!,UPPER=..UList)).
+toCaseSplit(_     ,Pred,MiXed,UPPER):-must((compound(MiXed),MiXed=..MList,
+  %toCaseSplit(' ',Pred,MList,UList),!,
+  maplist(toCaseSplit(' ',Pred),MList,UList),!,
+  UPPER=..UList)).
 
 
 %= 	 	 
@@ -1099,6 +1111,7 @@ unquoteAtom(Atom,New):-concat_atom_safe(LIST,'"',Atom),concat_atom_safe(LIST,'',
 %
 is_charlist(L):- ground(L), L\==[], is_list(L),!,maplist(is_charlist_char,L).
 
+:- export(is_charlist_char/1).
 is_charlist_char(C):- atom(C), atom_length(C,1), name(C,[Code]),swish_render_codes_charset_code(_,Code).
 
 any_to_charlist(A,C):- is_charlist(A),!,A=C.
@@ -1113,6 +1126,7 @@ any_to_charlist(A,C):- any_to_string(A,S),atom_chars(S,C).
 %
 is_codelist(L):- ground(L), L\==[], is_list(L),!,maplist(is_codelist_code,L).
 
+:- export(is_codelist_code/1).
 is_codelist_code(H):- integer(H), swish_render_codes_charset_code(_,H),!.
 
 swish_render_codes_charset_code(_,9).
@@ -1423,9 +1437,9 @@ vars_to_ucase_0([N=V|Vars],List):-
 % Atom Split.
 %
 atomSplit(In,List):- convert_to_cycString(In,M),listify(M,List).
-%atomSplit(In,List):- quietly(( ground(In),
-% any_to_string(In,String),
-%    splt_words(String,List,Vars),vars_to_ucase(Vars,List))),!.
+atomSplit_old(In,List):- quietly(( ground(In),
+ any_to_string(In,String),
+    splt_words(String,List,Vars),vars_to_ucase(Vars,List))),!.
 
 %atomSplit(Atom,WordsO):-atomSplitEasy_unused(Atom,WordsO),!.
 
@@ -2056,7 +2070,14 @@ longest_string(Order,TStr1,TStr2):-
 
 :- system:use_module(library(logicmoo_startup)).
 
-:- fixup_exports.
+:- logicmoo_util_strings:fixup_exports.
+
+cfunctor31(A,B,C):- compound(A)->compound_name_arity(A,B,C);functor(A,B,C).
+:- ignore((source_location(S,_),prolog_load_context(module,M),module_property(M,class(library)),
+ forall(source_file(M:H,S),
+ ignore((cfunctor31(H,F,A),
+  ignore(((atom(F),\+ atom_concat('$',_,F),(export(F/A) , current_predicate(system:F/A)->true; system:import(M:F/A))))),
+  ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A]))))))))).
 
 end_of_file.
 

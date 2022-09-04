@@ -11,127 +11,126 @@
 % ===================================================================
 */
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_dmsg.pl
-:- module(dmsg,
-          [ ansi_control_conv/2,
-            with_output_to_each/2,
-            ansicall/2,
-            ansicall/3,
-            ansicall_4/3,
-            ansicall_6/3,
-            once_in_while/1,
-            ansifmt/2,
-            ansifmt/3,
-            dis_pp/1,
-            colormsg/2,
-            mesg_color/2,
-            contains_atom/2,
-            contrasting_color/2,
-            defined_message_color/2,
+%:- if((prolog_load_context(source,F),prolog_load_context(file,F))).
+%:- module(dmsg,[]).
+%:- else.
+%module(_,Y):- maplist(export,Y).
+%:- endif.
 
-            format_to_message/3, 
-            dfmt/1,dfmt/2,
-            debugm/1,debugm/2,
-            dmsg/1,dmsg/2,dmsg/3,
+:- define_into_module(
+  [ ansi_control_conv/2,
+    % source_variables_lwv/1,
+    %style_on_off/4,
+    ansi_prop/2,
+    ansicall/2,
+    ansicall/3,
+    ansicall_4/3,
+    wdmsg_goal/2,
+    ansicall_6/3,
+    ansifmt/2,
+    ansifmt/3,
+    cls/0,
+    colormsg/2,
+    contains_atom/2,
+    contrasting_color/2,
+    debugm/1,debugm/2,
+    defined_message_color/2,
+    dfmt/1,dfmt/2,
+    dis_pp/1,
+    dmsg/1,dmsg/2,dmsg/3,
+    dmsg0/1,
+    dmsg00/1,
+    dmsg000/1,
+    dmsg1/1,
+    dmsg2/1,
+    dmsg3/1,
+    dmsg4/1,
+    dmsg5/1, % dmsg5/2,
+    dmsg_hide/1,
+    dmsg_hides_message/1,
+    dmsg_log/3,
+    dmsg_pretty/1, 
+    dmsg_show/1,
+    dmsg_showall/1,
+    dmsg_text_to_string_safe/2,
+    dmsginfo/1,
+    f_word/2,
+    fg_color/2,
+    flush_output_safe/0,
+    flush_output_safe/1,
+    fmt/1,fmt/2,fmt/3,
+    fmt0/1,fmt0/2,fmt0/3,
+    fmt9/1,
+    fmt90/1,
+    fmt_ansi/1,
+    fmt_or_pp/1,
+    fmt_portray_clause/1,
+    format_to_message/3, 
+    functor_color/2,
+    get_indent_level/1,
+    good_next_color/1,
+    if_color_debug/0,
+    if_color_debug/1,
+    if_color_debug/2,
+    in_cmt/1,
+    indent_e/1,
+    indent_to_spaces/2,
+    is_sgr_on_code/1,
+    is_tty/1,
+    keep_line_pos_w_w/2,
+    last_used_fg_color/1,
+    logger_property/3,
+    loggerFmtReal/3,
+    loggerReFmt/2,
+    logLevel/2,
+    matches_term/2,
+    matches_term0/2,
+    mesg_arg1/2,
+    mesg_color/2,
+    msg_to_string/2,
+    next_color/1,
+    once_in_while/1,
+    portray_clause_w_vars/1,
+    portray_clause_w_vars/2,
+    portray_clause_w_vars/3,
+    portray_clause_w_vars/4,
+    predef_functor_color/2,
+    prepend_each_line/2,
+    print_prepended/2,
+    print_prepended_lines/2,
+    random_color/1,
+    setLogLevel/2,
+    sformat/4,
+    sgr_code_on_off/3,
+    sgr_off_code/2,
+    sgr_on_code/2,
+    sgr_on_code0/2,
+    term_color0/2,
+    to_stderror/1,
+    tst_color/0,
+    tst_color/1,
+    tst_fmt/0,
+    univ_safe_3/2,
+    unliked_ctrl/1,
+    vdmsg/2,
+    wdmsg/1,
+    wdmsg/2,
+    wdmsgl/1,
+    wdmsgl/2,
+    wdmsgl/3,
+    with_all_dmsg/1,
+    with_current_indent/1,
+    with_dmsg/2,
+    with_no_dmsg/1,
+    with_no_dmsg/2,
+    with_output_to_console/1,
+    with_output_to_each/2,
+    with_output_to_main/1,
+    with_output_to_stream/2,
+    with_show_dmsg/2,
+    writeFailureLog/2,
+    withFormatter/4]).
 
-          setLogLevel/2,
-          logLevel/2,
-               loggerFmtReal/3,
-               loggerReFmt/2,
-               logger_property/3,
-
-            univ_safe_2/2,
-            cls/0,
-            dmsg0/1,
-            dmsg00/1,
-            dmsg1/1,
-            dmsg2/1,
-            dmsg3/1,
-            dmsg4/1,
-            dmsg5/1, % dmsg5/2,
-            dmsg_hide/1,
-            dmsg_hides_message/1,
-            dmsg_show/1,
-            dmsg_showall/1,
-            dmsg_text_to_string_safe/2,
-            dmsginfo/1,
-          wdmsg/1,
-          wdmsg/2,
-            wdmsgl/1,
-            wdmsgl/2,
-            wdmsgl/3,
-            
-            
-            
-
-            f_word/2,
-            fg_color/2,
-            flush_output_safe/0,
-            flush_output_safe/1,
-            fmt/1,fmt/2,fmt/3,
-            fmt0/1,fmt0/2,fmt0/3,
-            fmt9/1,
-            fmt_ansi/1,
-            fmt_or_pp/1,
-            fmt_portray_clause/1,
-            functor_color/2,
-          get_indent_level/1,
-            good_next_color/1,
-            if_color_debug/0,
-            if_color_debug/1,
-            if_color_debug/2,
-            in_cmt/1,
-            indent_e/1,
-            indent_to_spaces/2,
-            is_sgr_on_code/1,
-            is_tty/1,
-            keep_line_pos_w_w/2,
-            last_used_fg_color/1,
-          matches_term/2,
-          matches_term0/2,
-            mesg_arg1/2,
-            msg_to_string/2,
-            next_color/1,
-            portray_clause_w_vars/1,
-            portray_clause_w_vars/2,
-            portray_clause_w_vars/3,
-            portray_clause_w_vars/4,
-            predef_functor_color/2,
-            prepend_each_line/2,
-            print_prepended/2,
-            print_prepended_lines/2,
-            random_color/1,
-            sformat/4,
-            sgr_code_on_off/3,
-            %style_on_off/4,
-            sgr_off_code/2,
-            sgr_on_code/2,
-            sgr_on_code0/2,
-            to_stderror/1,
-            tst_color/0,
-            tst_color/1,
-            tst_fmt/0,
-            unliked_ctrl/1,
-            vdmsg/2,
-            withFormatter/4,
-            with_all_dmsg/1,
-            with_current_indent/1,
-            with_dmsg/2,
-            with_no_dmsg/1,
-            with_no_dmsg/2,
-            with_output_to_console/1,
-            with_output_to_main/1,
-            with_output_to_stream/2,
-            with_show_dmsg/2,
-
-
-% source_variables_lwv/1,
-term_color0/2,
-ansi_prop/2,
-dmsg_log/3,
-dmsg000/1,
-
-            writeFailureLog/2
-          ]).
 :- multifile
         term_color0/2.
 :- meta_predicate
@@ -239,7 +238,7 @@ into_oncode_call(Out,OnCode,OnCodeCall):- OnCodeCall= smart_format(Out,'\e[~wm',
 wldmsg_0(_CM,ops):- !.
 wldmsg_0(_CM,ops):-
  dzotrace((
- dmsg:wldmsg_2('======================\\'),
+ wldmsg_2('======================\\'),
  (prolog_load_context(stream,X)-> dmsgln(prolog_load_context(stream,X)) ; (current_input(X),dmsgln(current_input(X)))),
  ignore((
  fail,
@@ -257,12 +256,12 @@ wldmsg_0(_CM,ops):-
  dmsgln(strip_module(M)),
  dmsgln(call('$current_source_module'(_SM))),
  dmsgln(call('$current_typein_module'(_TM))),
-  (source_location(F,L)-> dmsg:wldmsg_2(X=source_location(F,L)) ; dmsg:wldmsg_2(no_source_location(X))),
+  (source_location(F,L)-> wldmsg_2(X=source_location(F,L)) ; wldmsg_2(no_source_location(X))),
    %dmsgln(forall(byte_count(X,_))),
    %dmsgln(forall(character_count(X,_))),
    dmsgln(forall(line_count(X,_))),
    dmsgln(forall(line_position(X,_))),
-  dmsg:wldmsg_2('======================/'))),
+  wldmsg_2('======================/'))),
  !.
 
 wldmsg_0(_,CM:Goal):- !, wldmsg_0(CM,Goal).
@@ -284,7 +283,7 @@ wldmsg_1(Info):-
 get_real_user_output(O):-stream_property(O,file_no(1)).
 get_real_user_error(O):-stream_property(O,file_no(2)).
 
-
+:- export(same_streams/2).
 same_streams(X,Y):- dzotrace((into_stream(X,XX),into_stream(Y,YY),!,XX==YY)).
 
 into_stream(X,S):- dzotrace(into_stream_0(X,S)).
@@ -303,18 +302,27 @@ output_to_x(S,Info):- ignore(dzotrace(catch(output_to_x_0(S,Info),_,true))).
 output_to_x_0(S,Info):- into_stream(S,X),!, flush_output(X),
   catch(smart_format(X,'~N% ~p~n',[Info]),_,smart_format(X,'~N% DMSGQ: ~q~n',[Info])),flush_output(X).
 
-dmsgln(CMSpec):- strip_module(CMSpec,CM,Spec),!, ignore(dzotrace(dmsg:wldmsg_0(CM,Spec))).
-% system:dmsgln(List):-!,dzotrace(dmsg:wldmsg_0(user,List)).
+:- export(prepend_trim/2).
+:- export(is_html_white_l/1).
+:- export(is_html_white_r/1).
+:- export(likely_folded/1).
+:- module_transparent(dmsgln/1).
+:- export(dmsgln/1).
+:- system:import(dmsgln/1).
+:- meta_predicate(dmsgln(:)).
+:- dynamic(dmsgln/1).
+:- module_transparent(dmsgln/1).
+:- export(dmsgln/1).
+:- system:import(dmsgln/1).
+:- meta_predicate(dmsgln(:)).
+dmsgln222(CMSpec):- strip_module(CMSpec,CM,Spec),!, ignore(dzotrace(wldmsg_0(CM,Spec))).
+% system:dmsgln(List):-!,dzotrace(wldmsg_0(user,List)).
+dmsgln(CMSpec):- strip_module(CMSpec,CM,Spec),!, ignore(dzotrace(wldmsg_0(CM,Spec))).
 
-:- module_transparent(dmsg:dmsgln/1).
-:- dmsg:export(dmsg:dmsgln/1).
-:- system:import(dmsg:dmsgln/1).
-:- meta_predicate(dmsg:dmsgln(:)).
 
 
-
-univ_safe_2(A,B):- compound(A),compound_name_arity(A,F,0),!,F=..B.
-univ_safe_2(A,B):- A=..B.
+univ_safe_3(A,B):- compound(A),compound_name_arity(A,F,0),!,F=..B.
+univ_safe_3(A,B):- A=..B.
 
 :- meta_predicate if_defined_local(:,0).
 if_defined_local(G,Else):- current_predicate(_,G)->G;Else.
@@ -407,7 +415,7 @@ if_defined_local(G,Else):- current_predicate(_,G)->G;Else.
 :- set_module(class(library)).
 
 :- user:use_module(library(memfile)).
-:- user:use_module(first).
+%:- user:use_module(first).
 %:- user:ensure_loaded(logicmoo_util_rtrace).
 :- ensure_loaded(library(logicmoo/each_call)).
 %:- user:ensure_loaded(logicmoo_util_loop_check).
@@ -539,7 +547,7 @@ hide_some_hiddens(S,M):-
    compound_name_arguments(M,F,ArgsO),!.
 
 
-pretty_and_hide(In, Info):- dzotrace((portray_vars:pretty_numbervars(In,M),hide_some_hiddens(M,Info))),!.
+pretty_and_hide(In, Info):- dzotrace((pretty_numbervars(In,M),hide_some_hiddens(M,Info))),!.
 
 dmsg_pretty(In):- dzotrace( ignore( \+ \+   ( pretty_and_hide(In, Info),dmsg(Info)))).
 
@@ -630,7 +638,7 @@ is_regular_format_args(X,_):- \+ atomic(X),!,fail.
 is_regular_format_args(X,Y):- (string(X);atom(Y)), atom_contains(X,'~').
 is_regular_format_args(_,Y):- is_list(Y),!.
 
-smart_format(X,Y,Z):- format(X,Y,Z).
+system:smart_format(X,Y,Z):- format(X,Y,Z).
 smart_format(X,Y):- smart_format([X,Y]).
 
 smart_format(DDD):- \+ is_list(DDD),!, format('~q',[DDD]).
@@ -638,6 +646,10 @@ smart_format(DDD):- \+ is_list(DDD),!, format('~q',[DDD]).
 smart_format([X,Y]):- is_regular_format_args(X,Y),!,catch(format(X,Y),error(smart_format(A),B),writeq(smart_format(X,Y)=error(smart_format(A),B))),!.
 smart_format([X|More]):- (compound(X);is_stream(X)),!,with_output_to(X,smart_format(More)),!.
 smart_format([X,Y]):- smart_format(X-Y),!.
+
+:- export(smart_format/3).
+:- export(smart_format/2).
+:- export(smart_format/1).
 
 fmt0(X,Y):-catchvvnt((smart_format(X,Y),flush_output_safe),E,dfmt(E:smart_format(X,Y))).
 
@@ -1226,7 +1238,7 @@ dmsg(V):- quietly(likely_folded((locally(set_prolog_flag(retry_undefined,none),
 %dmsg(F,A):- dzotrace((tlbugger:no_slow_io,on_x_fail(smart_format(atom(S),F,A))->writeln(dmsg(S));writeln(dmsg_fail(F,A)))),!.
 
 :- system:import(dmsg/1).
-% system:dmsg(O):-logicmoo_util_dmsg:dmsg(O).
+% system:dmsg(O):-logicmoo_util_dmsg(O).
 %= 	 	 
 
 %% dmsg( ?F, ?A) is det.
@@ -1290,7 +1302,7 @@ same_streams(TErr,Err):- stream_property(TErr,file_no(A)),stream_property(Err,fi
 %
 % Wdmsg.
 %
-wdmsg(_):- notrace((ttyflush,current_prolog_flag(debug_level,0),current_prolog_flag(dmsg_level,never))),!.
+wdmsg(_):- ttyflush,current_prolog_flag(debug_level,0),current_prolog_flag(dmsg_level,never),!.
 wdmsg(X):- likely_folded(wdmsg_goal(in_cmt(line,fmt(X)),dmsg(X))).
 
 likely_folded(X):- dis_pp(bfly)->pretty_clauses:with_folding_depth(1,X);call(X).
@@ -1423,7 +1435,7 @@ dmsg000(V):-
 dmsg1(V):- !, dmsg3(V).
 dmsg1(V):- var(V),!,dmsg1(warn(dmsg_var(V))).
 dmsg1(_):- current_prolog_flag(dmsg_level,never),!.
-dmsg1(V):- tlbugger:is_with_dmsg(FP),!,univ_safe_2(FP,FPL),append(FPL,[V],VVL),univ_safe_2(VV,VVL),once(dmsg1(VV)),!.
+dmsg1(V):- tlbugger:is_with_dmsg(FP),!,univ_safe_3(FP,FPL),append(FPL,[V],VVL),univ_safe_3(VV,VVL),once(dmsg1(VV)),!.
 dmsg1(NC):- cyclic_term(NC),!,dtrace,format_to_error('~N% ~q~n',[dmsg_cyclic_term_1]).
 dmsg1(NC):- tlbugger:skipDMsg,!,loop_check_early(dmsg2(NC),format_to_error('~N% ~q~n',[skipDMsg])),!.
 dmsg1(V):- locally(tlbugger:skipDMsg,((once(dmsg2(V)), ignore((tlbugger:dmsg_hook(V),fail))))),!.
@@ -1646,20 +1658,26 @@ use_tty(_,TTY):- stream_property(current_output,tty(TTY)),!.
 use_tty(_,false).
 
 :- meta_predicate(woto_tty(+,+,0)).
+:- export(woto_tty/3).
 woto_tty(S,TTY,Goal):- with_output_to(S,(set_stream(current_output,tty(TTY)),Goal)).
 
 :- meta_predicate(woto(+,0)).
+:- export(woto/2).
 woto(S,Goal):- use_tty(S,TTY),woto_tty(S,TTY,Goal).
 
+
 :- meta_predicate(wots(-,0)).
+:- export(wots/2).
 wots(S,Goal):- woto(string(S),Goal).
 
 :- meta_predicate(wotso(0)).
+:- export(wotso/1).
 wotso(Goal):- !, call(Goal).
 wotso(Goal):- wots(S,Goal), ignore((S\=="",write(S))).
 
 :- meta_predicate(weto(0)).
 %weto(G):- !, call(G).
+:- export(weto/1).
 weto(G):- 
   stream_property(UE,alias(user_error)),
   stream_property(CO,alias(current_output)),
@@ -1678,6 +1696,7 @@ weto(G):-
 weto(G):- call(G).
 
 :- meta_predicate(wets(+,0)).
+:- export(wets/2).
 wets(S,G):-
   with_ioe((
      (set_stream(S,alias(user_error)),
@@ -1685,6 +1704,7 @@ wets(S,G):-
      locally_tl(thread_local_error_stream(S),G))).
 
 :- meta_predicate(with_ioe(0)).
+:- export(with_ioe/1).
 with_ioe(G):-
   stream_property(UE,alias(user_error)),
   stream_property(UO,alias(user_output)),
@@ -1860,7 +1880,7 @@ mesg_arg1(T,F):-cfunctor(T,F,_).
 % Defined Message Color.
 %
 defined_message_color(todo,[fg(red),bg(black),underline]).
-%defined_message_color(error,[fg(red),hbg(black),bold]).
+defined_message_color(error,[fg(red),hbg(black),bold]).
 defined_message_color(warn,[fg(black),hbg(red),bold]).
 defined_message_color(A,B):-tlbugger:term_color0(A,B).
 
@@ -2199,7 +2219,7 @@ cls:- ignore(catch(system:shell(cls,0),_,fail)).
 :- 'mpred_trace_none'(portray_clause_w_vars(_)).
 */
 
-:- ignore((source_location(S,_),prolog_load_context(module,M),module_property(M,class(library)),
+:- ignore((prolog_load_context(source,S),prolog_load_context(module,M),module_property(M,class(library)),
  forall(source_file(M:H,S),
  ignore((cfunctor(H,F,A),
   ignore(((atom(F),\+ atom_concat('$',_,F),(export(F/A) , current_predicate(system:F/A)->true; system:import(M:F/A))))),
@@ -2208,4 +2228,7 @@ cls:- ignore(catch(system:shell(cls,0),_,fail)).
 :- '$hide'(wdmsg/1).
 :- '$hide'(wdmsg/2).
 :- '$hide'(dmsg/1).
+
+:- fixup_exports.
+:- fixup_module_exports_now.
 

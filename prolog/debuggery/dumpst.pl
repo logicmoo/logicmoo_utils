@@ -10,6 +10,10 @@
 % Licience: LGPL
 % ===================================================================
 */
+:- if((prolog_load_context(source,F),prolog_load_context(file,F))).
+:- else.
+%module(_,Y):- maplist(export,Y).
+:- endif.
 :- module(dumpst,[
           getPFA/3,getPFA1/3,getPFA2/3,get_m_opt/4,fdmsg/1,fdmsg1/1,
           neg1_numbervars/3,clauseST/2,
@@ -63,13 +67,13 @@
 
 :- use_module(library(logicmoo_startup)).
 :- use_module(library(logicmoo_common)).
-:- use_module(library(debuggery/first)).
+%:- use_module(library(debuggery/first)).
 :- use_module(library(logicmoo/util_strings)).
-:- use_module(library(debuggery/dmsg)).
+%:- use_module(library(debuggery/dmsg)).
 :- use_module(library(debuggery/rtrace)).
-:- use_module(library(debuggery/bugger)).
-:- use_module(library(debuggery/dumpst)).
-:- use_module(library(debuggery/ucatch)).
+%:- use_module(library(debuggery/bugger)).
+%:- use_module(library(debuggery/dumpst)).
+%:- use_module(library(debuggery/ucatch)).
 :- use_module(library(debuggery/frames)).
 
 
@@ -88,6 +92,7 @@
           dumpST/0,dumpST/1,
           dumpST0/0,dumpST0/1,dumpST0/2,
           dumpST9/0,dumpST9/1,dumpST9/2.
+
 
 
 %:- ensure_loaded(library(debug)).
@@ -147,9 +152,14 @@ dumpST0(Frame,MaxDepth):-  prolog_current_frame(Current),(number(Frame);get_dump
 %
 % Dump S True Stucture.
 %
-dumpST:- prolog_current_frame(Current),get_dump_frame(Current,Frame),
-  no_bfly(zotrace(with_all_dmsg((b_setval('$dump_frame',Frame),dumpST1)))).
 
+%:- use_module(library(sandbox)).
+%sandbox:safe_primitive(dumpST/0).
+
+dumpST:- ((prolog_current_frame(Current),get_dump_frame(Current,Frame),
+  no_bfly(zotrace(with_all_dmsg((b_setval('$dump_frame',Frame),dumpST1)))))).
+
+%no_bfly(Goal):- current_predicate(in_bfly/2)->in_bfly(f,Goal);call(Goal). 
 
 :- thread_local(tlbugger:no_slow_io/0).
 :- multifile(tlbugger:no_slow_io/0).
@@ -349,6 +359,15 @@ fdmsg1(M):-dmsg(failed_fdmsg1(M)).
 do_fdmsg1(G):- 
   simplify_goal_printed(G,GG),!,
   (GG\==G->write('#');true),
+  do_fdmsg2(GG),!.
+
+term_contains_ansi_b(S,S):- \+ compound(S),!,string(S),sub_string(S,_,_,_,'\x1B').
+term_contains_ansi_b(S,N):- arg(_,S,E),term_contains_ansi_b(E,N),!.
+
+%do_fdmsg2(GG):- term_contains_ansi_b(GG,_),pt(GG),!.
+do_fdmsg2(GG):- term_contains_ansi_b(GG,_),write(GG),!.
+%do_fdmsg2(GG):- term_contains_ansi_b(GG,N),write(N),fail.
+do_fdmsg2(GG):-
   term_variables(GG,_Vars),
   copy_term_nat(GG,GGG), =(GG,GGG),
   numbervars(GGG,0,_,[attvar(skip)]),
@@ -458,21 +477,21 @@ simplify_goal_printed(term_position(_,_,_,_,_),'$..term_position/4..$').
 %simplify_goal_printed(catchv(G,_,_),GS):-!,simplify_goal_printed(G,GS).
 %simplify_goal_printed(catch(G,_,_),GS):-!,simplify_goal_printed(G,GS).
 %simplify_goal_printed(skolem(V,N,_F),GS):-!,simplify_goal_printed(skeq(V,N,'..'),GS).
+simplify_goal_printed(I,O):- once(dumpst_hook:simple_rewrite(I,O)), I \== O,!.
 
 simplify_goal_printed(List,O):- current_prolog_flag(dmsg_len,Three),
   is_list(List),length(List,L),L>Three,
    append([A,B,C],[F|_],List),F \='...'(_), !, 
-  simplify_goal_printed([A,B,C,'...'(_)],O).
+  simplify_goal_printed([A,B,C,'....'(L>Three)],O).
 
 
-simplify_goal_printed([E|OList],O):- \+ is_list(OList), 
+simplify_goal_printed([E|OList],O):- fail,  \+ is_list(OList), 
    append(List,Open,OList),var(Open),!,
     current_prolog_flag(dmsg_len,Three),
    is_list(List),length(List,L),L>Three,
     append([A,B,C],[F|_],[E|List]),F \='...'(_), !, 
    simplify_goal_printed([A,B,C,'...'(_)],O).
 
-simplify_goal_printed(I,O):- once(dumpst_hook:simple_rewrite(I,O)), I \== O.
 
 simplify_goal_printed([F|A],[FS|AS]):- !,simplify_goal_printed(F,FS),simplify_goal_printed(A,AS).
 simplify_goal_printed(G,GS):- univ_safe_2(G,[F|A]),maplist(simplify_goal_printed,A,AA),univ_safe_2(GS,[F|AA]).

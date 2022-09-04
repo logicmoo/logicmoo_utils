@@ -47,6 +47,18 @@
 :- meta_predicate user:attvar_variant(0,0).
 :- use_module(library(option),[dict_options/2,option/2]).
 
+:- export((mdwq/1, 
+		  plvar/1,
+          nb_var/1, nb_var/2,
+          vdict/1, vdict/2,
+		  un_mv/1, un_mv1/1,
+		  mv_peek_value/2,mv_peek_value1/2,
+      mv_set_values/2,
+		  %mv_set/2,
+      mv_set1/2,
+		  mv_add1/2,mv_allow/2,
+		  ic_text/1, xvarx/1, is_mv/1, multivar/1)).
+
 %:- set_prolog_flag(access_level,system).
 %:- set_prolog_flag(gc,false).
 
@@ -54,12 +66,17 @@
 
 mdwq(Q):- format(user_error,'~NMWQ: ~q~n',[Q]).
 
-:- meta_predicate mdwq_call(*).
+:- meta_predicate(mdwq_call(*)).
 mdwq_call(Q):- !, call(Q).
-mdwq_call(Q):- call(Q) *-> mdwq(success:Q); (mdwq(failed:Q),!,fail).
-:- export(mdwq_call/1).
+%mdwq_call(Q):- call(Q) *-> mdwq(success:Q); (mdwq(failed:Q),!,fail).
 
+:- define_into_module(system,mdwq_call/1).
+
+:- create_prolog_flag(attr_pre_unify_hook,false,[keep(true)]).
 :- create_prolog_flag(attr_pre_unify_hook,true,[keep(true)]).
+
+
+
 
 :- if(current_prolog_flag(attr_pre_unify_hook,true)).
 
@@ -112,17 +129,29 @@ uhook(Module, AttVal, Value, M) :-
 :- ((abolish('$wakeup'/1),'$attvar':asserta('$wakeup'(M:G):-wakeup(G,M)))).
 :- meta_predicate('$wakeup'(:)).
 
-:- all_source_file_predicates_are_transparent.
+%:- all_source_file_predicates_are_transparent.
+:- debug(logicmoo(loader),'~N~p~n',[all_source_file_predicates_are_transparent(File)]),
+    forall((source_file(ModuleName:P,File),functor(P,F,A)),
+      ignore(( 
+        ignore(( \+ atom_concat('$',_,F), ModuleName:export(ModuleName:F/A))),
+            \+ (predicate_property(ModuleName:P,(transparent))),
+                   % ( nop(dmsg(todo(module_transparent(ModuleName:F/A))))),
+                   (module_transparent(ModuleName:F/A))))).
 
 :- '$set_source_module'('multivar').
 
 :- module_transparent(attr_pre_unify_hook_m/4).
+:- dynamic(attr_pre_unify_hook_m/4).
+:- export(attr_pre_unify_hook_m/4).
 attr_pre_unify_hook_m(IDVar, Value, _, M):- \+ attvar(IDVar),!, M:(IDVar=Value).
 attr_pre_unify_hook_m(Var,Value,Rest, M):- 
   mdwq_call('$attvar':call_all_attr_uhooks(Rest, Value, M)),
   nop(M:mv_add1(Var,Value)).
 
-user:attr_pre_unify_hook(Var,Value,Rest):- strip_module(Rest,M,_), attr_pre_unify_hook_m(Var,Value,Rest,M).
+:- module_transparent(attr_pre_unify_hook/3).
+:- dynamic(attr_pre_unify_hook/3).
+:- export(attr_pre_unify_hook/3).
+attr_pre_unify_hook(Var,Value,Rest):- strip_module(Rest,M,_), attr_pre_unify_hook_m(Var,Value,Rest,M).
            
 
 
@@ -233,6 +262,8 @@ xvarx(Var):-
    get_attr(Var,'$VAR$',_MV)-> true ; 
    (get_attrs(Var,Attrs) -> put_attrs(Var,att('$VAR$',Var,Attrs)) ;
    (true -> put_attrs(Var,att('$VAR$',Var,[])))).
+:- export(xvarx/1).
+:- system:import(xvarx/1).
 
  
 
@@ -511,5 +542,16 @@ term_upcase(Value,UC2):-catch(string_upper(Value,UC2),_,(format(string(UC1),'~w'
   (current_predicate('system':F/A)->true; 'system':import(M:F/A))))))).
 */
 
+:- system:import((mdwq/1, 
+		  plvar/1,
+          nb_var/1, nb_var/2,
+          vdict/1, vdict/2,
+		  un_mv/1, un_mv1/1,
+		  mv_peek_value/2,mv_peek_value1/2,
+      mv_set_values/2,
+		  %mv_set/2,
+      mv_set1/2,
+		  mv_add1/2,mv_allow/2,
+		  ic_text/1, xvarx/1, is_mv/1, multivar/1)).
 :- fixup_exports.
 

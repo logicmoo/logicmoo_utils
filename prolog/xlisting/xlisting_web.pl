@@ -206,7 +206,7 @@ hide_xpce_library_directory.
 :- system:use_module(library(predicate_streams)).
 :- system:use_module(library(logicmoo/with_no_x)).
 :- system:use_module(library(logicmoo/each_call)).
-:- system:use_module(library(logicmoo/butterfly_console)).
+%:- system:use_module(library(logicmoo/butterfly_console)).
 
 :- thread_local(t_l:no_cycstrings/0).
 :- asserta(t_l:no_cycstrings).
@@ -258,13 +258,20 @@ cp_menu:cp_menu(X,X).
 %cp_menu:cp_menu.
 :- endif.
 
-extra_cp_menu -->  
+:- multifile((extra_cp_menu/0)).
+:- dynamic((extra_cp_menu//0)).
+:- export(extra_cp_menu//0).
+
+cp_menu:extra_cp_menu -->  
    { \+ (( httpd_wrapper:http_current_request(Request),member(request_uri(URI),Request), atom_contains(URI,pldoc))) },!,
    pldoc_search:doc_links([],[]).
-extra_cp_menu --> [].
+cp_menu:extra_cp_menu --> [].
+
 
 :- multifile(cp_menu:(cp_menu/2)).
 :- dynamic(cp_menu:(cp_menu/2)).
+:- multifile(cp_menu:(current_menu_item/2)).
+:- dynamic(cp_menu:(current_menu_item/2)).
 
 % handler_with_output_to 
 suppliment_cp_menu:- 
@@ -281,9 +288,10 @@ suppliment_cp_menu:-
     C=A,
     html_requires(css('menu.css'), C, D),
     html(ul(id(nav), \menu(Menu)), D, B1),
-    html(\ extra_cp_menu,B1,B)))).
+    html(\ xlisting_web:extra_cp_menu,B1,B)))).
 
 :- suppliment_cp_menu.
+
 
 :- dynamic(baseKB:param_default_value/2).
 :- kb_global(baseKB:param_default_value/2).
@@ -2117,7 +2125,7 @@ embed_test(URL,Width,Height):-
   format( '<div width="~w" height="~w" ><object data="~w"  width="100%" height="~w" type="text/html"><embed src="~w" width="100%" height="100%" onerror="alert(`URL invalid ~w !!`);"/></object></div>',
                 [     Width,     Height,              URL,                      Height,                        URL,        URL                  ]).
 
-slow_frame(Goal):- !,call(Goal).
+%slow_frame(Goal):- !,call(Goal).
 slow_frame(Goal):- slow_frame('300',Goal).
 slow_frame(_,Goal):- thread_self(main), \+ toplevel_pp(bfly),!, call(Goal).
 slow_frame(Height,Goal):- 
@@ -2712,7 +2720,8 @@ must_run0((G1,G2)):- !, call_cleanup(must_run0(G1),must_run0(G2)),!.
 
 %must_run0(Goal):- ignore(catch(no_undefined_preds(Goal),_,true)),!.
 must_run0(Goal):- flush_output_safe, 
-  (catch(must_or_rtrace(no_undefined_preds(Goal)),E,(wdmsg(E),www_dumpST,wdmsg(E=Goal),fail)) -> true ; wdmsg(assertion_failed(fail, Goal))),
+  (catch(must_or_rtrace(no_undefined_preds(Goal)),E,(wdmsg(E),www_dumpST,wdmsg(E=Goal),fail)) -> true ; 
+    wdmsg(nop(assertion_failed(fail, Goal)))),
   flush_output_safe.
 
 no_undefined_preds(G):- locally(set_prolog_flag(unknown,fail),G).
@@ -2785,7 +2794,7 @@ try_or_rtrace(G):- tracing,!,dmsg(try(G)),call(G).
 try_or_rtrace(G):- fast_and_mean, !, with_no_xdbg(G).
 try_or_rtrace(G):- catch(G,E,(E==time_limit_exceeded->throw(time_limit_exceeded);(ignore((dmsg(G=E),www_dumpST,dmsg(G=E),thread_self(main),rtrace(G),www_dumpST,dmsg(G=E),break))))).
 
-www_dumpST:- write('<pre>'),dumpST,write('</pre>').
+www_dumpST:- write_expandable(false,(write('<pre>'),dumpST,write('</pre>'))).
 % :- prolog_xref:assert_default_options(register_called(all)).
 
 %i2tml_hbr_trace(H,B,R):- rtrace(i2tml_hbr(H,B,R)).
@@ -2875,7 +2884,7 @@ set_line_pos(Out,LP):-
 current_line_position(LP):-current_output(Out),current_line_position(Out,LP).
 
 :- kb_shared(baseKB:wid/3).
-
+:- asserta((baseKB:wid(_,_,_):-fail)).
 
 %% current_line_position( ?ARG1, ?ARG2) is det.
 %

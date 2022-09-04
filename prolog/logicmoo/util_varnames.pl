@@ -20,6 +20,7 @@
             all_disjoint_in_sets/3,
             del_each_attr/2,
             get_random_headvars/1,
+            member_open/2,
             get_random_headvars/4,
             get_1head_arg_var/5,
             term_slots/2,
@@ -27,13 +28,12 @@
             dif_matrix/2,
             term_singleslots/2,
           term_singleslots/3,
-          term_singleslots/5,
+          term_singleslots/5,         
             set_varname/2,
             set_varname/3,
             write_functor/2,
             atom_subst_frak_0/4,
             arg_varname/3,
-            variable_name_or_ref/2,
             renumbervars/3,
             b_implode_varnames/1,
             b_implode_varnames0/1,
@@ -96,7 +96,6 @@
             
             v_dif_rest/2,
             vmust/1,
-            name_variable/2, variable_name/2,
             init_varname_stores/1,
             maybe_scan_for_varnames/0
 
@@ -200,7 +199,7 @@ This module holds utilities to access and change the names of prolog variables.
 % % % OFF :- system:reexport((lockable_vars)).
 % % % OFF :- system:use_module(library(logicmoo/each_call)).
 % % % % OFF :- system:use_module(library(dictoo_lib)).
-
+:- system:use_module(library(logicmoo/each_call)).
 :- use_module(library(occurs)).
 :- use_module(library(gensym)).
 :- use_module(library(when)).
@@ -232,126 +231,6 @@ This module holds utilities to access and change the names of prolog variables.
 :- use_module(library(listing)).
 
 
-%%	name_variable(+Var, +Name) is det.
-%
-%	Assign a name to a variable. Succeeds   silently if Var is not a
-%	variable (anymore).
-
-
-%name_variable(Var,_Name) :- nonvar(Var),!.
-%name_variable(Var,Name) :- !, put_attr(Var,vn,Name).
-
-name_variable(Var, Name1) :- get_attr(Var,vn,Name2),
-        combine_names(Name1,Name2,Name),
-	put_attr(Var, vn, Name). % add_var_to_env(Name,Var),!.
-name_variable(Var, Name) :- var(Var), !,
-	put_attr(Var, vn, Name).
-
-name_variable('$VAR'(Var), Name):- Name==Var, !.
-name_variable('$VAR'(Var), Name):- var(Var),Name=Var,!.
-% name_variable('$VAR'(Var), Name) :- trace_or_throw(numbervars_name_variable(Var, Name)),!.
-name_variable(_, _).
-
-:- nodebug(logicmoo(varnames)).
-
-
-variable_name_or_ref(Var, Name) :- get_var_name(Var, Name),!.
-variable_name_or_ref(Var, Name) :- format(atom(Name),'~q',[Var]).
-
-
-%% project_attributes( ?QueryVars, ?ResidualVars) is semidet.
-%
-% Project Attributes.
-%
-vn:project_attributes(QueryVars, ResidualVars):- fail,dmsg(vn:proj_attrs(vn,QueryVars, ResidualVars)),fail.
-
-
-%% attribute_goals(@V)// is det.
-%	copy_term/3, which also determines  the   toplevel  printing  of
-%	residual constraints.
-%  Hook To [dom:attribute_goals/3] For Module Logicmoo_varnames.
-%  Attribute Goals.
-%
-vn:attribute_goals(Var) --> {get_var_name(Var,  Name)},!,[name_variable(Var,  Name)],!.
-
-numbervars_using_vs(T,TT,Vs):- numbervars_using_vs_(Vs,T,TT).
-
-numbervars_using_vs_(Vs,T,TT):- var(T),get_var_name(T,VN,Vs),TT='$VAR'(VN),!.
-numbervars_using_vs_(_Vs,T,TT):- (ground(T); \+ compound(T)),!,TT=T.
-numbervars_using_vs_(Vs,T,TT):- compound_name_arguments(T,F,A),maplist(numbervars_using_vs_(Vs),A,AA),compound_name_arguments(TT,F,AA),!.
-
-get_var_name(T,VN,Vs):- member(N=V,Vs),V==T,!,VN=N.
-get_var_name(T,VN,_Vs):- get_var_name(T,VN),!.
-get_var_name(T,VN,_Vs):- term_to_atom(T,VN).
-
-
-
-
-grab_vn_varnames(Msg,Vs2):-
-  term_attvars(Msg,AttVars),
-  %append(AttVars,Vars,AllVars),
-  sort(AttVars,AllVarS),
-  grab_each_vn_varname(AllVarS,Vs2).
-grab_each_vn_varname([],[]):-!.
-grab_each_vn_varname([AttV|AttVS],Vs2):-
-    grab_each_vn_varname(AttVS,VsMid),!,
-     (get_attr(AttV, vn, Name) -> Vs2 = [Name=AttV|VsMid] ; VsMid=       Vs2),!.
-
-get_var_name_or_fake(T,VN):- get_var_name(T,VN),!.
-get_var_name_or_fake(T,VN):- term_to_atom(T,VN).
-
-get_var_name(V,N):- notrace(get_var_name0(V,N)),!.
-:- export(get_var_name/2).
-%%	variable_name(+Var, -Name) is semidet.
-%
-%	True if Var has been assigned Name.
-
-variable_name(Var, Name) :- must(var(Var)),(get_attr(Var, vn, Name);var_property(Var,name(Name));get_attr(Var, varnames, Name)),!.
-
-get_var_name0(Var,Name):- nonvar(Var),!,get_var_name1(Var,Name),!.
-get_var_name0(Var,Name):- nonvar(Name),!,must(get_var_name0(Var, NameO)),!,Name=NameO.
-get_var_name0(Var,Name):- var_property(Var,name(Name)),!.
-get_var_name0(Var,Name):- get_attr(Var, vn, Name),!.
-get_var_name0(Var,Name):- nb_current('$variable_names', Vs),varname_of(Vs,Var,Name),!.
-get_var_name0(Var,Name):- get_attr(Var, varnames, Name),!.
-get_var_name0(Var,Name):- nb_current('$old_variable_names', Vs),varname_of(Vs,Var,Name),!.
-get_var_name0(Var,Name):- get_varname_list(Vs),varname_of(Vs,Var,Name),!.
-get_var_name0(Var,Name):- execute_goal_vs(Vs),varname_of(Vs,Var,Name).
-
-% get_var_name0(Var,Name):- attvar(Var),get_varname_list(Vs),format(atom(Name),'~W',[Var, [variable_names(Vs)]]).
-
-varname_of(Vs,Var,Name):- compound(Vs), Vs=[NV|VsL],  ((compound(NV) , (NV=(N=V)),atomic(N), V==Var,!,N=Name) ; varname_of(VsL,Var,Name)).
-
-get_var_name1(Var,Name):- var(Var),!,get_var_name0(Var,Name).
-get_var_name1(Var,Name):- nonvar(Name),!,must(get_var_name1(Var, NameO)),!,Name=NameO.
-get_var_name1('$VAR'(Name),Name):- atom(Name),!.
-get_var_name1('$VAR'(Int),Name):- integer(Int),format(atom(A),"~w",['$VAR'(Int)]),!,A=Name.
-get_var_name1('$VAR'(Var),Name):- (var(Var)->get_var_name0(Var,Name);Name=Var),!.
-get_var_name1('$VAR'(Att3),Name):- !, get_var_name1(Att3,Name).
-get_var_name1('aVar'(Att3),Name):- !, get_var_name1(Att3,Name).
-get_var_name1('aVar'(Name,Att3),Value):- !, get_var_name1('$VAR'(Name),Value); get_var_name1('aVar'(Att3),Value).
-get_var_name1(att(vn,Name,_),Name):- !.
-get_var_name1(att(_,_,Rest),Name):- Rest\==[],get_var_name1(Rest,Name).
-get_var_name1(Var,Name):- catch(call(call,oo_get_attr(Var, vn, Name)),_,fail),!. % ground(Name),!.
-
-
-term_varnames(Msg,Vs,Unnamed):- 
-  term_attvars(Msg,AttVars),term_variables(Msg,Vars),
-  append(AttVars,Vars,AllVars),
-  sort(AllVars,AllVarsS),
-  grab_each_varname(AllVarsS,Vs,Unnamed).
-grab_each_varname([],[],[]):-!.
-grab_each_varname([AttV|AttVS],[Name=AttV|Vs],Unnamed):- 
-   get_var_name(AttV, Name),!,
-   grab_each_varname(AttVS,Vs,Unnamed).
-grab_each_varname([AttV|AttVS],Vs,[AttV|Unnamed]):- 
-   grab_each_varname(AttVS,Vs,Unnamed).
-
-
-
-get_var_by_name(N,V):- nb_current('$variable_names',Vs), member_open(NV, Vs), NV=(N=V).
-get_var_by_name(N,V):- nb_current('$old_variable_names',Vs), member_open(NV, Vs), NV=(N=V).
-
 %% member_open( ?ARG1, :TermARG2) is det.
 %
 % Member Open.
@@ -364,16 +243,24 @@ member_open(C, [B|A]) :-  (nonvar(B),B=C) ; (nonvar(A),member_open(C, A)).
 %
 % Source Variables Lwv.
 %
+:-export(sourceable_variables_lwv/1).
+
+sourceable_variables_lwv(AllVs):-
+  ((prolog_load_context(variable_names,Vs1),is_list(Vs1));Vs1=[]),
+  ((nb_current('$varable_names',Vs2),is_list(Vs2));Vs2=[]),
+  ((execute_goal_vs(Vs3))),
+  ((nb_current('$old_variable_names',Vs4),is_list(Vs4));Vs4=[]),
+   append([Vs3,Vs2,Vs1,Vs4],All),!,list_to_set(All,AllVs),!.
+
 source_variables_lwv(Msg,AllVs):-
-  (prolog_load_context(variable_names,Vs1);Vs1=[]),
+   sourceable_variables_lwv(Vs1),
    grab_vn_varnames(Msg,Vs2),
-   execute_goal_vs(Vs3),
-   append([Vs3,Vs2,Vs1],All),!,list_to_set(All,AllVs),!.
+   append([Vs2,Vs1],All),!,list_to_set(All,AllVs),!.
    % set_varname_list( AllS).
 source_variables_lwv(_Msg,[]):-!.
 
 
-
+:- export(execute_goal_vs/1).
 execute_goal_vs(Vs):- execute_goal_vs0(Vs),!.
 execute_goal_vs([]).
 execute_goal_vs0(Vs):- notrace(catch(parent_goal('$toplevel':'$execute_goal2'(_,Vs,_)),_,fail)).
@@ -619,7 +506,7 @@ get_clause_vars(CV):- quietly(get_clause_vars_nontraced(CV)).
 get_clause_vars_nontraced(_):- t_l:dont_varname,!.
 get_clause_vars_nontraced(V):- var(V),!.
 get_clause_vars_nontraced('$VAR'(_)):- !.
-get_clause_vars_nontraced(_:V):- var(V),!,ignore((get_varname_list(Vs),member(N=V0,Vs),V0==V,set_varname(write_functor,N,V))).
+get_clause_vars_nontraced(_:V):- var(V),!,ignore((get_varname_list_local(Vs),member(N=V0,Vs),V0==V,set_varname(write_functor,N,V))).
 get_clause_vars_nontraced(MHB):- term_variables(MHB,Vs),must(get_clause_vars(MHB,Vs)).
 
 :- '$set_predicate_attribute'(get_clause_vars(_), trace, 1).
@@ -929,7 +816,7 @@ set_varname(How,N,V):- atom(N),atom_concat('"?',LS,N),atom_concat(NN,'"',LS),fix
 set_varname(_M:write_functor,N,V):- !,ignore('$VAR'(N)=V),!.
 set_varname(_M:write_attribute,N,V):-!,put_attr(V,vn,N).
 set_varname(_M:put_attr,N,V):-!,put_attr(V,vn,N).
-set_varname(Nb_setval,N,V):- get_varname_list(Vs),!,register_var(N,Vs,V,NewVs),call(call,Nb_setval,'$variable_names',NewVs).
+set_varname(Nb_setval,N,V):- get_varname_list_local(Vs),!,register_var(N,Vs,V,NewVs),call(call,Nb_setval,'$variable_names',NewVs).
 set_varname(Nb_setval,N,V):- call(call,Nb_setval,'$variable_names',[N=V]).
 %set_varname(Nb_setval,N,V):- must(call(call,Nb_setval,N,V)).
 %set_varname(_How,_,_).
@@ -1059,7 +946,7 @@ contains_ftVar(Term):- sub_term(Sub,Term),compound(Sub),Sub='$VAR'(_).
 %
 ensure_vars_labled_r(I,I):-!.
 ensure_vars_labled_r(I,O):-
-  once((((get_varname_list(Vs),Vs\==[])),
+  once((((get_varname_list_local(Vs),Vs\==[])),
    copy_term(I:Vs,O:OVs),
     must_maplist(write_functor,OVs))),
    (O \=@= I ;  ground(O)),!.
@@ -1106,7 +993,7 @@ renumbervars(How,Term,Named):-
 %
 source_variables_lv(AllS):-
   (prolog_load_context(variable_names,Vs1);Vs1=[]),
-  (get_varname_list(Vs2);Vs2=[]),
+  (get_varname_list_local(Vs2);Vs2=[]),
   %    execute_goal_vs(Vs3),
   ignore(Vs3=[]),
   append(Vs1,Vs2,Vs12),append(Vs12,Vs3,All),!,list_to_set(All,AllS),
@@ -1309,7 +1196,7 @@ snumbervars5(Term,Start,End,List):-must_det_l((integer(Start),is_list(List), num
 % Try Save Variables.
 %
 try_save_vars(_):- t_l:dont_varname,!.
-try_save_vars(HB):-ignore((get_varname_list(Vs),Vs\==[],save_clause_vars(HB,Vs))),!.
+try_save_vars(HB):-ignore((get_varname_list_local(Vs),Vs\==[],save_clause_vars(HB,Vs))),!.
 
 :- export(maybe_scan_for_varnames/0).
 
@@ -1587,13 +1474,15 @@ listing_vars_file.
 
 %=
 
+:- system:use_module(library(debuggery/bugger)).
+
+:- fixup_exports.
+
 %% term_expansion( :TermFDecl, ?Clause) is semidet.
 %
 % Hook To [user:term_expansion/2] For Module Logicmoo_varnames.
 % Term Expansion.
 %
-system:term_expansion((H:-B),_):- current_prolog_flag(source_variables,true),term_expansion_save_vars((H:-B)),fail.
-
 % % % % OFF :- system:use_module(library(logicmoo_utils_all)).
-:- fixup_exports.
+system:term_expansion((H:-B),_):- current_prolog_flag(source_variables,true),term_expansion_save_vars((H:-B)),fail.
 

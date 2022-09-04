@@ -14,9 +14,33 @@
 :- module(pretty_clauses,
           [ pprint_tree/2,        % +Term, +Options
            bfly_term//2,          % +Term, +Options
-   color_format_maybe/3,print_tree00/1,print_as_tree/1,current_print_write_options/1,mort/1,print_tree_with_final/2]).
+           print_tree_nl/1,
+           guess_pretty/1,
+           term_is_ansi/1,
+           write_keeping_ansi/1,
+           make_pretty/2,
+         %  term_varnames/2,
+   color_format_maybe/3,print_tree00/1,print_as_tree/1,current_print_write_options/1,mort/1,
+   print_tree_with_final/2,
+   is_webui/0,
+   print_tree_with_final/3]).
 
+/*
+:- multifile '$exported_op'/3. 
+:- dynamic '$exported_op'/3. 
+:- discontiguous '$exported_op'/3. 
+'$exported_op'(_,_,_):- fail.
+*/
 
+:- multifile '$autoload'/3. 
+:- discontiguous '$autoload'/3.
+:- dynamic '$autoload'/3.
+'$autoload'(_,_,_):- fail.
+
+:- system:use_module(library(debuggery/bugger)).
+%:- system:reexport(library(must_sanity)).
+:- include(portray_vars).
+:- include(butterfly_console).
 /** <module> Pretty Print Prolog terms in plain or HTML
 
 This file is primarily designed to   support running Prolog applications
@@ -42,10 +66,25 @@ etc.
 
 */
 
+:- define_into_module([
+ our_pengine_output/1,
+ pprint_tree/2,        % +Term, +Options
+           bfly_term//2,          % +Term, +Options
+           print_tree_nl/1,
+           guess_pretty/1,
+           term_is_ansi/1,
+           write_keeping_ansi/1,
+           make_pretty/2,
+         %  term_varnames/2,
+   color_format_maybe/3,print_tree00/1,print_as_tree/1,current_print_write_options/1,mort/1,
+   print_tree_with_final/2,
+   is_webui/0,
+   print_tree_with_final/3]).
+
 :- set_module(class(library)).
 
 :- autoload(library(http/html_write),[html/3,print_html/1]).
-:- autoload(library(lynx/html_text),[html_text/2]).
+%:- autoload(library(lynx/html_text),[html_text/2]).
 :- autoload(library(option),
             [merge_options/3, select_option/3, select_option/4,
              option/2, option/3]).
@@ -74,7 +113,21 @@ etc.
 %:- /*system:*/use_module(butterfly_term_html,[bfly_term//2]).
 :- thread_local(t_l:print_mode/1).
 
-:- use_module(library(butterfly_console)).
+:- export(with_pp/2).
+:- export(in_pp/1).
+:- export(pp_set/1).
+:- export(is_pp_set/1).
+:- export(toplevel_pp/1).
+:- export(display_length/2).
+:- export(in_bfly/2).
+:- export(in_pp_html/1).
+
+:- dynamic(pretty_clauses:pp_hook/3).
+:- multifile(pretty_clauses:pp_hook/3).
+:- module_transparent(pretty_clauses:pp_hook/3).
+:- export(pretty_clauses:pp_hook/3).
+
+%:- use_module(library(butterfly_console)).
 
 %:- thread_local(pretty_tl:in_pretty_tree/0).
 %:- thread_local(pretty_tl:in_pretty_tree_rec/0).
@@ -294,10 +347,10 @@ sample_pp_term(X):- world_snap(X).
 prolog_pprint(Term):- prolog_pprint(Term, []).
 :- export(prolog_pprint/2).
 prolog_pprint(Term, Options):- ground(Term),
-   \+ \+ (mort((portray_vars:pretty_numbervars(Term, Term2),
+   \+ \+ (mort((pretty_numbervars(Term, Term2),
      prolog_pprint_0(Term2, Options)))), !.
 prolog_pprint(Term, Options):- \+ ground(Term),
-   \+ \+ (mort((portray_vars:pretty_numbervars(Term, Term2),
+   \+ \+ (mort((pretty_numbervars(Term, Term2),
      prolog_pprint_0(Term2, Options)))), !.
 
 
@@ -589,11 +642,13 @@ ec_portray_hook(Term):-
 
 color_format_maybe(_,F,A):- format(F,A),!.
 
+:- export(write_q/1). 
 write_q(X):- in_pp(bfly),!,print_html_term(X).
+write_q(S):- current_output_line_position(Pos), pretty_clauses:pp_hook(write_q, Pos, S),!.
 write_q(X):- writeq(X).
 
-ec_portray(_,X):- as_is_cmpd(X),!,write_q(X).
-ec_portray(_,X):- atom(X),ansi_ansi,!,write_q(X).
+ec_portray(_,X):- as_is_cmpd(X),!,without_ec_portray_hook(write_q(X)).
+ec_portray(_,X):- atom(X),ansi_ansi,!,without_ec_portray_hook(write_q(X)).
 ec_portray(N,_):- N > 3,!,fail.
 ec_portray(_,Term):- (\+ compound(Term);Term='$VAR'(_)),!, ec_portray_now(Term).
 ec_portray(N,List):- N<2, is_list(List),!,print_tree00(List).
@@ -684,6 +739,13 @@ echo_flush:- ttyflush.
 :- export(echo_format/1).
 echo_format(S):- echo_flush, echo_format(S, []),!.
 :- export(echo_format/2).
+
+
+:- thread_local(t_l:each_file_term/1).
+:- thread_local(t_l:quit_processing_stream/1).
+:- thread_local(t_l:block_comment_mode/1).
+:- thread_local(t_l:echo_mode/1).
+
 echo_format(_Fmt, _Args):- t_l:block_comment_mode(Was), Was==invisible, !.
 echo_format(Fmt, Args):- t_l:block_comment_mode(_), t_l:echo_mode(echo_file), !, real_format(Fmt, Args), ttyflush.
 echo_format(Fmt, Args):- t_l:echo_mode(echo_file), !, real_format(Fmt, Args), ttyflush.
@@ -880,6 +942,7 @@ in_color(C,P):-
 % pretty_clauses:goal_expansion(pt_nl,(pformat(S:L),nl)):- source_location(S,L).
 
 write_simple(A):- write_simple(A,[]).
+write_simple(S,_):- term_is_ansi(S), !, write_keeping_ansi(S).
 write_simple(A,Options):- get_portrayal_vars(Vs), 
   my_merge_options(Options,[quoted(true), portrayed(true), variable_names(Vs)],OptionsNew),
   without_ec_portray_hook((
@@ -900,6 +963,7 @@ portray_with_vars(A,Options):-
 
 % portray_with_vars(A,Options):- dumpST, break, throw(looped(portray_with_vars(A,Options))).
 
+:- export(portray_with_vars1/2).
 portray_with_vars1(A,Options):-
   get_portrayal_vars(Vs),
   my_merge_options(Options,[quoted(true), portrayed(true), variable_names(Vs)],OptionsNew),
@@ -919,12 +983,14 @@ prolog_pretty_print_term(A,Options):-
 % @TODO comment out the next line
 %simple_write_term(A):- !, with_no_hrefs(t,(if_defined(rok_writeq(A),write_q(A)))),!.
 
-simple_write_term(A):- in_pp(bfly),!,print_html_term(A).
-simple_write_term(A):- write_q(A).
-simple_write_term(A,Options):- Options==[], !, simple_write_term(A).
-simple_write_term(A,_):- in_pp(bfly),!,print_html_term(A).
-simple_write_term(A,Options):-  without_ec_portray_hook(\+ \+ write_term(A,Options)),!.
+system:simple_write_term(S):- current_output_line_position(Pos), pretty_clauses:pp_hook(simple_write_term, Pos, S),!.
+system:simple_write_term(A):- in_pp(bfly),!,print_html_term(A).
+system:simple_write_term(A):- write_q(A).
+system:simple_write_term(A,Options):- Options==[], !, simple_write_term(A).
+system:simple_write_term(A,_):- in_pp(bfly),!,print_html_term(A).
+system:simple_write_term(A,Options):-  without_ec_portray_hook(\+ \+ write_term(A,Options)),!.
 
+:- fixup_exports.
 %simple_write_term(A,Options):-  write_term(A,[portray_goal(pretty_clauses:pprint_tree)|Options]).
 
 get_portrayal_vars(Vs):- nb_current('$variable_names',Vs)-> true ; Vs=[].
@@ -935,11 +1001,13 @@ system_portray(Tab,Term,Options):- recalc_tab(Tab, NewTab), !, system_portray(Ne
 
 %system_portray(Tab,Term,_Options) :-  ground(Term), Term = [tag(_,N),M], prefix_spaces(Tab),write([N,M]),!.
 %system_portray(Tab,Term,_Options) :-  ground(Term), Term = tag(_,N), prefix_spaces(Tab),write(N),!.
+system_portray(_Tab, S,_Options) :- term_is_ansi(S), !, write_keeping_ansi(S).
 system_portray(Tab,Term,_Options) :- 
   with_no_hrefs(t,(if_defined(rok_linkable(Term),fail),
     prefix_spaces(Tab),write_atom_link(Term))),!.
 
 
+system_portray(Pos, S, Options):-  pretty_clauses:pp_hook(Options, Pos, S),!.
 system_portray(Tab,Term,Options):- 
    Ing = Term,
    once(nb_current('$in_system_portray',P);P=[]),
@@ -984,6 +1052,7 @@ print_tree(Term):- ansi_ansi,!,print_tree_with_final(Term,'.\n').
 print_tree(Term):- ansi_ansi,current_output_line_position(Pos),!,print_tree_with_final(Term,''), maybe_reset_spaces(Pos).
 print_tree(Term):-  print_tree00(Term).
 
+print_tree00(S):- current_output_line_position(Pos), pretty_clauses:pp_hook(print_tree00, Pos, S),!.
 print_tree00(Term):-
  current_output_line_position(Pos),
  ensure_pp((
@@ -1014,6 +1083,7 @@ print_tree_with_final(Term, Final):-
     locally(set_prolog_flag(no_pretty,false),print_tree_with_final(Term, Final, [fullstop(false)])).
 
 
+:-export(print_tree_with_final/3).
 print_tree_with_final(Term, Final, Options):- 
   select(variable_names(Vs),Options,NewOptions),!,
   nb_current('$variable_names',Was),
@@ -1069,6 +1139,8 @@ use_new.
 :- thread_local(bfly_tl:bfly_setting/2).
 %:- retractall(bfly_tl:bfly_setting(_,_)).
 
+:- export(ensure_pp/1).
+:- meta_predicate(ensure_pp(0)).
 ensure_pp(Goal):-  is_pp_set(Where), !, with_pp(Where,Goal).
 ensure_pp(Goal):-  toplevel_pp(Where), !, with_pp(Where,Goal).
 
@@ -1086,6 +1158,7 @@ should_print_mode_html(_).
 with_pp(plain,Goal):- !, with_pp(ansi,locally_tl(print_mode(plain),Goal)).
 with_pp(Mode,Goal):- quietly(with_pp0(Mode,Goal)).
 
+with_pp0(bfly,Goal):- in_pp(swish),!,with_pp0(swish,Goal).
 with_pp0(ansi,Goal):- \+ t_l:print_mode(plain), !, locally_tl(print_mode(plain),with_pp0(ansi,Goal)).
 with_pp0(Mode,Goal):- \+ t_l:print_mode(html), should_print_mode_html(Mode),!, locally_tl(print_mode(html),with_pp0(Mode,Goal)).
 with_pp0(Where,Goal):- \+ is_pp_set(Where), !,
@@ -1106,6 +1179,7 @@ write_bfly_html_0(S):- bfly_html_goal(write(S)).
 
 % actually_bfly(Goal):- flush_output, bfly_html_goal(Goal).
 actually_bfly(Goal):- bfly_html_goal((wots(S,set_pp(swish,Goal)),write_bfly_html_0(S))).
+:- export(actually_bfly/1).
 set_pp(Where,Goal):- 
    \+ in_pp(Where) 
    -> setup_call_cleanup(
@@ -1140,7 +1214,7 @@ with_real_pp(swish,swish,Goal):-wots(SO,in_bfly(t,Goal)),our_pengine_output(SO).
 
 our_pengine_output(SO):- toplevel_pp(swish),!,pengines:pengine_output(SO),!.
 our_pengine_output(SO):- toplevel_pp(http),!,format('<pre>~w</pre>',[SO]).
-our_pengine_output(SO):- toplevel_pp(bfly),!,bfly_html_goal(format('<pre>~w </pre>',[SO])).
+our_pengine_output(SO):- toplevel_pp(bfly),!,bfly_html_goal((sformat(S,'<pre>~w </pre>',[SO]),print_raw_html_page(S))).
 our_pengine_output(SO):- ttyflush,format('our_pengine_output\n{~w}',[SO]),nl.
 
 
@@ -1405,6 +1479,23 @@ print_tree_width(W120):- W120=120.
 maybe_prefix_spaces(V,Tab):- ignore(( \+ as_is(V),prefix_spaces(Tab) )).
 maybe_print_tab_term(Tab,V):- maybe_prefix_spaces(V,Tab), print_tree_no_nl( V ).
 
+write_keeping_ansi(S):- string(S),!, write('"'),write(S),write('"').
+write_keeping_ansi(S):- \+ atom(S),!, write(S).
+write_keeping_ansi(S):- is_color(S), !, real_ansi_format([bold, hfg(S)], '~q',[S]).
+%write_keeping_ansi(S):- write('\''),write(S),write('\'').
+write_keeping_ansi(S):- write(S).
+
+
+term_is_ansi(S):- compound(S),!,fail.
+term_is_ansi(S):- string(S),!,sub_string(S,_,_,_,"\x1B"),!.
+term_is_ansi(S):- \+ atom(S),!,fail.
+term_is_ansi(S):- sub_string(S,_,_,_,"\x1B"),!.
+term_is_ansi(S):- is_color(S).
+
+term_contains_ansi(S):- \+ compound(S),!,term_is_ansi(S).
+term_contains_ansi(S):- arg(_,S,E),term_contains_ansi(E),!.
+:- export(term_contains_ansi/1).
+
 :- thread_local(t_l:printing_dict/0).
 
 is_infix_op(OP):- current_op(_,XFY,OP), (yfx==XFY ; xfx==XFY ; xfy==XFY ).
@@ -1413,10 +1504,13 @@ print_lc_tab_term(LC,Tab,T):- write(LC),print_tab_term(Tab,T).
 
 pt1(FS,TpN,Term):- recalc_tab(TpN, New), TpN\==New, !, pt1(FS,New,Term).
 
+pt1(FS,Tab,S) :- pretty_clauses:pp_hook(FS,Tab,S),!.
+
+pt1(_FS,_Tab,S) :- term_is_ansi(S), !, write_keeping_ansi(S).
+
 pt1(_, Tab,Term) :- 
   with_no_hrefs(t,(if_defined(rok_linkable(Term),fail), !,
   prefix_spaces(Tab), write_atom_link(Term))),!.
-
 
 pt1(_FS,Tab,[H|T]) :- is_codelist([H|T]), !,
    sformat(S, '`~s`', [[H|T]]),
@@ -1699,6 +1793,7 @@ pt_cont_args(Sep1, Tab,Sep, Mid, FS,[A|As]) :- !,
 :- export(print_tab_term/3).
 
 is_arity_lt1(S):- notrace(is_arity_lt10(S)).
+is_arity_lt1(V):- term_contains_ansi(V),!,fail.
 is_arity_lt10(A) :- \+ compound(A),!.
 is_arity_lt10(A) :- compound_name_arity(A,_,0),!.
 is_arity_lt10(A) :- functor(A,'$VAR',_),!.
@@ -1722,6 +1817,7 @@ use_system_portray(A=B):- use_system_portray(A),use_system_portray(B),!.
 as_is(V):-notrace(as_is0(V)).
 
 as_is0(V):- var(V).
+as_is0(V):- term_contains_ansi(V),!,fail.
 as_is0(V) :- is_dict(V), !, fail.
 as_is0(A) :- is_arity_lt1(A), !.
 as_is0(A) :- functor(A,F,_), simple_f(F), !.
@@ -1768,6 +1864,7 @@ simple_f(isa).
 simple_f(has_rel).
 simple_f(HasSpace):- atom_contains(HasSpace,' ').
 
+simple_arg(V):- term_contains_ansi(V),!,fail.
 simple_arg(S):- (nvar(S) ; \+ compound(S)),!.
 %simple_arg(S):- S=[_,A], simple_arg(A), !.
 simple_arg(S):- \+ (arg(_,S,Var), compound(Var), \+ nvar(Var)).
@@ -1916,7 +2013,7 @@ pprint_tree(Term, Options) :- select('variable_names'(Vs),Options,OptionsM),!,
 pprint_tree(Term, Options) :-  saneify_vars(Term,TermO), pprint_tree_1(TermO, Options).
 
 %pprint_tree_1(Term, Options) :- prolog_pretty_print:pprint_tree_2(Term, Options).
-pprint_tree_1(Term, Options) :- prolog_pretty_print:pprint_tree_2(Term, Options).
+pprint_tree_1(Term, Options) :- pprint_tree_2(Term, Options).
 %pprint_tree(Term, Options) :- \+ \+ pprint_tree_2(Term, Options).
 
 pprint_tree_2(Term, Options0) :-
@@ -2974,6 +3071,7 @@ finalize_term(Term, Dict) -->
 %:- fixup_exports.
 :- multifile(user:portray/1).
 :- dynamic(user:portray/1).
+user:portray(S):- term_is_ansi(S), !, write_keeping_ansi(S).
 user:portray(Term):- 
   %fail, 
   notrace(pc_portray(Term)),!.

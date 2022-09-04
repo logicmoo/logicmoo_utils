@@ -30,7 +30,7 @@ This module prevents infinite loops.
 % :- autoload(library(apply),[maplist/2, maplist/3]).
 :- system:use_module(library(lists)).
 :- system:use_module(library(apply)).
-:- user:use_module(library(yall)).
+:- system:use_module(library(yall)).
 :- system:use_module(library(threadutil)).
 :- system:use_module(library(debug)).
 
@@ -345,12 +345,12 @@ lco_goal_expansion(B,A):-
 lco_goal_expansion(A,A).
 
 :- if(current_predicate(fixup_exports/0)).
-%:- fixup_exports.
+:- fixup_exports.
 :- endif.
 
 :- multifile system:goal_expansion/4.
 :- dynamic system:goal_expansion/4.
-system:goal_expansion(LC,Pos,LCO,Pos):- notrace((compound(LC),lco_goal_expansion(LC,LCO),LC\=@=LCO)).
+% system:goal_expansion(LC,Pos,LCO,Pos):- notrace((compound(LC),lco_goal_expansion(LC,LCO),LC\=@=LCO)).
 
 
 end_of_file.

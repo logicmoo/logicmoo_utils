@@ -1,19 +1,31 @@
-:- module(portray_vars, [debug_var/2,maybe_debug_var/2,pretty_numbervars/2,guess_pretty/1,
-  into_symbol_name/2,
-  prologcase_name/2,
-  may_debug_var/2,
-  maybe_debug_var/2,
-  guess_varnames/1,
-  %guess_varnames/2,
-  toProperCamelAtom/2,
-  simpler_textname/2,simpler_textname/3]).
+%:- if((prolog_load_context(source,F),prolog_load_context(file,F))).
 
+:- define_into_module(
+         [debug_var/2,debug_var0/2,maybe_debug_var/2,pretty_numbervars/2,guess_pretty/1,
+          into_symbol_name/2,
+          prologcase_name/2,
+          may_debug_var/2,
+          guess_prettyf/1,
+          guess_pretty/1,
+          pretty1/1,
+          pretty_two/1,
+          pretty_three/1,
+          pretty_final/1,
+          maybe_debug_var/2,
+          guess_varnames/1,
+          %term_varnames/2,
+          guess_varnames/2,
+          name_variable/2, variable_name/2,
+          variable_name_or_ref/2,
+          toProperCamelAtom/2,
+          simpler_textname/2,simpler_textname/3]).
 /** <module> Utility LOGICMOO PORTRAY VARS
 	Automatically names  variables based off how they are used in code.
 - @author Douglas R. Miles
 - @license LGPL 
 */
-:- set_module(class(library)).
+%:- endif.
+%:- set_module(class(library)).
 %:- use_module(util_varnames,[get_var_name/2]).
 
 :- use_module(library(occurs)).
@@ -61,11 +73,16 @@
 */
 
 % debug_var(_A,_Var):-!.
-debug_var(_,_):- current_prolog_flag(no_pretty,true),!.
+:- export(debug_var/2).
+:- export(debug_var0/2).
+
+really_no_pretty:- fail, current_prolog_flag(no_pretty,true).
+
+debug_var(_,_):- really_no_pretty,!.
 debug_var(X,Y):-  mortvar(debug_var0(X,Y)).
 debug_var(Sufix,X,Y):- quietly((flatten([X,Sufix],XS),debug_var(XS,Y))).
 
-maybe_debug_var(_,_):- current_prolog_flag(no_pretty,true),!.
+maybe_debug_var(_,_):- really_no_pretty,!.
 maybe_debug_var(X,Y):- mortvar(may_debug_var(X,Y)).
 
 p_n_atom(Cmpd,UPO):- p_n_atom1(Cmpd,UP),toProperCamelAtom(UP,UPO),!.
@@ -238,7 +255,12 @@ bad_varname(UP):-
 
 % mortvar(G):- must_or_rtrace(G),!.
 
+:- export(mort/1).
+:- export(mortvar/1).
+:- meta_predicate(mort(0)).
+:- meta_predicate(mortvar(0)).
 mort(G):- mortvar(G).
+
 mortvar((G1,G2)):- !, mortvar(G1),mortvar(G2).
 %mortvar(G):- moretrace(catch(w_o_c(error,G),E,(nl,display(mort_error(E)),nl,fail))),!.
 mortvar(G):- catch(G,E,(nl,display(mort_error(E)),nl,throw(E))),!.
@@ -303,25 +325,29 @@ prologcase_name0(String,ProposedName):-
 atom_trim_prefix(Root,Prefix,Result):- atom_concat_w_blobs(Prefix,Result,Root) -> true ; Result=Root.
 atom_trim_suffix(Root,Suffix,Result):- atom_concat_w_blobs(Result,Suffix,Root) -> true ; Result=Root.
 
-pretty_numbervars_g(T,T):- current_prolog_flag(no_pretty,true),!.
-pretty_numbervars_g(Term, TermO):- (ground(Term);current_prolog_flag(no_pretty,true)),!,duplicate_term(Term,TermO).
+pretty_numbervars_g(T,T):- really_no_pretty,!.
+pretty_numbervars_g(Term, TermO):- (ground(Term);really_no_pretty),!,duplicate_term(Term,TermO).
 %pretty_numbervars(Term, TermO):- copy_term(Term,TermO,_),guess_pretty(Term),Term=@=TermO,Term=TermO,!.
 
-
+:- export(pretty_numbervars/2).
 pretty_numbervars(TermIn, TermOut):- pretty_numbervars_ground(TermIn, TermOut),!.
 
+:- export(pretty_numbervars_ground/2).
 pretty_numbervars_ground(TermIn, TermOut):- pretty_numbervars_g(TermIn, TermOut),!.
 pretty_numbervars_ground(TermIn, TermOut):-  % the new 
- quietly((
+ quietly(( %fail,
    copy_term(TermIn,Together,_),
    term_varnames(TermIn,Vs0,_),
    replace_variables(Vs0,TermIn,Term),
    Together=Term,
-   guess_pretty(Term),
+   guess_prettyf(Term),
    term_varnames(Term,Vs,_),   
    copy_term(Term+Vs,TermOut+Vs2, _),
    moretrace(implode_varnames_pred(to_var_dollar, Vs2)))),!.
+pretty_numbervars_ground(TermIn, TermIn):-  set_prolog_flag(no_pretty,true),!.
 
+
+:- export(pretty_numbervars_unground/2).
 pretty_numbervars_unground(TermIn, TermOut):- pretty_numbervars_g(TermIn, TermOut),!.
 pretty_numbervars_unground(TermIn, TermOut):-  % the old
  quietly((
@@ -339,6 +365,7 @@ replace_variables(Vs,Term,TermO):- compound_name_arguments(Term,F,Args),maplist(
  compound_name_arguments(TermO,F,ArgsO).
   
 
+guess_prettyf(O):- mortvar((copy_term(O,C),guess_pretty1(O),O=@=C)).
 
 
 ground_variables_as_atoms(_Pred,[],_Vars):-!.
@@ -372,8 +399,8 @@ vees_to_varname_list([V|Vs],[N=V|NewVs]):-
   once(get_var_name(V,N);gensym('_',N)),
   vees_to_varname_list(Vs,NewVs).
 
-guess_pretty(_):- current_prolog_flag(no_pretty,true),!.
-guess_pretty(O):- mortvar((copy_term(O,C),guess_pretty1(O),O=@=C)).
+guess_pretty(_):- really_no_pretty,!.
+guess_pretty(O):- guess_prettyf(O).
 
 maybe_xfr_varname(CV,V):- get_var_name(CV,Name),may_debug_var(Name,V).
 
@@ -384,13 +411,15 @@ guess_pretty1(O):- mortvar(( ignore(pretty1(O)),ignore(pretty_two(O)),ignore(pre
 
 make_pretty(I,O):- pretty_numbervars(I,O),!.
 make_pretty(I,O):- is_user_output,!,shrink_naut_vars(I,O), pretty1(O),pretty_three(O),pretty_final(O),!.
-make_pretty(I,O):- dumplicate_term(I,O), pretty1(O),pretty_three(O),pretty_final(O),!.
+make_pretty(I,O):- plvn(Vs),duplicate_term(I+Vs,O+Vs), pretty1(O),pretty_three(O),pretty_final(O),!.
 
-:- export(guess_varnames/1).
+plvn(Vs):- nb_current('$variable_names',Vs),!.
+plvn(Vs):- prolog_load_context(variable_names,Vs).
+%:- export(guess_varnames/1).
 
-guess_varnames(I):- guess_pretty1(I),!.
+guess_varnames(I):- guess_pretty1(I).
 
-/*
+
 guess_varnames(I,O):- guess_pretty1(I), guess_var2names(I,O).
 
 
@@ -417,7 +446,7 @@ guess_var2names(Each,H,H ):- H=..[F,V],var(V),
   call(Each,UF1,V),!.
 guess_var2names(Each,H,HH ):- H=..[F|ARGS],!,must_maplist_det(guess_var2names(Each),ARGS,ARGSO),!,HH=..[F|ARGSO].
 guess_var2names(_Each, (G), (G)):- guess_pretty1(G),!.
-*/
+
 
 /*
 :- export(print_clause_plain/1).
@@ -476,7 +505,9 @@ name_one(V,R):- is_dict(V), dict_pairs(V,VV,_), !, name_one(VV,R).
 name_one(R,V):- nonvar(R),var(V),!, name_one_var(R,V).
 name_one(_,_):- fail.
 
+:- if( \+ current_predicate(vnl:attr_unify_hook/2)).
 vnl:attr_unify_hook(_,_).
+:- endif.
 
 :- thread_local(t_l:dont_append_var/0).
 
@@ -674,7 +705,19 @@ ec_timed(EC23):- member(EC23,[holds_at,holds,releasedAt,happens]).
 
 arg_type_decl_name(F,_,_,_):- atomic(F),\+atom(F),!, fail.
 arg_type_decl_name(F,A,N,Use):- clause(user:argname_hook(F,A,N,T),Body),catch(((call(Body),toProperCamelAtom(T,Use))),_,fail).
-arg_type_decl_name(happens,2,2,when).
+arg_type_decl_name(loc_xy,N,N,(y)).
+arg_type_decl_name(loc_xy,2,1,(x)).
+arg_type_decl_name(loc_xy,3,2,(x)).
+
+arg_type_decl_name(vis_hv,N,N,(v)).
+arg_type_decl_name(vis_hv,2,1,(h)).
+arg_type_decl_name(vis_hv,3,2,(h)).
+
+arg_type_decl_name(grid_size,N,N,(v)).
+arg_type_decl_name(grid_size,2,1,(h)).
+arg_type_decl_name(grid_size,3,2,(h)).
+
+arg_type_decl_name((happens),2,2,(when)).
 arg_type_decl_name(EC23,2,2,time_at):- ec_timed(EC23).
 arg_type_decl_name(EC23,3,2,time_from):- ec_timed(EC23).
 arg_type_decl_name(EC23,3,3,time_until):- ec_timed(EC23).
@@ -682,7 +725,7 @@ arg_type_decl_name(EC23,3,3,time_until):- ec_timed(EC23).
 arg_type_decl_name(object,7,1,event).
 arg_type_decl_name(predicate,5,1,event).
 
-arg_type_decl_name(F,A,N,C):- on_x_fail(call_u(argIsa(F, N, C))),A>1.
+arg_type_decl_name(F,A,N,C):- notrace(on_x_fail(call_u(argIsa(F, N, C)))),A>1.
 
 arg_type_decl_name(at,2,2,tloc).
 arg_type_decl_name(satisfy_each1,2,1,ctx).
@@ -730,7 +773,7 @@ pretty_final(H,F,A,P1,ARGS):- atom_codes_w_blobs(F,[_,49|Rest]),atom_codes_w_blo
 pretty_final(H,F,A,P1,ARGS):- atom_codes_w_blobs(F,[T|Rest]),\+ char_type(T, alpha), !,atom_codes_w_blobs(F0,Rest),!,pretty_final(H,F0,A,P1,ARGS).
 pretty_final(_H,'',_A,P1,ARGS):- must_maplist_det(guess_varnames,[P1|ARGS]),!.
 pretty_final(H,F,A,P1,ARGS):- 
-   must_maplist_det(guess_varnames,[P1|ARGS]),
+   maplist(guess_varnames,[P1|ARGS]),
    arg(A,H,R),may_debug_var_weak([F,'_'],R),
    ignore((A>2, may_debug_var_weak([F,'_P_',A,'_v'],P1))),   
    !. 
@@ -913,20 +956,156 @@ portray_pretty_numbervars(Term):-
   moretrace(\+ tracing), % fail,
   \+ (nb_current('$inprint_message', Messages), Messages\==[]),
   \+ ground(Term),
-  \+ current_prolog_flag(no_pretty,true),  
+  \+ really_no_pretty,  
   pretty_numbervars_here(Term,PrettyVarTerm),
   % Term \=@= PrettyVarTerm,
   locally(set_prolog_flag(no_pretty,true),
    print(PrettyVarTerm)),!.
   %prolog_pretty_print:print_term(PrettyVarTerm, [output(current_output)]),!.
 
+
+%%	name_variable(+Var, +Name) is det.
+%
+%	Assign a name to a variable. Succeeds   silently if Var is not a
+%	variable (anymore).
+
+
+%name_variable(Var,_Name) :- nonvar(Var),!.
+%name_variable(Var,Name) :- !, put_attr(Var,vn,Name).
+
+name_variable(Var, Name1) :- get_attr(Var,vn,Name2),
+        combine_names(Name1,Name2,Name),
+	put_attr(Var, vn, Name). % add_var_to_env(Name,Var),!.
+name_variable(Var, Name) :- var(Var), !,
+	put_attr(Var, vn, Name).
+
+name_variable('$VAR'(Var), Name):- Name==Var, !.
+name_variable('$VAR'(Var), Name):- var(Var),Name=Var,!.
+% name_variable('$VAR'(Var), Name) :- trace_or_throw(numbervars_name_variable(Var, Name)),!.
+name_variable(_, _).
+
+:- nodebug(logicmoo(varnames)).
+
+
+variable_name_or_ref(Var, Name) :- get_var_name(Var, Name),!.
+variable_name_or_ref(Var, Name) :- format(atom(Name),'~q',[Var]).
+
+
+%% project_attributes( ?QueryVars, ?ResidualVars) is semidet.
+%
+% Project Attributes.
+%
+vn:project_attributes(QueryVars, ResidualVars):- fail,dmsg(vn:proj_attrs(vn,QueryVars, ResidualVars)),fail.
+
+
+%% attribute_goals(@V)// is det.
+%	copy_term/3, which also determines  the   toplevel  printing  of
+%	residual constraints.
+%  Hook To [dom:attribute_goals/3] For Module Logicmoo_varnames.
+%  Attribute Goals.
+%
+vn:attribute_goals(Var) --> {get_var_name(Var,  Name)},!,[name_variable(Var,  Name)],!.
+
+numbervars_using_vs(T,TT,Vs):- numbervars_using_vs_(Vs,T,TT).
+
+numbervars_using_vs_(Vs,T,TT):- var(T),get_var_name(T,VN,Vs),TT='$VAR'(VN),!.
+numbervars_using_vs_(_Vs,T,TT):- (ground(T); \+ compound(T)),!,TT=T.
+numbervars_using_vs_(Vs,T,TT):- compound_name_arguments(T,F,A),maplist(numbervars_using_vs_(Vs),A,AA),compound_name_arguments(TT,F,AA),!.
+
+get_var_name(T,VN,Vs):- member(N=V,Vs),V==T,!,VN=N.
+get_var_name(T,VN,_Vs):- get_var_name(T,VN),!.
+get_var_name(T,VN,_Vs):- term_to_atom(T,VN).
+
+
+
+
+grab_vn_varnames(Msg,Vs2):-
+  term_attvars(Msg,AttVars),
+  %append(AttVars,Vars,AllVars),
+  sort(AttVars,AllVarS),
+  grab_each_vn_varname(AllVarS,Vs2).
+grab_each_vn_varname([],[]):-!.
+grab_each_vn_varname([AttV|AttVS],Vs2):-
+    grab_each_vn_varname(AttVS,VsMid),!,
+     (get_attr(AttV, vn, Name) -> Vs2 = [Name=AttV|VsMid] ; VsMid=       Vs2),!.
+
+:- export(get_var_name_or_fake/2).
+get_var_name_or_fake(T,VN):- get_var_name(T,VN),!.
+get_var_name_or_fake(T,VN):- term_to_atom(T,VN).
+
+%%	variable_name(+Var, -Name) is semidet.
+%
+%	True if Var has been assigned Name.
+
+variable_name(Var, Name) :- must(var(Var)),(get_attr(Var, vn, Name);var_property(Var,name(Name));get_attr(Var, varnames, Name)),!.
+
+:- export(get_varname_list_local/1).
+get_varname_list_local(Vs):- get_varname_list(Vs).
+% get_var_name0(Var,Name):- attvar(Var),get_varname_list_local(Vs),format(atom(Name),'~W',[Var, [variable_names(Vs)]]).
+
+varname_of(Vs,Var,Name):- compound(Vs), Vs=[NV|VsL],  
+  ((compound(NV) , (NV=(N=V)),atomic(N), V==Var,!,N=Name) ; varname_of(VsL,Var,Name)).
+
+:- export(get_var_name/2).
+get_var_name(V,N):- notrace(get_var_name0(V,N)),!.
+:- export(get_var_name0/2).
+get_var_name0(Var,Name):- nonvar(Name),!,must(get_var_name0(Var, NameO)),!,Name=NameO.
+get_var_name0(Var,Name):- nonvar(Var),!,get_var_name1(Var,Name),!.
+get_var_name0(Var,Name):- var_property(Var,name(Name)),!.
+get_var_name0(Var,Name):- get_attr(Var, vn, Name),!.
+get_var_name0(Var,Name):- nb_current('$variable_names', Vs),varname_of(Vs,Var,Name),!.
+get_var_name0(Var,Name):- get_attr(Var, varnames, Name),!.
+get_var_name0(Var,Name):- nb_current('$old_variable_names', Vs),varname_of(Vs,Var,Name),!.
+get_var_name0(Var,Name):- get_varname_list_local(Vs),varname_of(Vs,Var,Name),!.
+get_var_name0(Var,Name):- sourceable_variables_lwv(Vs),varname_of(Vs,Var,Name),!.
+get_var_name0(Var,Name):- execute_goal_vs(Vs),varname_of(Vs,Var,Name).
+
+:- export(get_var_name1/2).
+get_var_name1(Var,Name):- nonvar(Name),!,must(get_var_name1(Var, NameO)),!,Name=NameO.
+get_var_name1(Var,Name):- var(Var),!,get_var_name0(Var,Name).
+get_var_name1('$VAR'(Name),Name):- atom(Name),!.
+get_var_name1('$VAR'(Int),Name):- integer(Int),format(atom(A),"~w",['$VAR'(Int)]),!,A=Name.
+get_var_name1('$VAR'(Var),Name):- (var(Var)->get_var_name0(Var,Name);Name=Var),!.
+get_var_name1('$VAR'(Att3),Name):- !, get_var_name1(Att3,Name).
+get_var_name1('aVar'(Att3),Name):- !, get_var_name1(Att3,Name).
+get_var_name1('aVar'(Name,Att3),Value):- !, get_var_name1('$VAR'(Name),Value); get_var_name1('aVar'(Att3),Value).
+get_var_name1(att(vn,Name,_),Name):- !.
+get_var_name1(att(_,_,Rest),Name):- Rest\==[],get_var_name1(Rest,Name).
+get_var_name1(Var,Name):- catch(call(call,oo_get_attr(Var, vn, Name)),_,fail),!. % ground(Name),!.
+
+
+term_varnames(Msg,Vs,Unnamed):- 
+  term_attvars(Msg,AttVars),term_variables(Msg,Vars),
+  append(AttVars,Vars,AllVars),
+  sort(AllVars,AllVarsS),
+  grab_each_varname(AllVarsS,Vs,Unnamed).
+term_varnames(_Term,[],_Ug):- !.
+term_varnames(_Term,Vs,_Ug):- %term_variables(Term,Vars),
+  (nb_current('$variable_names',Vs)->true;Vs=[]).
+grab_each_varname([],[],[]):-!.
+grab_each_varname([AttV|AttVS],[Name=AttV|Vs],Unnamed):- 
+   get_var_name(AttV, Name),!,
+   grab_each_varname(AttVS,Vs,Unnamed).
+grab_each_varname([AttV|AttVS],Vs,[AttV|Unnamed]):- 
+   grab_each_varname(AttVS,Vs,Unnamed).
+
+
+
+get_var_by_name(N,V):- nb_current('$variable_names',Vs), member_open(NV, Vs), NV=(N=V).
+get_var_by_name(N,V):- nb_current('$old_variable_names',Vs), member_open(NV, Vs), NV=(N=V).
+
+
+:- fixup_exports.
+
 :- multifile(user:portray/1).
 :- dynamic(user:portray/1).
 
 user:portray(Term):- %JUNIT  \+ tracing,
   % \+ current_prolog_flag(debug, true),
-  % fail,
+  fail,
   portray_pretty_numbervars(Term),!.
 
 
 :- nb_setval('$variable_names',[]).
+
+

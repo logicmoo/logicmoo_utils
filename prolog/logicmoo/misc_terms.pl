@@ -45,6 +45,8 @@ This module includes random predicate utilities that manipulate terms for substi
 */
 :- module(logicmoo_util_terms,
         [
+append_term/3,
+append_term0/3,
 at_start/1,
 remember_at_start/2,
 expire_tabled_list/1,
@@ -61,6 +63,7 @@ each_subterm/2,
 each_subterm/3,
 flatten_dedupe/2,
 flatten_set/2,
+wom_functor/3,
 functor_h/2,
 functor_h/3,
 get_functor/2,
@@ -114,7 +117,7 @@ weak_nd_subst1/5,
 weak_nd_subst2/4,
 wsubst/4,
 append_termlist/3,            
-append_term/3,            
+append_term0/3,            
 apply_term/3,
 atom_concat_safe/3,
 compound_name_args_safe/3,
@@ -401,7 +404,7 @@ pred_juncts_to_list2(_Pred1,Lit,[Lit]).
 %
 % List Converted To Conjuncts.
 %
-list_to_conjuncts(I,O):-list_to_conjuncts((,),I,O).
+list_to_conjuncts(I,O):-list_to_conjuncts((','),I,O).
 
 :- export(list_to_conjuncts/3).
 
@@ -656,13 +659,16 @@ compound_name_args_safe(P,F,A):-
        -> (call(call, ( =.. ),P,[F|A]))
         ;  (apply_term(F,A,P)))),!.
 
-%% append_term( ?T, ?I, ?HEAD) is semidet.
+%% append_term0( ?T, ?I, ?HEAD) is semidet.
 %
 % Append Term.
 %
-append_term(F,I,HEAD):-atom(F),!,HEAD=..[F,I],!.
-append_term(Call,E,CallE):-var(Call),!, must(compound(CallE)),CallE=..ListE,append(List,[E],ListE),Call=..List.
-append_term(Call,E,CallE):-must(compound(Call)), Call=..List, append(List,[E],ListE), CallE=..ListE.
+append_term(M:I,P,M:O):- !, append_term0(I,P,O).
+append_term(I,P,O):- append_term0(I,P,O).
+append_term0(F,I,HEAD):-atom(F),!,HEAD=..[F,I],!.
+append_term0(F,I,HEAD):-atom(F),!,HEAD=..[F,I],!.
+append_term0(Call,E,CallE):-var(Call),!, must(compound(CallE)),CallE=..ListE,append(List,[E],ListE),Call=..List.
+append_term0(Call,E,CallE):-must(compound(Call)), Call=..List, append(List,[E],ListE), CallE=..ListE.
 
 
 apply_term(T,LST,HEAD):- atom(T),!,HEAD=..[T|LST],!.
@@ -758,6 +764,7 @@ pred_subst(_Pred ,P,   P     ).
 :- op(700,xfx,prolog:('univ_safe')).
 
 safe_functor(P,F,A):- compound(P) -> compound_name_arity(P,F,A) ; functor(P,F,A).
+:- export(safe_functor/3).
 
 m_functor(M:P, M:F, A):- !, safe_functor(P, F, A).
 m_functor(P, F, A):- safe_functor(P, F, A).
@@ -780,8 +787,10 @@ wom_functor(MP, F, A):- strip_module(MP,_,P),safe_functor(P, F, A).
 % Subst.
 %
 % subst(A,B,C,D):-  quietly((catchv(quietly(nd_subst(A,B,C,D)),E,(dumpST,dmsg(E:nd_subst(A,B,C,D)),fail)))),!.
-subst(A,B,C,D):-  must(nd_subst(A,B,C,D0)),on_x_debug(D=D0),!.
+subst(A,B,C,D):-  (must(nd_subst(A,B,C,D0))),on_x_debug(D=D0),!.
 subst(A,_B,_C,A).
+
+:- export(subst/4).
 
 subst_each(A,[NV|List],D):-
   (NV=..[_,N,V]->true;NV=..[N,V]),!,
@@ -789,7 +798,7 @@ subst_each(A,[NV|List],D):-
   subst_each(M,List,D).
 subst_each(A,_,A).
 
-
+:- export(subst_each/3).
 
 %= 	 	 
 
@@ -827,7 +836,7 @@ nd_subst1( X, Sk, P, N, P1 ) :- N > 0, univ_term(P , [F|Args]),
 nd_subst2( _,  _, [], [] ).
 nd_subst2( X, Sk, [A|As], [Sk|AS] ) :- X == A, !, nd_subst2( X, Sk, As, AS).
 nd_subst2( X, Sk, [A|As], [A|AS]  ) :- var(A), !, nd_subst2( X, Sk, As, AS).
-nd_subst2( X, Sk, [A|As], [Ap|AS] ) :- nd_subst( A,X,Sk,Ap ),nd_subst2( X, Sk, As, AS).
+nd_subst2( X, Sk, [A|As], [Ap|AS] ) :- nd_subst( A,X,Sk,Ap ),!,nd_subst2( X, Sk, As, AS).
 nd_subst2( _X, _Sk, L, L ).
 
 

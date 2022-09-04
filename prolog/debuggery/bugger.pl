@@ -11,6 +11,7 @@
 % ===================================================================
 */
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_bugger.pl
+%:- if((prolog_load_context(source,F),prolog_load_context(file,F))).
 :- module(bugger,
           [ 
           debug_logicmoo/1,
@@ -45,9 +46,12 @@
             caller_module/1,
             caller_module2/2,
             callsc/1,
+            must_maplist/2,
+            must_maplist/3,
+            must_maplist/4,
 
-          % all_source_file_predicates_are_transparent/0,
-          all_source_file_predicates_are_transparent/1,
+          %all_source_file_predicates_are_transparent_bugger/0,
+          all_source_file_predicates_are_transparent_bugger/1,
 
 
           debugCallWhy/2,
@@ -118,7 +122,7 @@
             logOnFailure/1,
             logOnFailure0/1,
             logOnFailureEach/1,
-            on_f_log_ignore/1,
+            on_f_log_ignore/2,
             logicmoo_bugger_loaded/0,
             meta_interp/2,
             meta_interp_signal/1,
@@ -216,7 +220,24 @@
      op(1150,fx,(baseKB:kb_shared))
 
           ]).
+%:- endif.
+:- multifile '$exported_op'/3. 
+:- dynamic '$exported_op'/3. 
+:- discontiguous '$exported_op'/3. 
+'$exported_op'(_,_,_):- fail.
 
+:- multifile '$autoload'/3. 
+:- discontiguous '$autoload'/3.
+:- dynamic '$autoload'/3.
+'$autoload'(_,_,_):- fail.
+
+%:- system:reexport(library(must_sanity)).
+:- system:reexport(library(logicmoo/redo_locally)).
+:- system:reexport(library(debuggery/bugger)).
+module(_Skip,Exports):- maplist(export,Exports).
+
+:- include(library(must_sanity)).
+:- include(ucatch).
 /** <module> Utility LOGICMOO_DEBUGGERY
 This module supplies support for utilities, like DCG_must and must_trace, that allow for easier debugging.
 
@@ -261,7 +282,7 @@ This module supplies support for utilities, like DCG_must and must_trace, that a
         on_f_debug_ignore(:),
         logOnFailure0(:),
         logOnFailure(:),
-        on_f_log_ignore(:),
+        on_f_log_ignore(+,+),
         meta_interp(:, +),
         must_each(:),
         must_maplist_det(:, ?),
@@ -474,23 +495,23 @@ not_debugging:- \+ ( nb_current('$inprint_message', Messages), Messages\==[] ),
  \+ current_prolog_flag(debug,true).
 
 /*
-%% all_source_file_predicates_are_transparent() is det.
+%% all_source_file_predicates_are_transparent_bugger() is det.
 %
 % All Module Predicates Are Transparent.
 %
-:- module_transparent(all_source_file_predicates_are_transparent/0).
-:- export(all_source_file_predicates_are_transparent/0).
-all_source_file_predicates_are_transparent:-
-  must(prolog_load_context(source,SFile)),all_source_file_predicates_are_transparent(SFile),
-  must(prolog_load_context(file,File)),(SFile==File->true;all_source_file_predicates_are_transparent(File)).
+:- module_transparent(all_source_file_predicates_are_transparent_bugger/0).
+:- export(all_source_file_predicates_are_transparent_bugger/0).
+all_source_file_predicates_are_transparent_bugger:-
+  must(prolog_load_context(source,SFile)),all_source_file_predicates_are_transparent_bugger(SFile),
+  must(prolog_load_context(file,File)),(SFile==File->true;all_source_file_predicates_are_transparent_bugger(File)).
 */
 
 :- system:use_module(library(debug)).
 
-:- module_transparent(all_source_file_predicates_are_transparent/1).
-:- export(all_source_file_predicates_are_transparent/1).
-all_source_file_predicates_are_transparent(File):-
-    debug(logicmoo(loader),'~N~p~n',[all_source_file_predicates_are_transparent(File)]),
+:- module_transparent(all_source_file_predicates_are_transparent_bugger/1).
+:- export(all_source_file_predicates_are_transparent_bugger/1).
+all_source_file_predicates_are_transparent_bugger(File):-
+    debug(logicmoo(loader),'~N~p~n',[all_source_file_predicates_are_transparent_bugger(File)]),
     forall((source_file(ModuleName:P,File),functor(P,F,A)),
       ignore(( 
         ignore(( \+ atom_concat('$',_,F), ModuleName:export(ModuleName:F/A))),
@@ -903,7 +924,7 @@ bad_idea:- current_prolog_flag(bad_idea,true).
 %=  :- mpred_trace_childs(must(:)).
 
 
-:- ensure_loaded(dmsg).
+%:- ensure_loaded(dmsg).
 
 
 %% prolog_call( :Goal) is semidet.
@@ -1162,10 +1183,15 @@ nodebugx(X):-
 
 debugging_logicmoo(Mask):- logicmoo_topic(Mask,Topic),prolog_debug:debugging(Topic, TF, _),!,TF=true.
 
+:- export(debugging_logicmoo_setting/3).
+:- module_transparent(debugging_logicmoo_setting/3).
 debugging_logicmoo_setting(_,true,[user_error]):- tracing.
 :- multifile(prolog_debug:debugging/3).
 :- dynamic(prolog_debug:debugging/3).
-:- asserta((prolog_debug:debugging(X,Y,Z):-debugging_logicmoo_setting(X,Y,Z))).
+:- module_transparent(prolog_debug:debugging/3).
+
+:- asserta((prolog_debug:debugging(X,Y,Z):- current_predicate(debugging_logicmoo_setting/3),
+ predicate_property(bugger:debugging_logicmoo_setting(_,_,_),defined), debugging_logicmoo_setting(X,Y,Z))).
 :- asserta((prolog_debug:debugging(_,False,[]):- current_prolog_flag(nodebugx,true),!,False=false)).
 
 
@@ -2125,7 +2151,7 @@ logOnFailureEach(Goal):-with_each(1,on_f_log_fail,Goal).
 %
 % Whenever Functor Log Ignore.
 %
-on_f_log_ignore(Goal):-ignore(logOnFailure0(on_x_log_throw(Goal))).
+on_f_log_ignore(M,Goal):-ignore(logOnFailure0(on_x_log_throw(M:Goal))).
 
 
 %on_f_debug(Goal):-ctrace,Goal.
@@ -2639,14 +2665,18 @@ cleanup_strings:-garbage_collect_atoms.
 %
 % Loading Module.
 %
+:- module_transparent(loading_module/2).
 loading_module(M,Why):- quietly(loading_module0(M,Why)).
 
+:- module_transparent(loading_module0/2).
+:- export(loading_module0/2).
 loading_module0(M,use_module(U)):- if_defined(parent_goal(_:catch(M:use_module(U),_,_),_)).
 loading_module0(M,ensure_loaded(U)):- if_defined(parent_goal(_:catch(M:ensure_loaded(U),_,_),_)).
 loading_module0(M,consult(F)):- if_defined(parent_goal(_:'$consult_file_2'(F,M,_,_,_),_)).
 loading_module0(M,source_location(F)):- source_location(F,_),source_file_property(F,module(M)).
 loading_module0(M,file(F)):- prolog_load_context(file,F),source_file_property(F,module(M)).
 loading_module0(M,source(F)):- prolog_load_context(source,F),source_file_property(F,module(M)).
+loading_module0(M,strip_module):- strip_module(_,M,_).
 loading_module0(M,prolog_load_context):- prolog_load_context(module,M).
 loading_module0(M,stream_property(F)):- stream_property(_X,file_name(F)),source_file_property(F,module(M)).
 loading_module0(M,source_context_module):- source_context_module(M).
@@ -2697,6 +2727,7 @@ caller_module2(Module,Skipped):- module_stack(Module,_), \+ arg(_,Skipped,Module
 %
 % Module Stack.
 %
+module_stack(M,strip_module):- strip_module(_,M,_).
 module_stack(M,prolog_load_context):- prolog_load_context(module, M).
 module_stack(M,'$current_typein_module'):- '$current_typein_module'(M).
 module_stack(M,of):- predicate_property(M:of(_,_),imported_from(func)).
@@ -3161,7 +3192,7 @@ disabled_this:- asserta((user:prolog_exception_hook(Exception, Exception, Frame,
 :- thread_local(tlbugger:no_buggery_tl/0).
 
 
-:- '$hide'(maybe_leash/1).
+:- '$hide'(rtrace:maybe_leash/1).
 % :- '$hide'('$syspreds':visible/1).
 % :- '$hide'('$syspreds':leash/1).
 % :- '$hide'(visible/1).
@@ -3242,4 +3273,5 @@ logicmoo_bugger_loaded.
 % :- mpred_trace_childs(prolog_ecall_fa/5).
 % :- mpred_trace_childs(with_each/3).
 
+:- fixup_module_exports_now.
 

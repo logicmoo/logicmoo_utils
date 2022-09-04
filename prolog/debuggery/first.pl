@@ -1,4 +1,5 @@
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_first.pl
+%:- if((prolog_load_context(source,F),prolog_load_context(file,F))).
 :- module(first,
           [ pi_to_head_l/2,
             safe_numbervars/1,
@@ -8,12 +9,15 @@
             check_variable_names/2,
             unnumbervars4/4,
             get_varname_list/1,
+            cfunctor/3,
             set_varname_list/1,
             on_xf_cont/1,
             user_ensure_loaded/1,
             user_use_module/1,
+            dupe_term/2,
             alldiscontiguous/0,
             arg_is_transparent/1,
+            maybe_fix_varnumbering/2,
             all_module_predicates_are_transparent/1,
             alldiscontiguous/0,
             arg_is_transparent/1,
@@ -64,11 +68,12 @@
             term_to_string/2,
             unnumbervars/2,
             unnumbervars_and_save/2,
-            qdmsg/1,
+            %qdmsg/1,
             getenv_safe/3,
             var_to_name/3
 
           ]).
+%:- endif.
 
 
 :- set_module(class(library)).
@@ -96,7 +101,7 @@ old_get_predicate_attribute(MA, Name, Val) :-
                        */
 
 :- meta_predicate(totally_hide(:)).
-
+totally_hide(_):-!.
 totally_hide(CM:F/A):- cfunctor(P,F,A),!,
    (predicate_property(CM:P,imported_from(M));M=CM),
    Pred=M:P,!,
@@ -144,17 +149,14 @@ cfunctor(A,B,C):- compound(A)->compound_name_arity(A,B,C);functor(A,B,C).
 
 :- system:import(cnas/3).
 :- system:import(cfunctor/3).
+:- system:export(cfunctor/3).
+%:- system:reexport(library(must_sanity)).
 
 
-% :- abolish(system:nop/1),asserta(system:nop(_)).
 
 getenv_safe(Name,ValueO,Default):-
    (getenv(Name,RV)->Value=RV;Value=Default),
     (number(Default)->( \+ number(Value) -> atom_number(Value,ValueO); Value=ValueO);(Value=ValueO)).
-
-qdmsg(_):- current_prolog_flag(dmsg_level,never),!.
-qdmsg(M):-compound(M),cfunctor(M,F,_),!,debug(logicmoo(F),'~q',[M]).
-qdmsg(M):-debug(logicmoo(M),'QMSG: ~q',[M]).
 
 
 
@@ -511,6 +513,7 @@ add_var_to_list(Name,Var,Vs,NewName,NewVar,NewVs):-
 %
 unnumbervars(X,Y):- must(zotrace(unnumbervars_and_save(X,Y))).
 
+:- export(zotrace/1).
 zotrace(G):- call(G).
 :- module_transparent(zotrace/1).
 %zotrace(G):- notrace(tracing)->notrace(G);call(G).
@@ -1180,4 +1183,3 @@ quiet_all_module_predicates_are_transparent(ModuleName):-
   ignore(((\+ atom_concat('$',_,F),(export(F/A) , current_predicate(system:F/A)->true; system:import(M:F/A))))),
   ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A]))))))))).
 
- 

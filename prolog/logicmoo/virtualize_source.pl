@@ -14,22 +14,28 @@
 
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_structs.pl
 :- module(virtualize_source,
-          [
-%cnas/3,
-nb_current_or_nil/2,
-safe_virtualize/3,
-same_terms/2,          
-decl_wrapped/4,
-sd_goal_expansion/4,
-%skipped_dirs/1,
-swc/0,
-virtualize_code/3,
-virtualize_code_each/4,
-virtualize_code_fa/5,
-virtualize_ereq/2,
-virtualize_source/3,
-vwc/0
-]).
+   [%cnas/3,
+    nb_current_or_nil/2,
+    safe_virtualize/3,          
+    %skipped_dirs/1,
+    check_how_virtualize_file/2,
+    could_safe_virtualize/0,
+    decl_wrapped/4,
+    get_how_virtualize_file/2,
+    same_terms/2,          
+    sd_goal_expansion/4,
+    set_how_virtualize_file/1,
+    set_how_virtualize_file/2,
+    set_how_virtualize_file/3,
+    swc/0,
+    is_file_virtualize_allowed/0,
+    virtualize_code/3,
+    virtualize_code_each/4,
+    virtualize_code_fa/5,
+    virtualize_ereq/2,
+    virtualize_source/3,
+    virtualize_source_file/0,
+    vwc/0]).
 /** <module> Utility LOGICMOO VIRTUALIZE SOURCE
 Source code transformation - Uses Hook Database and Hook Hybrid to rewrite source code to better interact with hybrid database. 
 
@@ -41,12 +47,35 @@ Source code transformation - Uses Hook Database and Hook Hybrid to rewrite sourc
 :- autoload(library(lists),[member/2,append/3]).
 :- autoload(library(occurs),[sub_term/2]).
 
+:- define_into_module(
+   [nb_current_or_nil/2,
+    safe_virtualize/3,          
+    %skipped_dirs/1,
+    check_how_virtualize_file/2,
+    could_safe_virtualize/0,
+    decl_wrapped/4,
+    get_how_virtualize_file/2,
+    same_terms/2,          
+    sd_goal_expansion/4,
+    set_how_virtualize_file/1,
+    set_how_virtualize_file/2,
+    set_how_virtualize_file/3,
+    swc/0,
+    is_file_virtualize_allowed/0,
+    virtualize_code/3,
+    virtualize_code_each/4,
+    virtualize_code_fa/5,
+    virtualize_ereq/2,
+    virtualize_source/3,
+    virtualize_source_file/0,
+    vwc/0]).
+
 :- module_transparent((
 %cnas/3,
 nb_current_or_nil/2,
 safe_virtualize/3,
 same_terms/2,          
-decl_wrapped/4,
+%decl_wrapped/4,
 sd_goal_expansion/4,
 %skipped_dirs/1,
 swc/0,
@@ -99,12 +128,6 @@ get_current_clause(MI):-
 get_current_clause(_).
 
 
-
-:- export(( set_how_virtualize_file/1, could_safe_virtualize/0,
-            virtualize_source_file/0,
-     set_how_virtualize_file/2,
-     check_how_virtualize_file/2,
-     get_how_virtualize_file/2)).
 
 virtualize_alias(pfc,heads).
 virtualize_alias(full,heads).
@@ -208,7 +231,8 @@ ignore_mpreds_in_file:- prolog_load_context(source,F), \+ prolog_load_context(fi
 
 is_file_virtualize_allowed(F):- check_how_virtualize_file(bodies,F).
 
-is_file_virtualize_allowed:- fail, prolog_load_context(source,S), (is_file_virtualize_allowed(S)-> true ; 
+is_file_virtualize_allowed:- fail,
+  prolog_load_context(source,S), (is_file_virtualize_allowed(S)-> true ; 
    (prolog_load_context(file,F),F\==S, is_file_virtualize_allowed(F))).
 
 
@@ -780,7 +804,7 @@ decl_wrapped(M,F,A,How):-
  assert_if_new(rdf_rewrite:arity(F,A)), % TODO puts this in Local Mt
  assert_if_new(baseKB:safe_wrap(M,F,A,How)).
  % once((M==baseKB->true;assert_if_new(baseKB:predicateConventionMt(F,M)))).
-
+:- export(decl_wrapped/4).
 
 %= 	 	 
 

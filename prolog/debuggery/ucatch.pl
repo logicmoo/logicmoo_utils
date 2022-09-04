@@ -12,7 +12,9 @@
 */
 
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_catch.pl
-:- module(ucatch,
+:- module(ucatch,[]).
+
+:- define_into_module(
           [ !/1,
             addLibraryDir/0,
             get_main_error_stream/1,
@@ -36,7 +38,13 @@
             doall_and_fail/1,
             quietly_must/1,
             on_x_f/3,
-            
+
+            keep_going/0,keep_going0/0,
+            must/1,
+            show_current_source_location/0,
+            varnames_load_context/1,
+            current_mfl4/4,
+            current_source_location/2,
             hide_trace/1,
             (block)/2,
             (block3)/3,
@@ -45,6 +53,7 @@
             %bubbled_ex_check/1,
             catchv/3,
             flag_call/1,
+            flag_call0/1,
             current_source_file/1,current_source_location0/2,
             lmcache:current_main_error_stream/1,
             lmcache:thread_current_input/2,
@@ -65,7 +74,7 @@
             ib_multi_transparent33/1,
             if_defined/1,if_defined/2,
             input_key/1,
-            is_ftCompound/1,ftCompound/1, 
+            is_ftCompound/1,%ftCompound/1, 
             not_ftCompound/1,
             is_ftNameArity/2,
             is_ftNonvar/1, % ftNonvar/1,ftVar/1,
@@ -147,6 +156,9 @@
 
           ]).
 
+%:- include(ucatch).
+:- include(first).
+
 
 :- thread_local tlbugger:show_must_go_on/1.
 
@@ -156,7 +168,7 @@ keep_going0:- getenv(keep_going,'-k').
 keep_going0:- non_user_console.
 keep_going0:- tlbugger:show_must_go_on(X)->X==true,!.
 keep_going0:- current_prolog_flag(runtime_must,keep_going),!.
-keep_going0:- current_prolog_flag(debug_on_error,true), !, fail.
+%keep_going0:- current_prolog_flag(debug_on_error,true), !, fail.
 
 
 % % % OFF :- system:use_module((dmsg)).
@@ -496,6 +508,7 @@ set_thread_error_stream(Id,Err):-
 %
 % Thread Current Error Stream.
 %
+:- export(get_thread_current_error/1).
 get_thread_current_error(Err):- t_l:thread_local_error_stream(Err),!.
 get_thread_current_error(Err):- thread_self(ID),lmcache:thread_current_error_stream(ID,Err),!.
 get_thread_current_error(Err):- !,Err=user_error.
@@ -691,16 +704,18 @@ quietly_must(G):- quietly(must(G)).
 %
 % If Defined.
 %
-if_defined(Goal):- if_defined(Goal,((dmsg(warn_undefined(Goal)),!,fail))).
 :- module_transparent(if_defined/1).
+:- export(if_defined/1).
+if_defined(Goal):- if_defined(Goal,((dmsg(warn_undefined(Goal)),!,fail))).
 
 %% if_defined( ?Goal, :GoalElse) is semidet.
 %
 % If Defined Else.
 %
+:- module_transparent(if_defined/2).
+:- export(if_defined/2).
 if_defined((A,B),Else):-!, if_defined(A,Else),if_defined(B,Else).
 if_defined(Goal,Else):- current_predicate(_,Goal)*->Goal;Else.
-:- module_transparent(if_defined/2).
 % if_defined(M:Goal,Else):- !, current_predicate(_,OM:Goal),!,OM:Goal;Else.
 %if_defined(Goal,  Else):- current_predicate(_,OM:Goal)->OM:Goal;Else.
 
@@ -857,7 +872,10 @@ source_ctx(B:L):- must((current_source_file(F:L),file_base_name(F,B))).
 %
 current_source_location(F,L):- notrace((clause(current_source_location0(F,L),Body),notrace(catch(Body,_,fail)))),!.
 
-current_source_location0(F,L):- current_why_data(Data),sub_term(Sub,Data),compound(Sub),Sub=mfl4(_,_,F,L),!.
+sub_why(Sub,Sub).
+sub_why(Sub,Why):- compound(Why),Why=(A,B),(sub_why(Sub,A);sub_why(Sub,B)).
+
+current_source_location0(F,L):- current_why_data(Data),sub_why(Sub,Data), \+ is_list(Data), compound(Sub),Sub=mfl4(_,_,F,L),!.
 current_source_location0(F,why):- t_l:current_why_source(F).
 current_source_location0(F,L):- source_location(F,L),!.
 current_source_location0(F,L):- prolog_load_context(stream,S),line_or_char_count(S,L),stream_property(S,file_name(F)),!.
@@ -931,9 +949,14 @@ with_only_current_why(Why,Prolog):-
 %
 with_current_why(S,Call):-
   current_why(UU),
-  (S=@=UU -> Call;
-  (((UU=(U,_),S=@=U) -> Call; 
-  with_only_current_why((S,UU),Call)))).
+  (s_in_why(S,UU) -> Call;  with_only_current_why((S,UU),Call)).
+
+s_in_why(S,UU):- S=@=UU,!.
+s_in_why(_,UU):- \+ compound(UU),!,fail.
+s_in_why(S,(U1,U2)):- !, (s_in_why(S,U1);s_in_why(S,U2)).
+s_in_why(S,[U1|U2]):- !, (s_in_why(S,U1);s_in_why(S,U2)).
+s_in_why(S,UU):- sub_goal(U,UU),S=@=U,!.
+sub_goal(U,UU):- sub_term(U,UU),nonvar(U), U\==UU.
 
 :- thread_initialization(nb_setval('$current_why',[])).
 
@@ -951,6 +974,7 @@ source_module(M):- \+ prolog_load_context(file,_),!, '$current_typein_module'(M)
 source_module(M):- nonvar(M),!,source_module(M0),!,(M0=M).
 source_module(M):- '$current_source_module'(M),!.
 source_module(M):- '$set_source_module'(M,M),!.
+source_module(M):- strip_module(_,M,_).
 source_module(M):- loading_module(M),!.
 
 :- thread_local(t_l:last_source_file/1).
@@ -1107,6 +1131,7 @@ is_ftCompound(Goal):-compound(Goal),\+ is_ftVar(Goal).
 not_ftCompound(A):- \+ is_ftCompound(A).
 
 :- export(is_ftVar/1).
+:- export(is_ftVar0/1).
 
 %% is_ftVar( :TermV) is semidet.
 %
@@ -1120,7 +1145,7 @@ is_ftVar0('aVar'(_,_)).
 
 
 % quotedDefnIff
-
+/*
 :- dynamic(baseKB:ftVar/1).
 baseKB:ftVar(X):- ucatch:is_ftVar(X).
 :- export(baseKB:ftVar/1).
@@ -1136,7 +1161,7 @@ baseKB:ftCompound(X):- ucatch:is_ftCompound(X).
 baseKB:ftNonvar(X):- ucatch:is_ftNonvar(X).
 :- export(baseKB:ftNonvar/1).
 :- system:import(baseKB:ftNonvar/1).
-
+*/
 %=
 
 %% is_ftNonvar( ?V) is semidet.
@@ -1461,6 +1486,9 @@ dbgsubst0(A,_B,_C,A).
 nd_dbgsubst(  Var, VarS,SUB,SUB ) :- Var==VarS,!.
 nd_dbgsubst(  P, Goal,Sk, P1 ) :- functor_safe(P,_,N),nd_dbgsubst1( Goal, Sk, P, N, P1 ).
 
+univ_safe_2(A,B):- compound(A),compound_name_arity(A,F,0),!,F=..B.
+univ_safe_2(A,B):- A=..B.
+
 
 %=
 
@@ -1559,6 +1587,7 @@ for obvious reasons.
 %
 %  Trace or throw.
 %
+:- export(trace_or_throw/1).
 trace_or_throw(E):- hide_non_user_console,quietly((thread_self(Self),wdmsg(thread_trace_or_throw(Self+E)),!,throw(abort),
                     thread_exit(trace_or_throw(E)))).
 
@@ -1688,7 +1717,7 @@ flag_call0(FlagHowValue):- univ_safe_2(FlagHowValue,[How,Flag,Value]),
 :- export(skipWrapper/0).
 
 % skipWrapper:-!.
-skipWrapper:- zotrace((ucatch:skipWrapper0)).
+skipWrapper:- zotrace((bugger:skipWrapper0)).
 % skipWrapper:- tracing,!.
 
 skipWrapper0:- current_prolog_flag(bugger,false),!.
@@ -1726,8 +1755,7 @@ one_must(MCall,OnFail):-  call(MCall) *->  true ; call(OnFail).
 %
 
 %must_det_u(Goal):- !,maybe_notrace(Goal),!.
-must_det_u(Goal):- must(Goal),!.
-must_det_u(Goal):- Goal->true;(ignore(rtrace(Goal)),break).
+must_det_u(Goal):- (quietly(Goal)->!;(ignore(rtrace(Goal)),break)).
 
 
 %=
@@ -1757,6 +1785,7 @@ one_must_det(_Call,OnFail):-OnFail,!.
 %
 % Must Be Successfull Deterministic (list Version).
 %
+:- export(must_det_l/1).
 must_det_l(Goal):- call_each_det(must_det_u,Goal).
 
 must_det_l_pred(Pred,Rest):- tlbugger:skip_bugger,!,call(Pred,Rest).
@@ -2000,10 +2029,15 @@ system:goal_expansion(I,O):- fail, compound(I),functor(I,F,A),inlinedPred(F/A),
 file_line(F,What,File,L):- (debugging(F)->wdmsg(file_line(F,What,File,L));true).
 
 
-:- ignore((source_location(S,_),prolog_load_context(module,M),module_property(M,class(library)),
+:- ignore((source_location(S,_1),prolog_load_context(module,M),module_property(M,class(library)),
  forall(source_file(M:H,S),
  ignore((functor(H,F,A),
   ignore(((\+ atom_concat('$',_,F),(export(F/A) , current_predicate(system:F/A)->true; system:import(M:F/A))))),
   ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A]))))))))).
 
 % :- set_prolog_flag(compile_meta_arguments,true).
+
+:- include(dumpst).
+:- include(dmsg).
+:- fixup_exports.
+

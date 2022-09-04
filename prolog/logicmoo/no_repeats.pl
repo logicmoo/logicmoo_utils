@@ -22,10 +22,11 @@
             no_repeats_save/2,
             no_repeats_save/4,
             no_repeats_u/2,
-            subtract_eq/3,
+            
             succeeds_n_times/2,
             nr_test/2,
             */
+            subtract_eq/3,
             no_repeats_var/1
 %            loop_check_nr/1
           ]).
@@ -61,7 +62,7 @@
       
 :- set_module(class(library)).
 
-:- prolog_load_context(directory,Dir),add_file_search_path_safe(library,Dir).
+%:- prolog_load_context(directory,Dir),add_file_search_path_safe(library,Dir).
 % % % OFF :- system:use_module(library(logicmoo/misc_terms)).
 
 %% loop_check_nr( ?CL) is semidet.
@@ -237,7 +238,7 @@ no_repeats_old(Vs,Call):- CONS = [_], (Call),
 no_repeats_cmp(_,Vs,Call):- ground(Vs),!,Call,!.
 no_repeats_cmp(Cmp,Vs,Call):- CONS = [zzzZZZZzzzzZZZ], (Call), 
    quietly(( \+ memberchk_cmp(Cmp,Vs,CONS), copy_term(Vs,CVs), CONS=[_|T], nb_setarg(2, CONS, [CVs|T]))).
-
+:- export(no_repeats_cmp/3).
 memberchk_cmp(Cmp,Vs,CONS):-
    member(XY,CONS),call(Cmp,Vs,XY),!.
 
