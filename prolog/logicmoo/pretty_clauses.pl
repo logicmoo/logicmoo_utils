@@ -1928,6 +1928,10 @@ merge_canonical_defaults(O,[],O):-!.
 
 :- system:use_module(library(logicmoo_startup)).
 
+
+:- fixup_module_exports_into(baseKB).
+:- fixup_module_exports_into(system).
+
 % user:portray(Term):- in_pp(swish), print_tree00(Term).
 
 % user:portray(Term):- pc_portray(Term),!.
