@@ -651,7 +651,7 @@ show_http_session:- get_http_session(S),listing(http_session:session_data(S,_NV)
 %
 % Make Session.
 %
-make_session(S):- catch((is_cgi_stream->http_session:http_open_session(S,[renew(false)]);true),_,true).
+make_session(S):- ignore((catch((is_cgi_stream->http_session:http_open_session(S,[renew(false)]);true),_,true))).
 
 
 
@@ -665,7 +665,7 @@ get_http_session(S):- catch(find_http_session(S),_,fail),nonvar(S),!, make_sessi
 get_http_session(S):- catch((pengine:pengine_user(S)),_,fail),!.
 get_http_session(ID):- thread_self(ID).
 
-on_xx_log_fail(G):- catch(G,E,(nop(dmsg(E:G)),fail)).
+on_xx_log_fail(G):- notrace((catch(G,E,((dmsg(E:G)),fail)))).
 
 :- export(find_http_session/1).
 :- system:import(find_http_session/1).
@@ -676,7 +676,7 @@ on_xx_log_fail(G):- catch(G,E,(nop(dmsg(E:G)),fail)).
 find_http_session(S):- on_xx_log_fail((get_http_current_request(R),member(session(S),R))),nonvar(S),!.
 find_http_session(S):- on_xx_log_fail((http_session:http_in_session(S))),nonvar(S),!.
 find_http_session(S):- on_xx_log_fail((get_http_current_request(R),member(cookie(Cookies),R),member(swipl_session=S,Cookies))),nonvar(S),!.
-find_http_session(S):- on_xx_log_fail((http_session:http_open_session(S,[renew(false)]))),nonvar(S),!.
+find_http_session(S):- on_xx_log_fail(make_session(S)),nonvar(S),!.
 
 
 
@@ -686,7 +686,7 @@ find_http_session(S):- on_xx_log_fail((http_session:http_open_session(S,[renew(f
 % If Is A Cgi Stream.
 %
 is_cgi_stream:-current_output(X),http_stream:is_cgi_stream(X).
-
+%is_cgi_stream:-!.
 
 
 
@@ -803,10 +803,10 @@ clear_http_session:- ignore((get_http_session(S),retractall(http_session:session
 % Save Request In Session.
 %
 save_request_in_session(Request):- 
-  save_in_session(t_request,t(Request)),
-        (member(method(post), Request) -> (http_read_data(Request, Data, []),save_in_session(Data));true),
-     (has_search_filter(Request) -> clear_search_filter_in_session ; true),
-        save_in_session(Request).
+  on_xf_ignore_flush(save_in_session(t_request,t(Request))),
+        on_xf_ignore_flush(member(method(post), Request) -> (http_read_data(Request, Data, []),save_in_session(Data));true),
+     on_xf_ignore_flush(has_search_filter(Request) -> clear_search_filter_in_session ; true),
+        on_xf_ignore_flush(save_in_session(Request)).
         % http_session:http_session_id(F),forall(http_session:session_data(F,D),wdmsg(D)).
 
 nop_format(G):- nop(format(G)).
@@ -837,110 +837,35 @@ write_expandable(Showing,Goal):- %ensure_colapable_styles,
 % <link rel="SHORTCUT ICON" href="/swish/lm_xref/pixmapx/mini-logo.gif"><meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
 write_begin_html(Title):-
   inline_html_format([print_xlisting_head(Title),
-   '<body id="body" class="yui-skin-sam cliopatria">',call(ensure_swish_app_html),'<div style="display: none;">',  
+   `<body id="body" class="yui-skin-sam cliopatria">`,call(ensure_swish_app_html),`<div style="display: none;">`,  
   (get_param_req(lean,'1') -> write("</div>") ; (write("</div>"), do_cp_menu, format('<br/>'))),  
   % ensure_colapsable_script,
-   call(ensure_colapsable_styles), '']).
+   call(ensure_colapsable_styles)]).
 
 print_xlisting_head(Title):-
- inline_html_format(['<html><head><title>LOGICMOO XListing - ',write(Title),'</title>',
+ inline_html_format([`<html><head><title>LOGICMOO XListing - `,write(Title),`</title>`,
  `<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="description" content="Prolog XListing for Logicmoo Code">
 	<meta name="author" content="logicmoo@gmail.com">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-	<link rel="stylesheet" type="text/css" href="https://logicmoo.org/swish/css/menu.css">
-	<link rel="stylesheet" type="text/css" href="https://logicmoo.org/swish/css/cliopatria.css">
+	<link rel="stylesheet" type="text/css" href="/swish/css/menu.css">
+	<link rel="stylesheet" type="text/css" href="/swish/css/cliopatria.css">
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript">window.name="lm_xref"; </script>
-	<script data-main="https://logicmoo.org/swish/js/swish" src="https://logicmoo.org/node_modules/requirejs/require.js"></script></style>	
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="swish" src="https://logicmoo.org/swish/js/swish.js"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="jquery" src="https://logicmoo.org/swish/js/../node_modules/jquery/dist/jquery.min.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="config" src="https://logicmoo.org/swish/js/config.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="jswish" src="https://logicmoo.org/swish/js/jswish.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="plugin" src="https://logicmoo.org/swish/js/plugin.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="utils" src="https://logicmoo.org/swish/js/utils.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="preferences" src="https://logicmoo.org/swish/js/preferences.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="history" src="https://logicmoo.org/swish/js/history.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="modal" src="https://logicmoo.org/swish/js/modal.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="chat" src="https://logicmoo.org/swish/js/chat.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="pane" src="https://logicmoo.org/swish/js/pane.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="tabbed" src="https://logicmoo.org/swish/js/tabbed.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="notebook" src="https://logicmoo.org/swish/js/notebook.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="navbar" src="https://logicmoo.org/swish/js/navbar.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="search" src="https://logicmoo.org/swish/js/search.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="editor" src="https://logicmoo.org/swish/js/editor.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="query" src="https://logicmoo.org/swish/js/query.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="runner" src="https://logicmoo.org/swish/js/runner.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="term" src="https://logicmoo.org/swish/js/term.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="login" src="https://logicmoo.org/swish/js/login.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-require+module="chatroom" src="https://logicmoo.org/swish/js/chatroom.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="version" src="https://logicmoo.org/swish/js/version.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="d3" src="https://logicmoo.org/swish/js/../node_modules/d3/d3.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="c3" src="https://logicmoo.org/swish/js/../node_modules/c3/c3.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="svg-pan-zoom" src="https://logicmoo.org/swish/js/../node_modules/svg-pan-zoom/dist/svg-pan-zoom.min.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="form" src="https://logicmoo.org/swish/js/form.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="links" src="https://logicmoo.org/swish/js/links.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="svgavatar" src="https://logicmoo.org/swish/js/svgavatar.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="chatbell" src="https://logicmoo.org/swish/js/chatbell.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="sourcelist" src="https://logicmoo.org/swish/js/sourcelist.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="prolog" src="https://logicmoo.org/swish/js/prolog.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/lib/codemirror" src="https://logicmoo.org/swish/js/../node_modules/codemirror/lib/codemirror.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="storage" src="https://logicmoo.org/swish/js/storage.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="sha1" src="https://logicmoo.org/swish/js/../node_modules/js-sha1/src/sha1.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="printThis" src="https://logicmoo.org/swish/js/../node_modules/printthis/printThis.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/mode/prolog/prolog-template-hint" src="https://logicmoo.org/swish/js/codemirror/mode/prolog/prolog-template-hint.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/mode/prolog/prolog" src="https://logicmoo.org/swish/js/codemirror/mode/prolog/prolog.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/mode/prolog/prolog_keys" src="https://logicmoo.org/swish/js/codemirror/mode/prolog/prolog_keys.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/mode/prolog/prolog_query" src="https://logicmoo.org/swish/js/codemirror/mode/prolog/prolog_query.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/mode/prolog/prolog_server" src="https://logicmoo.org/swish/js/codemirror/mode/prolog/prolog_server.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/mode/markdown/markdown" src="https://logicmoo.org/swish/js/../node_modules/codemirror/mode/markdown/markdown.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/edit/matchbrackets" src="https://logicmoo.org/swish/js/../node_modules/codemirror/addon/edit/matchbrackets.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/comment/continuecomment" src="https://logicmoo.org/swish/js/../node_modules/codemirror/addon/comment/continuecomment.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/comment/comment" src="https://logicmoo.org/swish/js/../node_modules/codemirror/addon/comment/comment.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/hint/show-hint" src="https://logicmoo.org/swish/js/../node_modules/codemirror/addon/hint/show-hint.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/hint/anyword-hint" src="https://logicmoo.org/swish/js/../node_modules/codemirror/addon/hint/anyword-hint.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/display/placeholder" src="https://logicmoo.org/swish/js/../node_modules/codemirror/addon/display/placeholder.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/runmode/runmode" src="https://logicmoo.org/swish/js/../node_modules/codemirror/addon/runmode/runmode.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/search/search" src="https://logicmoo.org/swish/js/../node_modules/codemirror/addon/search/search.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/search/searchcursor" src="https://logicmoo.org/swish/js/../node_modules/codemirror/addon/search/searchcursor.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/search/jump-to-line" src="https://logicmoo.org/swish/js/../node_modules/codemirror/addon/search/jump-to-line.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/dialog/dialog" src="https://logicmoo.org/swish/js/../node_modules/codemirror/addon/dialog/dialog.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/hover/text-hover" src="https://logicmoo.org/swish/js/codemirror/addon/hover/text-hover.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/hover/prolog-hover" src="https://logicmoo.org/swish/js/codemirror/addon/hover/prolog-hover.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/hint/templates-hint" src="https://logicmoo.org/swish/js/codemirror/addon/hint/templates-hint.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/addon/hint/show-context-info" src="https://logicmoo.org/swish/js/codemirror/addon/hint/show-context-info.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/keymap/emacs" src="https://logicmoo.org/swish/js/../node_modules/codemirror/keymap/emacs.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="answer" src="https://logicmoo.org/swish/js/answer.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="sparkline" src="https://logicmoo.org/swish/js/../node_modules/sparkline/dist/jquery.sparkline.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="download" src="https://logicmoo.org/swish/js/download.js?ts=1662721918040"></script>
+	<script data-main="/swish/js/swish" src="https://logicmoo.org/node_modules/requirejs/require.js"></script>
 	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
-	<link rel="stylesheet" type="text/css" href="https://logicmoo.org/swish/css/menu.css">
-	<link rel="stylesheet" type="text/css" href="https://logicmoo.org/swish/css/cliopatria.css">
-	<link rel="stylesheet" type="text/css" href="https://logicmoo.org/www/yui/2.7.0/build/autocomplete/assets/skins/sam/autocomplete.css">
 	<script type="text/javascript" src="https://logicmoo.org/www/yui/2.7.0/build/utilities/utilities.js"></script>
 	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/icon?family=Material+Icons"><script type="text/javascript" src="https://logicmoo.org/swish/lm_xref/pixmapx/popupmenu/scripts/Popup-plugin.js"></script>
-	<link rel="stylesheet" type="text/css" href="https://logicmoo.org/swish/lm_xref/pixmapx/popupmenu/styles/Popup-plugin.css"><script type="text/javascript" src="https://logicmoo.org/swish/lm_xref/pixmapx/selected/js/social.selection.js"></script>
-	<link rel="stylesheet" type="text/css" href="https://logicmoo.org/swish/lm_xref/pixmapx/selected/css/social.selection.css">
-	<script type="text/javascript" src="https://logicmoo.org/swish/js/cliopatria.js"></script>
-	<link rel="stylesheet" type="text/css" href="https://logicmoo.org/swish/css/butterfly_term.css">
-	<link rel="stylesheet" type="text/css" href="https://logicmoo.org/swish/css/term.css">
-	<script type="text/javascript" src="https://logicmoo.org/ef/files/ws.mount/shrdlu/eval_socket.js"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="gitty" src="https://logicmoo.org/swish/js/gitty.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="diff" src="https://logicmoo.org/swish/js/diff.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/mode/prolog/prolog-ctype" src="https://logicmoo.org/swish/js/codemirror/mode/prolog/prolog-ctype.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/mode/xml/xml" src="https://logicmoo.org/swish/js/../node_modules/codemirror/mode/xml/xml.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="cm/mode/meta" src="https://logicmoo.org/swish/js/../node_modules/codemirror/mode/meta.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="difflib" src="https://logicmoo.org/swish/js/difflib.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="diffview" src="https://logicmoo.org/swish/js/diffview.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="splitter" src="https://logicmoo.org/swish/js/../node_modules/jquery.splitter/js/jquery.splitter-0.15.0.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="bootstrap" src="https://logicmoo.org/swish/js/../node_modules/bootstrap/dist/js/bootstrap.min.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="laconic" src="https://logicmoo.org/swish/js/../node_modules/laconic/laconic.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="bloodhound" src="https://logicmoo.org/swish/js/../node_modules/typeahead.js/dist/bloodhound.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="typeahead" src="https://logicmoo.org/swish/js/../node_modules/typeahead.js/dist/typeahead.jquery.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="tagmanager" src="https://logicmoo.org/swish/js/../node_modules/tagmanager/tagmanager.js?ts=1662721918040"></script>
-	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="/pengine/pengines.js" src="/pengine/pengines.js?ts=1662721918040"></script><head>`]).
+	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <script type="text/javascript" src="/swish/lm_xref/pixmapx/popupmenu/scripts/Popup-plugin.js"></script>
+	<link rel="stylesheet" type="text/css" href="/swish/lm_xref/pixmapx/popupmenu/styles/Popup-plugin.css">
+  <script type="text/javascript" src="/swish/lm_xref/pixmapx/selected/js/social.selection.js"></script>
+	<link rel="stylesheet" type="text/css" href="/swish/lm_xref/pixmapx/selected/css/social.selection.css">
+	<script type="text/javascript" src="/swish/js/cliopatria.js"></script>
+	<link rel="stylesheet" type="text/css" href="/swish/css/butterfly_term.css">
+	<link rel="stylesheet" type="text/css" href="/swish/css/term.css">
+	</head>`]).
 
 
 do_cp_menu:-
@@ -949,7 +874,7 @@ do_cp_menu:-
 offer_testcases :- forall(no_repeats(X,xlisting_whook:offer_testcase(X)),write_cmd_link(X)).
 
 write_cmd_link(menu(Info,Goal)):- nonvar(Info),!, write_cmd_link(Info,Goal).
-write_cmd_link(Goal):- sformat(S,'~p',['?-'(Goal)]),write_cmd_link(S,Goal).
+write_cmd_link(Goal):- sformat(S,'~q',['?-'(Goal)]),write_cmd_link(S,Goal).
 
 write_cmd_link(Info,Goal):- nonvar(Goal),with_output_to(string(S),writeq(Goal)),
   www_form_encode(S,A), format('<a href="?cmd=~w" target="_self">~w</a>\n',[A,Info]).
@@ -987,10 +912,11 @@ handler_logicmoo_cyclone_call(Request):-
   make_here,
   with_no_x_http(handler_logicmoo_cyclone(Request)).
 
-on_xf_ignore_flush(G):- flush_output_safe,on_xf_ignore(must_det_ll(G)),flush_output_safe.
+on_xf_ignore_flush(G):- flush_output_safe,notrace(ignore(catch(G,_,true))),flush_output_safe.
 
 system:xnotrace(G):- call(G).
 
+%handler_logicmoo_cyclone(Request):- !, arcproc_left(Request),!.
 handler_logicmoo_cyclone(Request):- 
   no_xdbg_flags,
   html_write:html_current_option(content_type(D)),format('Content-type: ~w~n~n', [D]),
@@ -999,19 +925,22 @@ handler_logicmoo_cyclone(Request):-
 
 handler_logicmoo_cyclone000(Request):-
   intern_request_data(Request),
-  with_http(handler_logicmoo_cyclone111).
+  handler_logicmoo_cyclone111.
+
+mUST_CALL(G):- call(G).
+%mUST_CALL(G):- mUST_det_ll(G).
 
 intern_request_data(Request):-
-  maplist(on_xf_ignore_flush,[
+  mUST_CALL((
   ignore(find_http_session(_)), 
   set_prolog_flag(retry_undefined, none),
   current_input(In),current_output(Out),
-  (stream_property(Err,file_no(2));current_error_stream(Err)),
+  once(stream_property(Err,file_no(2));current_error_stream(Err)),
   thread_self(ID),!,
   asserta(lmcache:current_ioet(In,Out,Err,ID)),
-  save_request_in_session(Request)]).
+  save_request_in_session(Request))),!.
 
-handler_logicmoo_cyclone111:- current_predicate(handler_logicmoo_arc/0),!,with_http(handler_logicmoo_arc),write_end_html.
+handler_logicmoo_cyclone111:- current_predicate(handler_logicmoo_arc/0),!,with_http(handler_logicmoo_arc).
 handler_logicmoo_cyclone111:- 
  get_webproc(WebProc),
  ignore(WebProc=ls),
@@ -1059,7 +988,7 @@ write_end_html:- flush_output_safe,
 :- dynamic(cp_menu:menu_item/2).
 :- retractall(cp_menu:menu_item(_, 'XListing Web')).
 %:- asserta(cp_menu:menu_item(500=swish/swish, 'Swish')).
-:- asserta(cp_menu:menu_item('https://logicmoo.org/swish/lm_xref/',	'XListing')).
+:- asserta(cp_menu:menu_item('/swish/lm_xref/',	'XListing')).
 %:- asserta(cp_menu:menu_item(700=places/swish/lm_xref, 'XListing Web')).
 
 /*
@@ -1187,7 +1116,7 @@ else
 %
 % Show Pcall Footer.
 %
-show_pcall_footer:- format('<hr><a href="https://logicmoo.org/swish/lm_xref/">LogicMOO/PrologMUD</a>',[]),!.
+show_pcall_footer:- format('<hr><a href="/swish/lm_xref/">LogicMOO/PrologMUD</a>',[]),!.
 
 
 
@@ -1198,6 +1127,16 @@ show_pcall_footer:- format('<hr><a href="https://logicmoo.org/swish/lm_xref/">Lo
 % ===================================================
 % Pretty Print Formula
 % ===================================================
+
+in_webui:- (in_pp(html);in_pp(bfly)),!.
+
+:- dynamic(pretty_clauses:pp_hook/3).
+:- multifile(pretty_clauses:pp_hook/3).
+pretty_clauses:pp_hook(_Options, Pos, Term):- % in_webui,
+  if_defined(rok_linkable(Term),fail),
+  with_no_hrefs(t,
+   (nop(prefix_spaces(Pos)),
+    write_atom_link(Term))),!.
 
 
 %% write_atom_link( ?ARG1) is det.
@@ -1234,8 +1173,6 @@ write_atom_link(W,_,N):- nb_current('$no_hrefs',t), !, format(W,'<a>~q</a>',[N])
 write_atom_link(W,A,N):-  
  catch((into_attribute_q(A,TextBoxObj),
    format(W,'<a href="?fa=~w">~q</a>',[TextBoxObj,N])),E,(dsmg(E),write_plain_atom(W,N))).
-
-
 
 
 %% write_plain_atom( :TermARG1, ?ARG2) is det.
@@ -1507,7 +1444,7 @@ write_oout(Term, Style, Prio, Ci, Co) :-
 	write_oout_cmpd(N, F, Term, Style, Prio, Ci, Co).
 
 
-local_print_tree(Term):- max_depth_goal(0,'$rok_print_tree',with_output_to(string(S), must_or_rtrace(print(Term)))), !, write(S).
+local_print_tree(Term):- max_depth_goal(0,'$rok_print_tree',with_output_to(string(S), mUST_CALL(print(Term)))), !, write(S).
 
 %% write_oout( ?ARG1, ?ARG2, ?ARG3, ?ARG4, ?ARG5, ?ARG6, ?ARG7) is det.
 %
@@ -2172,18 +2109,22 @@ output_html(HTML):- html_write:phrase(html(HTML), Tokens,[]),!,send_tokens(Token
 
 inline_html_format(G):- must_run_html(ilhf(G)).
 
-ilhf(X):- var(X), !, writeq(X).
+ilhf(X):- var(X), !, writeq(var_ilhf(X)).
 ilhf([]):-!.
 ilhf([H|T]):- is_codelist([H|T]),!,format('~s',[[H|T]]),!.
 ilhf([H|T]):- is_charlist([H|T]),!,format('~s',[[H|T]]),!.
+ilhf(X):- string(X),!,format('~s',[X]),!.
+ilhf(X):- atom(X),atom_contains(X,'<'),!,format('~w',[X]),!.
 ilhf([H|T]):- !, setup_call_cleanup(flush_output_safe,ilhf(H),ilhf(T)).
 ilhf((H,T)):- !, setup_call_cleanup(flush_output_safe,ilhf(H),ilhf(T)).
-ilhf(X):- \+ compound(X), !, write(X), flush_output_safe.
 ilhf(w(X)):-!, write(X), flush_output_safe.
-ilhf(h(X)):-!, write(X), flush_output_safe.
-ilhf(h(X)):-!, write_bfly_html(X), flush_output_safe.
+ilhf(h(X)):-!, with_http(ilhf(X)), flush_output_safe.
+%ilhf(h(X)):-!, write_bfly_html(X), flush_output_safe.
 ilhf(q(X)):-!, into_attribute(X,Y),write(Y), flush_output_safe.
-ilhf(X):- once(mUST_det_ll(X)).
+ilhf(call(X)):- !, ignore(mUST_CALL(X)),flush_output_safe.
+ilhf(X):- \+ callable(X), !, write(X), flush_output_safe.
+ilhf(X):- atom(X), \+ current_predicate(_,X), !, catch(format(X),_,write(X)), flush_output_safe.
+ilhf(X):- ( current_predicate(_,X)->ignore(mUST_CALL(X));print_tree(X)),flush_output_safe.
 
 
 
@@ -2279,7 +2220,7 @@ slow_iframe(Height,Goal):- url_encode(Goal,GoalE),
    
 
 handler_logicmoo_slowcode(Request):- 
- must_or_rtrace(save_request_in_session(Request)),!,
+ mUST_CALL(save_request_in_session(Request)),!,
   format('Content-type: text/html~n~n'),
   must_run_html(handler_logicmoo_slowcode_m(Request)).
 
@@ -2855,7 +2796,7 @@ must_run0((G1,G2)):- !, call_cleanup(must_run0(G1),must_run0(G2)),!.
 
 %must_run0(Goal):- ignore(catch(no_undefined_preds(Goal),_,true)),!.
 must_run0(Goal):- flush_output_safe, 
-  (catch(must_or_rtrace(no_undefined_preds(Goal)),E,(wdmsg(E),www_dumpST,wdmsg(E=Goal),fail)) -> true ; 
+  (catch(mUST_CALL(no_undefined_preds(mUST_CALL(Goal))),E,(wdmsg(E),www_dumpST,wdmsg(E=Goal),fail)) -> true ; 
     wdmsg(nop(assertion_failed(fail, Goal)))),
   flush_output_safe.
 
@@ -2898,9 +2839,6 @@ with_search_filters0(C):-
     locally_tl(tl_hide_data(FILTER),with_search_filters0(C)).
 with_search_filters0(C):- must_run_html(C).
 
-
-%with_no_x_http(Goal):- with_no_xdbg(Goal),!.
-with_no_x_http(Goal):- call(Goal).
 
 call_with_time_limit_notrace(_,Goal):- (thread_self(main);pengines:pengine_self(_)), !, with_no_x_http(Goal).
 %call_with_time_limit_notrace(Time,Goal):- call_with_time_limit(Time,Goal).
@@ -3076,7 +3014,7 @@ cccc:- ignore(retract((swish_html_output:make_safe_html(Module:HTML0,
 
 
 test_url_encode(AA):-
-  must_or_rtrace((url_encode(AA,X),url_decode_term(X,A),A==AA)),fail.
+  mUST_CALL((url_encode(AA,X),url_decode_term(X,A),A==AA)),fail.
 
 test_url_encode:- current_output(A),test_url_encode(A).
 test_url_encode:- clause(a_ok(_),_,R),test_url_encode(R).
@@ -3288,7 +3226,10 @@ into_textarea(G):- with_pp(plain,G).
 
 :- export(with_http/1).
 :- meta_predicate(with_http(0)).
-with_http(Goal):- no_xdbg_flags, with_pp(http,Goal).
+with_http(Goal):- with_pp(http,with_no_x_http(Goal)).
+
+%with_no_x_http(Goal):- make_sessionwith_no_xdbg(Goal),!.
+with_no_x_http(Goal):- call(Goal).
 
 %% fmtimg( ?ARG1, ?ARG2) is det.
 %

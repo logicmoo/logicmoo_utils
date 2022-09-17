@@ -71,8 +71,8 @@ with_butterfly_console(TF,Goal):- in_bfly(TF,Goal).
 %  setup_call_cleanup(asserta(lmcache:is_butterfly_thread(X,TF),Ref),Goal,erase(Ref)).
 
 is_butterfly_console:- toplevel_pp(bfly),!.
-%is_butterfly_console:- thread_self(X), lmcache:is_butterfly_thread(X,TF),!,TF==t.
-%is_butterfly_console:- getenv('COLORTERM',butterfly),!.
+is_butterfly_console:- thread_self(X), lmcache:is_butterfly_thread(X,TF),!,TF==t.
+is_butterfly_console:- getenv('COLORTERM',butterfly),!.
 %is_butterfly_console:- thread_self(X),atom(X),(atom_concat(_,'23',X);atom_concat(_,'01',X);atom_concat(_,'00',X)),!.
 
 
@@ -475,7 +475,7 @@ bfly_write(_Styl,X):-!, pformat(X).
 :- multifile(cp_menu:menu_item/2).
 :- dynamic(cp_menu:menu_item/2).
 :- asserta(cp_menu:menu_item('https://logicmoo.org/4123/',	'Butterfly REPL')).
-:- asserta(cp_menu:menu_item('https://logicmoo.org/swish/',	'SWISH')).
+:- asserta(cp_menu:menu_item('/swish/',	'SWISH')).
 
 :- meta_predicate(esc_screen(0)).
 esc_screen(X):- Style=current,

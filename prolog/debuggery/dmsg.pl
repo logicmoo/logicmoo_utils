@@ -1688,12 +1688,14 @@ weto(G):-
   once(stream_property(CE,alias(current_error));CE=UE),
   once(stream_property(CO,alias(current_output));current_output(CO)),!,
   setup_call_cleanup(
-     (set_stream(CO,alias(user_error)),set_stream(CO,alias(user_output)),
-         set_stream(CO,alias(current_error)),set_stream(CO,alias(current_output))),
+     (set_stream_safe(CO,alias(user_error)),set_stream_safe(CO,alias(user_output)),
+         set_stream_safe(CO,alias(current_error)),set_stream_safe(CO,alias(current_output))),
      locally_tl(thread_local_error_stream(CO),G), 
-     (set_stream(UE,alias(user_error)),set_stream(CE,alias(current_error)),
-         set_stream(UO,alias(user_output)),set_stream(CO,alias(current_output)))).
+     (set_stream_safe(UE,alias(user_error)),set_stream_safe(CE,alias(current_error)),
+         set_stream_safe(UO,alias(user_output)),set_stream_safe(CO,alias(current_output)))).
 weto(G):- call(G).
+
+set_stream_safe(S,P):- nop(set_stream(S,P)).
 
 :- meta_predicate(wets(+,0)).
 :- export(wets/2).
@@ -1754,7 +1756,7 @@ mUST_det_ll(X):-
   strip_module(X,M,P),functor(P,F,A),setup_call_cleanup(nop(trace(M:F/A,+fail)),(mUST_not_error(X)*->true;mUST_det_ll_failed(X)),
     nop(trace(M:F/A,-fail))).
 
-mUST_not_error(X):- catch(X,E,(E=='$aborted'-> throw(E);(/*arcST,*/writeq(E=X),pt(rRTrace=X),rRTrace(X)))).
+mUST_not_error(X):- catch(X,E,(E=='$aborted'-> throw(E);(/*arcST,*/wdmsg(E=X),wdmsg(rRTrace(E)=X),rRTrace(X)))).
 
 mUST_det_ll_failed(X):- notrace,wdmsg(failed(X))/*,arcST*/,noRTrace,trace,rRTrace(X),!.
 % mUST_det_ll(X):- mUST_det_ll(X),!.
@@ -1843,7 +1845,7 @@ keep_line_pos_w_w(S, G) :-
 line_pos(S,LPos):- stream_property(S, position(Pos)),stream_position_data(line_position, Pos, LPos).
 
 set_stream_line_position_safe(S,Pos):-
-  catch(set_stream(S, line_position(Pos)),E,dmsg(error(E))).
+  catch(set_stream_safe(S, line_position(Pos)),E,dmsg(error(E))).
 
 :- multifile(tlbugger:term_color0/2).
 :- dynamic(tlbugger:term_color0/2).
