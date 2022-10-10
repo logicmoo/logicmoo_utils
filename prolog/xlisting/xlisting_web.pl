@@ -49,7 +49,6 @@
             human_language/1,
             i2tml_hbr/3,
             if_html/2,
-            output_html/1,
             % write_html/1,
             show_map_legend/0,
             indent_nbsp/1,
@@ -309,7 +308,7 @@ do_sort_menu_popups(I, O):- cp_menu:sort_menu_popups(I,O).
         edit1term(*),
         handler_logicmoo_cyclone_call(+),
         must_run(*),must_run_html(*),must_run(*),must_run0(*),must_run0(*),
-        output_html(//),
+        %output_html(//),        
         if_html(?, 0),
         return_to_pos(0),
         with_search_filters(0),
@@ -820,16 +819,15 @@ nop_format(G):- nop(format(G)).
 :- create_prolog_flag(retry_undefined,default,[type(term),keep(true)]).
 
 write_expandable(true,Goal):- !, inline_html_format(['<pre>',ignore(Goal),'</pre>']).
+write_expandable(Showing,Goal):- write_expandable3(Showing,Goal,Goal).
 
-write_expandable(Showing,Goal):- %ensure_colapable_styles,
+write_expandable3(Showing,Title,Goal):- %ensure_colapable_styles,
  (Showing -> PX='128'; PX='0'),
- (Showing -> Exp=''; Exp='colapsed'),
- 
+ (Showing -> Exp=''; Exp='collapsed-c'),
+  with_pp(http,wots(S,weto(ignore(Goal)))),
   inline_html_format([
-   '<pre><button type="button" class="collapsible">',writeq(Goal),' (click to un/expand)</button>',
-   '<div class="',write(Exp),'" style="max-height: ',PX,'px">',
-    weto(ignore(Goal)),
-   '</div></pre>']).
+   '<pre><button type="button" class="collapsible">',Title,' (click to un/expand)</button>',
+   '<div class="',write(Exp),'" style="max-height: ',600/*PX*/,'px"><pre>\n',S,'\n</pre></div></pre>']).
 
 
 %% write_begin_html( ?ARG1 ) is det.
@@ -867,6 +865,7 @@ print_xlisting_head(Title):-
 	<link rel="stylesheet" type="text/css" href="/swish/lm_xref/pixmapx/selected/css/social.selection.css">
 	<script type="text/javascript" src="/swish/js/cliopatria.js"></script>
 	<link rel="stylesheet" type="text/css" href="/swish/css/butterfly_term.css">
+  <script type="text/javascript" href="/swish/js/butterfly_term.js"></script>
 	<link rel="stylesheet" type="text/css" href="/swish/css/term.css">
 	</head>`]).
 
@@ -880,7 +879,10 @@ write_cmd_link(menu(Info,Goal)):- nonvar(Info),!, write_cmd_link(Info,Goal).
 write_cmd_link(Goal):- sformat(S,'~q',['?-'(Goal)]),write_cmd_link(S,Goal).
 
 write_cmd_link(Info,Goal):- nonvar(Goal),with_output_to(string(S),writeq(Goal)),
-  www_form_encode(S,A), format('<a href="/swish/lm_xref/?cmd=~w" target="_new">~w</a>\n',[A,Info]).
+  toplevel_pp(PP),
+  www_form_encode(S,A), 
+   sformat(SO,'<a href="/swish/lm_xref/?mouse_iframer_div=~w&cmd=~w" target="lm_xref">~w</a> ',[PP,A,Info]),!,
+   our_pengine_output(SO).
 
 :- dynamic(xlisting_whook:offer_testcase/1).
 :- multifile(xlisting_whook:offer_testcase/1).
@@ -947,6 +949,31 @@ intern_request_data(Request):-
   asserta(lmcache:current_ioet(In,Out,Err,ID)),
   save_request_in_session(Request))),!.
 
+:- dynamic(mu_tmp:asserted_queued_cmd/2).
+
+make_happen(Prolog):- 
+  thread_self(Self),
+  CODE = mu_tmp:asserted_queued_cmd(Prolog,Self),
+  ( CODE -> wdmsg(waiting_on(CODE)) ; 
+   (asserta(CODE), 
+     ( \+ CODE -> wdmsg(something_doing(CODE)) ; 
+      ( sleep(0.2), 
+        ( \+ CODE -> wdmsg(something_now_doing(CODE)) ;  (retractall(CODE), now_really(Prolog))))))). 
+
+now_really(Prolog):- 
+  %nop(call(CODE)),%wdmsg(thread_signal(main,CODE)),!,  
+  CODE = ignore((catch((    
+     wdmsg(doing(call(user:Prolog))),
+    (user:locally(nb_setval('$maybe_abort',t),call(user:Prolog)),menu)),
+     E,wdmsg(Prolog=E)))),
+  %thread_signal(main,xlisting_web:maybe_abort),
+  thread_signal(main,CODE),!.
+
+maybe_abort:- \+ nb_current('$maybe_abort',t),!.
+maybe_abort:- wdmsg(aborting(main)),throw('$aborted').
+
+handler_logicmoo_cyclone111:- get_param_req(mouse_iframer_div,PP),PP=='bfly',get_param_req(cmd,Call),url_decode_term(Call,Prolog),
+  make_happen(Prolog),!.
 handler_logicmoo_cyclone111:- current_predicate(handler_logicmoo_arc/0),ignore(with_http(handler_logicmoo_arc)),!.
 handler_logicmoo_cyclone111:- 
  get_webproc(WebProc),
@@ -955,8 +982,7 @@ handler_logicmoo_cyclone111:-
   write_begin_html(WebProc),
 
   ((ignore( \+ ((  
-    get_param_req(cmd,Call),
-    url_decode_term(Call,Prolog),
+    get_param_req(cmd,Call),url_decode_term(Call,Prolog),
     current_predicate(_,Prolog),
     dmsg(cmd=Prolog),
     ignore((nonvar(Prolog),asserta_new(xlisting_whook:offer_testcase(Prolog)))), 
@@ -2108,18 +2134,18 @@ output_telnet_console2(Port):- HttpPort is Port +100,
 inline_html_format(G):- must_run_html(ilhf(G)).
 
 ilhf(X):- var(X), !, writeq(var_ilhf(X)).
+ilhf(call(X)):- !, ignore(mUST_CALL(X)),flush_output_safe.
+ilhf(X):- string(X),!,format('~s',[X]),!.
+ilhf(X):- atom(X),atom_contains(X,'<'),!,format('~w',[X]),!.
 ilhf([]):-!.
 ilhf([H|T]):- is_codelist([H|T]),!,format('~s',[[H|T]]),!.
 ilhf([H|T]):- is_charlist([H|T]),!,format('~s',[[H|T]]),!.
-ilhf(X):- string(X),!,format('~s',[X]),!.
-ilhf(X):- atom(X),atom_contains(X,'<'),!,format('~w',[X]),!.
 ilhf([H|T]):- !, setup_call_cleanup(flush_output_safe,ilhf(H),ilhf(T)).
 ilhf((H,T)):- !, setup_call_cleanup(flush_output_safe,ilhf(H),ilhf(T)).
 ilhf(w(X)):-!, write(X), flush_output_safe.
 ilhf(h(X)):-!, with_http(ilhf(X)), flush_output_safe.
 %ilhf(h(X)):-!, write_bfly_html(X), flush_output_safe.
 ilhf(q(X)):-!, into_attribute(X,Y),write(Y), flush_output_safe.
-ilhf(call(X)):- !, ignore(mUST_CALL(X)),flush_output_safe.
 ilhf(X):- \+ callable(X), !, write(X), flush_output_safe.
 ilhf(X):- atom(X), \+ current_predicate(_,X), !, catch(format(X),_,write(X)), flush_output_safe.
 ilhf(X):- ( current_predicate(_,X)->ignore(mUST_CALL(X));print_tree(X)),flush_output_safe.
