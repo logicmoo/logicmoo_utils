@@ -821,13 +821,14 @@ nop_format(G):- nop(format(G)).
 write_expandable(true,Goal):- !, inline_html_format(['<pre>',ignore(Goal),'</pre>']).
 write_expandable(Showing,Goal):- write_expandable3(Showing,Goal,Goal).
 
-write_expandable3(Showing,Title,Goal):- %ensure_colapable_styles,
- (Showing -> PX='128'; PX='0'),
+write_expandable3(Showing,Title,Goal):- 
+ on_xf_ignore_flush(ensure_colapable_styles),
+ (Showing -> PX='128'; PX='600'),
  (Showing -> Exp=''; Exp='collapsed-c'),
   with_pp(http,wots(S,weto(ignore(Goal)))),
   inline_html_format([
    '<pre><button type="button" class="collapsible">',Title,' (click to un/expand)</button>',
-   '<div class="',write(Exp),'" style="max-height: ',600/*PX*/,'px"><pre>\n',S,'\n</pre></div></pre>']).
+   '<div class="',write(Exp),'" style="max-height: ',PX,'px"><pre>\n',S,'\n</pre></div></pre>']).
 
 
 %% write_begin_html( ?ARG1 ) is det.
