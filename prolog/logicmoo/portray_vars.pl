@@ -240,6 +240,7 @@ add_var_to_env_maybe(_New,Var):- var(Var),get_attr(Var,vnl,_),!.
 add_var_to_env_maybe(New,_Var):- atom_contains(New,'_VAR'),!.
 add_var_to_env_maybe(New,Var):- ignore(add_var_to_env(New,Var)).
 
+check_varname(_):-!.
 check_varname(UP):- name(UP,[C|Rest]),
   (
    (  ( \+ char_type(C,prolog_var_start) )

@@ -11,6 +11,7 @@
             stack_check/1,
             stack_check/2,
             stack_check_else/2,
+            stack_check_or_call/2,
             stack_depth/1
           ]).
 :- module_transparent
@@ -25,6 +26,7 @@
         stack_check/1,
         stack_check/2,
         stack_check_else/2,
+        stack_check_or_call/2,
         stack_depth/1.
 
 :- set_module(class(library)).
@@ -79,6 +81,8 @@ stack_check(BreakIfOver,Error):- stack_check_else(BreakIfOver, trace_or_throw(st
 % Stack Check Else.
 %
 stack_check_else(BreakIfOver,Call):- stack_depth(Level) ,  ( Level < BreakIfOver -> true ; (dbgsubst(Call,stack_lvl,Level,NewCall),NewCall)).
+
+stack_check_or_call(BreakIfOver,Call):- stack_depth(Level) ,  ( Level < BreakIfOver -> true ; call(Call)).
 
 
 

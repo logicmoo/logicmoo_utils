@@ -797,8 +797,8 @@ if_interactive(Goal,Else):-
   read_pending_codes(In,_,_),
   WantTrace=call(true),
   between(1,10,N),
-  (N == 10 -> (dmsg("~n(NOT INTERACTIVE (~q))~n",[Else]),!,(WantTrace,call(Else))) ;
-  ( dmsg(
+  (N == 10 -> (format("~n(NOT INTERACTIVE (~q))~n",[Else]),!,(WantTrace,call(Else))) ;
+  ( format(
 "===================================================================
 
  Waiting... IF_INTERACTIVE ...
@@ -824,7 +824,7 @@ if_interactive(Goal,Else):-
 
 
 if_interactive(_Goal,Else):- 
-   (dmsg("~n(NOT INTERACTIVE (~q))~n",[Else]),!,call(Else)).
+   (format("~n(NOT INTERACTIVE (~q))~n",[Else]),!,call(Else)).
 
 
 :- create_prolog_flag(bugger_debug,filter,[type(term),keep(true)]).

@@ -975,7 +975,9 @@ maybe_abort:- wdmsg(aborting(main)),throw('$aborted').
 
 handler_logicmoo_cyclone111:- get_param_req(mouse_iframer_div,PP),PP=='bfly',get_param_req(cmd,Call),url_decode_term(Call,Prolog),
   make_happen(Prolog),!.
-handler_logicmoo_cyclone111:- current_predicate(handler_logicmoo_arc/0),ignore(with_http(handler_logicmoo_arc)),!.
+
+%handler_logicmoo_cyclone111:- current_predicate(handler_logicmoo_arc/0),ignore(with_http(handler_logicmoo_arc)),!.
+
 handler_logicmoo_cyclone111:- 
  get_webproc(WebProc),
  ignore(WebProc=ls),

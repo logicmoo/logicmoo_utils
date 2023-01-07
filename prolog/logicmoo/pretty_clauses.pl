@@ -996,11 +996,22 @@ system:simple_write_term(A):-
    without_ec_portray_hook(\+ \+ write_term(A,Options)),!.
 system:simple_write_term(A):- write_q(A),!.
 
-system:simple_write_term(A,Options):- 
-  with_write_options(Options,simple_write_term(A)).
+system:simple_write_term(A,Options):- maplist(fix_svar_names,Options,Options2),
+  with_write_options(Options2,simple_write_term(A)).
+
+fix_1svar_name(N=V,NN=V):- atom_to_varname(N,NN),!.
+atom_to_varname(N,NN):- \+ notrace(catch(with_output_to(string(_),write_term(A,[variable_names([N=A])])),_,fail)),
+  term_hash(N,HC), with_output_to(atom(NN),format('UHC_~w',[HC])),!.
+atom_to_varname(N,N):-!.
+atom_to_varname(N,NN):- atom_codes(N,[C1|Codes]),fix_varcodes_u(C1,C2),maplist(fix_varcodes,Codes,NCodes),atom_codes(NN,[C2|NCodes]).
+fix_varcodes_u(C,N):- C<65,C>90, N is (C rem 25)+65.
+fix_varcodes(C,N):- C<65,!, N is (C rem 25)+65.
+fix_varcodes(C,C).
+fix_svar_names(variable_names(Vs),variable_names(VsO)):- maplist(fix_1svar_name,Vs,VsO),!.
+fix_svar_names(X,X).
 
 :- fixup_exports.
-%simple_write_term(A,Options):-  write_term(A,[portray_goal(pretty_clauses:pprint_tree)|Options]).
+%simple_write_term(A,Options):- write_term(A,[portray_goal(pretty_clauses:pprint_tree)|Options]).
 
 get_portrayal_vars(Vs):- nb_current('$variable_names',Vs)-> true ; Vs=[].
 
@@ -1322,7 +1333,10 @@ toplevel_pp(ansi).
 %toplevel_pp(html_pre):- 
 %in_pp(html_pre):- on_x_log_fail(httpd_wrapper:http_current_request(_)).
 
-display_length(X,L):- wots(S,display(X)),atom_length(S,L),!.
+%display_length(X,L):- wots(S,display(X)),atom_length(S,L),!.
+display_length(S,L):- atom(S),!, atom_length(S,L).
+display_length(S,L):- string(S),!, atom_length(S,L).
+display_length(I,L):- with_output_to(string(S),display(I)), atom_length(S,L).
 
 
 
@@ -1627,7 +1641,7 @@ pt1(_, Tab,Term) :-
   with_no_hrefs(t,(if_defined(rok_linkable(Term),fail), !,
   prefix_spaces(Tab), write_atom_link(Term))),!.
 
-pt1(_FS,Tab,[H|T]) :- is_codelist([H|T]), !,
+pt1(_FS,Tab,[H|T]) :- is_codelist([H|T]), !,  
    sformat(S, '`~s`', [[H|T]]),
    pformat([ps(Tab),S]).
 
