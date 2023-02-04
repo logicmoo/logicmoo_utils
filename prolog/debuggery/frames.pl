@@ -5,6 +5,7 @@
             in_pengines/0,
             find_parent_frame_attribute/5,
             parent_goal/2,
+            parent_goal/1,
             prolog_frame_match/3,
             relative_frame/3,
             stack_check/0,
@@ -20,6 +21,7 @@
         in_pengines/0,
         find_parent_frame_attribute/5,
         parent_goal/2,
+        parent_goal/1,
         prolog_frame_match/3,
         relative_frame/3,
         stack_check/0,
@@ -105,7 +107,7 @@ in_pengines:- zotrace(relative_frame(context_module,pengines,_)).
 %
 relative_frame(Attrib,Term,Nth):- find_parent_frame_attribute(Attrib,Term,Nth,_RealNth,_FrameNum).
 
-:- export(parent_goal/2).
+
 
 %= 	 	 
 
@@ -113,6 +115,8 @@ relative_frame(Attrib,Term,Nth):- find_parent_frame_attribute(Attrib,Term,Nth,_R
 %
 % Parent Goal.
 %
+
+:- export(parent_goal/1).
 parent_goal(Goal):- nonvar(Goal), quietly((prolog_current_frame(Frame),prolog_frame_attribute(Frame,parent,PFrame),
   prolog_frame_attribute(PFrame,parent_goal,Goal))).
 parent_goal(Goal):- !, quietly((prolog_current_frame(Frame),prolog_frame_attribute(Frame,parent,PFrame0),

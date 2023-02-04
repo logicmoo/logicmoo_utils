@@ -21,7 +21,7 @@
           logicmoo_topic/2,
             asserta_if_ground/1,
             atom_contains666/2,
-            call_count/2,
+            call_count_nth/2,
             bad_idea/0,
             beenCaught/1,
             bin_ecall/4,
@@ -607,8 +607,8 @@ set_bugger_flag(F,V):-create_prolog_flag(F,V,[keep(true),tCol(ftTerm)]),!.
 
 
 
-:- meta_predicate(call_count(:,?)).
-call_count(C,N):-findall(C,C,L),nth1(N,L,C).
+:- meta_predicate(call_count_nth(0,?)).
+call_count_nth(C,N):-findall(C,C,L),nth1(N,L,C).
 
 
 % :- if_may_hide('$hide'(skipWrapper/0)).
@@ -1588,8 +1588,6 @@ set_no_debug_thread:-
 
 :- if(prolog_dialect:exists_source(library(gui_tracer))).
 %= :- meta_predicate  set_gui_debug(:).
-
-
 
 %% set_gui_debug( :GoalTF) is semidet.
 %
