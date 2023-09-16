@@ -1,5 +1,5 @@
 name(logicmoo_utils).
-version('3.0.3').
+version('3.1.3').
 title('Common predicates that are used throughout LogicMOO Software').
 keywords([local_scoping,utilities,debugging,loop_checking]).
 author( 'Douglas Miles', 'http://www.linkedin.com/in/logicmoo' ).
