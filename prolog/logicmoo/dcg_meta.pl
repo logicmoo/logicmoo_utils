@@ -43,7 +43,7 @@
          theString//1,
          theString//2,
          theText//1,
-         theCode//1,         
+         theCode//1,
          dcgLenBetween/4,
          notrace_catch_fail/1,
          notrace_catch_fail/3,
@@ -59,10 +59,10 @@
 
 
 /** <module> Utility LOGICMOO_DCG_META
-This module allows DCGs to use meta predicates like And Or Not. 
+This module allows DCGs to use meta predicates like And Or Not.
 
 - @author Douglas R. Miles
-- @license LGPL 
+- @license LGPL
 */
 :- set_module(class(library)).
 
@@ -91,7 +91,7 @@ user:portray(List):- compound(List),compound_name_arity([_,_],F,A),compound_name
 user_portray_dcg_seq(List):- \+ is_list(List),!,between(32,1,Len),length(Left,Len),append(Left,_,List), ground(Left),!,
    catch(atom_codes(W,Left),_,fail),format("|~w ___|",[W]).
 user_portray_dcg_seq(List):- is_codelist(List), catch(atom_codes(Atom,List),_,fail),length(List,Len),
-  (Len < 32 -> format("`~w`",[Atom]) ;  
+  (Len < 32 -> format("`~w`",[Atom]) ;
     (length(Left,26),append(Left,_Rest,List),format(atom(Print),"~s",[Left]),format("|~w ... |",[Print]))).
 
 
@@ -118,7 +118,7 @@ user_portray_dcg_seq(List):- is_codelist(List), catch(atom_codes(Atom,List),_,fa
 :- meta_predicate phrase_from_stream_nd(//,+).
 :- meta_predicate read_string_until(*,//,?,?).
 
- 
+
 :- meta_predicate dcgLeftOfMid(?,//,?,?).
 :- meta_predicate dcgLeftMidRight(//,//,//,?,?).
 
@@ -177,7 +177,7 @@ isVarOrVAR('$VAR'(_)).
 isVar(V):- (isVarOrVAR(V);isQVar(V)),!.
 isQVar(Cvar):-atom(Cvar),atom_concat('?',_,Cvar).
 
-:- dynamic 
+:- dynamic
    decl_dcgTest/2,
    decl_dcgTest/3,
    decl_dcgTest_startsWith/2,
@@ -250,7 +250,7 @@ atomics_to_string_str0([S],_Sep,String):-atom(S),!,string_to_atom(String,S).
 atomics_to_string_str0([S],_Sep,S):- string(S),!.
 atomics_to_string_str0([S|Text],Sep,String):-
    atomic_to_string(S,StrL),
-   atomics_to_string_str0(Text,Sep,StrR),!,   
+   atomics_to_string_str0(Text,Sep,StrR),!,
    new_a2s([StrL,StrR],Sep,String).
 
 % theString(String,Sep) --> [S|Text], {atomic_list_concat_catch([S|Text],Sep,String),!}.
@@ -261,7 +261,7 @@ decl_dcgTest_startsWith("anything",theCode(X=1),X==1).
 decl_dcgTest("",theCode(X=1),X==1).
 theCode(Code) --> [],{Code}.
 
- 
+
 decl_dcgTest([a,b|C],theAll([a,b|C])).
 % theAll(X)--> X.
 theAll(X, B, C) :- var(X),X=B,C=[],!.
@@ -375,7 +375,7 @@ capitalized([W|Text]) --> theText([W|Text]),{atom_codes(W,[C|_Odes]),is_upper(C)
 
 substAll(B,[],_R,B):-!.
 substAll(B,[F|L],R,A):-subst(B,F,R,M),substAll(M,L,R,A).
-   
+
 substEach(B,[],B):-!.
 substEach(B,[F-R|L],A):-subst(B,F,R,M),substEach(M,L,A).
 
@@ -385,7 +385,7 @@ dcgAndRest(TheType,_TODO,[S|MORE],[]) :- phrase(TheType,[S],[]),phrase(TheType,[
 % look ahead but ...
 % =======================================================
 
-% 1) must be first in list 
+% 1) must be first in list
 % 2) doesnt consume
 % 3) sees as many items as needed
 dcgStartsWith(TheType,SMORE,SMORE) :- phrase(TheType,SMORE,_).
@@ -395,7 +395,7 @@ decl_dcgTest_startsWith("this is text",dcgStartsWith(theText(["this","is"]))).
 
 
 :- export(dcgStartsWith1//1).
-% 1) must be first in list 
+% 1) must be first in list
 % 2) doesnt consume
 % 3) sees only 1 item
 dcgStartsWith1(TheType,[S|MORE],[S|MORE]) :- phrase(TheType,[S],[]).
@@ -404,7 +404,7 @@ dcgStartsWith1(TheType,[S|MORE],[S|MORE]) :- phrase(TheType,[S],[]).
 decl_dcgTest_startsWith("this is text",dcgStartsWith1(theText(["this"]))).
 
 
-% 1) must be first in list 
+% 1) must be first in list
 % 2) consumes like theRest(...)
 % 3) sees as many items as needed
 dcgStartsWith0(TheType,SMORE,[]) :- phrase(TheType,SMORE,_).
@@ -439,7 +439,7 @@ decl_dcgTest_startsWith(List,Phrase,true):-decl_dcgTest_startsWith(List,Phrase).
 
 % :-source_location(File,_Line),module_property(M,file(File)),!,forall(current_predicate(M:F/A),M:export(F/A)).
 
-     
+
 
 
 %dumpList(B):- currentContext(dumpList,Ctx),dumpList(Ctx,B).
@@ -483,9 +483,9 @@ one_blank --> [C],!,{C =< 32}.
 :- meta_predicate(file_meta_with_comments(2,+,+,-)).
 %file_meta_with_comments(Pred, O) --> [], {clause(t_l:'$last_comment'(O),_,Ref),erase(Ref)},!.
 file_meta_with_comments(_Pred, end_of_file) --> file_eof,!.
-file_meta_with_comments(Pred, O) --> one_blank,!,file_meta_with_comments(Pred, O).  % WANT? 
+file_meta_with_comments(Pred, O) --> one_blank,!,file_meta_with_comments(Pred, O).  % WANT?
 file_meta_with_comments(_Pred, C) --> file_comment_expr(C),!.
-file_meta_with_comments(Pred, Out,S,E):- append_term(Pred,Out,PredOut), 
+file_meta_with_comments(Pred, Out,S,E):- append_term(Pred,Out,PredOut),
   \+ t_l:dcg_meta_reader_options(with_text,true),!,phrase(PredOut,S,E),!.
 file_meta_with_comments(Pred, Out,S,E):- append_term(Pred,O,PredO), expr_with_text(Out,PredO,O,S,E),!.
 
@@ -542,7 +542,7 @@ bx(CT2):- notrace_catch_fail(CT2,E,(writeq(E:CT2),only_debug(break))),!.
 notrace_catch_fail(G,E,C):- catch(G,E,C),!.
 notrace_catch_fail(G):- notrace(catch(G,_,fail)),!.
 clean_fromt_ws([],[]).
-clean_fromt_ws([D|DCodes],Codes):- 
+clean_fromt_ws([D|DCodes],Codes):-
   ((\+ char_type(D,white), \+ char_type(D,end_of_line)) -> [D|DCodes]=Codes ; clean_fromt_ws(DCodes,Codes)).
 
 :- export(txt_to_codes/2).
@@ -559,13 +559,13 @@ phrase_from_pending_stream(Grammar, In):-
 phrase_from_pending_stream(CodesPrev,Grammar,In):- CodesPrev=[_,_|_],
    phrase(Grammar,CodesPrev,NewBuffer),!,
    append_buffer_codes(In,NewBuffer).
-phrase_from_pending_stream(CodesPrev,Grammar,In):- 
+phrase_from_pending_stream(CodesPrev,Grammar,In):-
   b_setval('$translation_stream',In),
   read_codes_from_pending_input(In,Codes),!,
-  ((notrace(is_eof_codes(Codes))) -> 
-     phrase_from_eof(Grammar, In); 
+  ((notrace(is_eof_codes(Codes))) ->
+     phrase_from_eof(Grammar, In);
      (append(CodesPrev,Codes,NewCodes), !,
-       (phrase(Grammar, NewCodes, NewBuffer) 
+       (phrase(Grammar, NewCodes, NewBuffer)
         -> append_buffer_codes(In,NewBuffer);
           phrase_from_pending_stream(NewCodes,Grammar,In)))).
 
@@ -577,7 +577,7 @@ my_lazy_list_location(file(_,_,-1,-1))-->[].
 
 track_stream(_In,G):- !,G.
 track_stream(In,G):- \+ is_stream(In),!,G.
-track_stream(In,G):- 
+track_stream(In,G):-
    b_setval('$translation_stream',In),
    notrace_catch_fail(stream_position(In,Pos,Pos),_,true),
    character_count(In,Chars),
@@ -601,7 +601,7 @@ track_stream_cleanup(Catcher,In,Was,Pos):-
 
 :- meta_predicate locally_setval(*,*,0).
 
-locally_setval(Name,Value,Goal):- 
+locally_setval(Name,Value,Goal):-
  (nb_current(Name,Was)->true;Was=[]),
   b_setval(Name,Value),
   call(Goal),
@@ -615,7 +615,7 @@ locally_setval(Name,Value,Goal):-
 %
 % Parse Expression from a Stream
 %
-parse_meta_stream(Pred, S,Expr):- 
+parse_meta_stream(Pred, S,Expr):-
   catch(
     parse_meta_stream_1(Pred, S,Expr),
     end_of_stream_signal(_Gram,S),
@@ -635,23 +635,26 @@ show_stream_info(In):-
      notrace((forall(stream_property(In,(BUF)),
     (writeq(show_stream_info(In,(BUF))),nl)))),!.
 
-phrase_from_stream_nd(Grammar,In):- 
+phrase_from_stream_nd(Grammar,In):-
    notrace((peek_pending_codes(In,Codes)->Codes=[_,_|_],
    remove_pending_buffer_codes(In,_))),
    (phrase(Grammar,Codes,NewBuffer)-> append_buffer_codes(In,NewBuffer);(append_buffer_codes(In,Codes),fail)).
-                                                       
-phrase_from_stream_nd(Grammar, In) :- at_end_of_stream(In), 
+
+phrase_from_stream_nd(Grammar, In) :- at_end_of_stream(In),
   peek_pending_codes(In,Pend),is_eof_codes(Pend),!,phrase_from_eof(Grammar, In). %
 %phrase_from_stream_nd(Grammar, _) :- clause(t_l:'$last_comment'(I),_,Ref),I=Grammar,erase(Ref).
 
 phrase_from_stream_nd(Grammar, In) :- stream_property(In,tty(true)),!,
  repeat,
- (is_tty_alive(In)-> true ; throw(end_of_stream_signal(Grammar,In))), 
+ (is_tty_alive(In)-> true ; throw(end_of_stream_signal(Grammar,In))),
  phrase_from_pending_stream(Grammar, In).
 
 phrase_from_stream_nd(Grammar, In) :-  supports_seek(In),
-    set_stream(In,buffer_size(819200)),set_stream(In,buffer_size(16384)), set_stream(In,encoding(octet)), set_stream(In,timeout(3.0)),    
-    %set_stream(In,buffer_size(5)), set_stream(In,encoding(octet)), set_stream(In,timeout(3.0)),set_stream(In,type(text)),%set_stream(In,buffer(false)),    
+    ignore(notrace_catch_fail(set_stream(In,buffer_size(819200)))),
+    ignore(notrace_catch_fail(set_stream(In,buffer_size(16384)))),
+    ignore(notrace_catch_fail(set_stream(In,encoding(octet)))),
+    ignore(notrace_catch_fail(set_stream(In,timeout(3.0)))),
+    %set_stream(In,buffer_size(5)), set_stream(In,encoding(octet)), set_stream(In,timeout(3.0)),set_stream(In,type(text)),%set_stream(In,buffer(false)),
    repeat, (at_end_of_stream(In)->(!,fail);true),
 
     character_count(In, FailToPosition),
@@ -675,13 +678,13 @@ phrase_from_stream_nd(Grammar, In) :- stream_property(In,file_name(_Name)),!,
 phrase_from_stream_nd(Grammar, In) :- \+ supports_seek(In),!, phrase_from_pending_stream(Grammar, In).
 %phrase_from_stream_nd(Grammar, In) :- b_setval('$translation_stream',In), quietly(phrase_from_stream_nd(Grammar, In)).
 phrase_from_stream_nd(Grammar, In) :-  supports_seek(In),
-    %set_stream(In,buffer_size(819200)),set_stream(In,buffer_size(16384)), set_stream(In,encoding(octet)), set_stream(In,timeout(3.0)),    
-    %set_stream(In,buffer_size(5)), set_stream(In,encoding(octet)), set_stream(In,timeout(3.0)),set_stream(In,type(text)),%set_stream(In,buffer(false)),    
+    %set_stream(In,buffer_size(819200)),set_stream(In,buffer_size(16384)), set_stream(In,encoding(octet)), set_stream(In,timeout(3.0)),
+    %set_stream(In,buffer_size(5)), set_stream(In,encoding(octet)), set_stream(In,timeout(3.0)),set_stream(In,type(text)),%set_stream(In,buffer(false)),
     character_count(In, FailToPosition),
     ((phrase_from_stream_lazy_part(Grammar, In) -> true ; (seek(In,FailToPosition,bof,_),!,fail))),!.
 
 
-phrase_from_stream_lazy_part(Grammar, In):- 
+phrase_from_stream_lazy_part(Grammar, In):-
     check_pending_buffer_codes(In),
     seek(In, 0, current, Prev),
     stream_to_lazy_list(In, List),
@@ -741,25 +744,25 @@ unify_next_or_eof(end_of_file).
 %
 parse_meta_ascii(Pred, S, Expr) :- is_stream(S),!,parse_meta_stream(Pred, S,Expr).
 %parse_meta_ascii(Pred, S, Expr) :- open_string(S,SIS),!,parse_meta_stream(Pred, SIS,Expr).
-parse_meta_ascii(Pred, Text, Expr):- 
+parse_meta_ascii(Pred, Text, Expr):-
   notrace(txt_to_codes(Text,Codes)),
   =(ascii_,In),
   append_buffer_codes(In,Codes),!,
   phrase_from_buffer_codes_nd(file_meta_with_comments(Pred,Expr), In).
 
 phrase_from_buffer_codes_nd(Grammar, In) :- peek_pending_codes(In,Pend),is_eof_codes(Pend),!,phrase_from_eof(Grammar,In).
-phrase_from_buffer_codes_nd(Grammar, In) :- 
+phrase_from_buffer_codes_nd(Grammar, In) :-
   repeat,
-  (phrase_from_buffer_codes(Grammar, In) *-> 
-    ((peek_pending_codes(In,Pend),is_eof_codes(Pend))->!;true);(!,fail)).    
+  (phrase_from_buffer_codes(Grammar, In) *->
+    ((peek_pending_codes(In,Pend),is_eof_codes(Pend))->!;true);(!,fail)).
 
 %phrase_from_buffer_codes(_Grammar, _In) :- peek_pending_codes(In,Pend),is_eof_codes(Pend),!,fail.
-phrase_from_buffer_codes(Grammar, In):- 
+phrase_from_buffer_codes(Grammar, In):-
    notrace((remove_pending_buffer_codes(In,NewCodes), NewCodes \== [])),!,
    (must_or_rtrace(phrase(Grammar, NewCodes, More))->append_buffer_codes(In,More);(append_buffer_codes(In,NewCodes),!,fail)).
 
 
-skipping_buffer_codes(Goal):- 
+skipping_buffer_codes(Goal):-
  setup_call_cleanup(
    notrace((remove_pending_buffer_codes(In,OldCodes), clear_pending_buffer_codes)),
      Goal,
@@ -777,27 +780,27 @@ file_eof --> [X],{ attvar(X), X = end_of_file},!.
 file_eof --> [X],{ var(X), X = -1},!.
 file_eof --> [X],{ X = -1},!.
 
-expr_with_text(Out,DCG,O,S,E):- 
+expr_with_text(Out,DCG,O,S,E):-
    zalwayz(lazy_list_character_count(StartPos,S,M)),%integer(StartPos),
    call(DCG,M,ME),
    lazy_list_character_count(EndPos,ME,E),!,
    expr_with_text2(Out,DCG,O,StartPos,M,ME,EndPos,S,E).
 
-expr_with_text2(Out,_ ,O,StartPos,M,ME,EndPos,_,_):- 
+expr_with_text2(Out,_ ,O,StartPos,M,ME,EndPos,_,_):-
    integer(StartPos),integer(EndPos),!,
    bx(Len is EndPos - StartPos),length(Grabber,Len),!,
    get_some_with_comments(O,Grabber,Out,M,ME),!.
-expr_with_text2(Out,_ ,O,end_of_file-StartPos,M,ME,end_of_file-EndPos,_,_):- 
+expr_with_text2(Out,_ ,O,end_of_file-StartPos,M,ME,end_of_file-EndPos,_,_):-
    integer(StartPos),integer(EndPos),!,
    bx(Len is StartPos - EndPos),length(Grabber,Len),!,
    get_some_with_comments(O,Grabber,Out,M,ME),!.
 
-expr_with_text2(Out,DCG,O,StartPos,M,ME,EndPos,S,E):- 
+expr_with_text2(Out,DCG,O,StartPos,M,ME,EndPos,S,E):-
    writeq(expr_with_text2(Out,DCG,O,StartPos,EndPos,S,E)),nl,
    get_some_with_comments(O,_Grabber,Out,M,ME),!.
 
 
-%expr_with_text(Out,DCG,O,S,E):- 
+%expr_with_text(Out,DCG,O,S,E):-
 %   call(DCG,S,E) -> append(S,Some,E) -> get_some_with_comments(O,Some,Out,S,E),!.
 get_some_with_comments(O,_,O,_,_):- compound(O),compound_name_arity(O,'$COMMENT',_),!.
 get_some_with_comments(O,Txt,with_text(O,Str),S,_E):-append(Txt,_,S),!,text_to_string(Txt,Str).
@@ -821,7 +824,7 @@ parse_meta_term(Pred, atom(String), Expr) :- !,parse_meta_ascii(Pred, String, Ex
 parse_meta_term(Pred, text(String), Expr) :- !,parse_meta_ascii(Pred, String, Expr).
 parse_meta_term(Pred, (String), Expr) :- string(String),!,parse_meta_ascii(Pred, String, Expr).
 parse_meta_term(Pred, [E|List], Expr) :- !, parse_meta_ascii(Pred, [E|List], Expr).
-parse_meta_term(Pred, Other, Expr) :- quietly((l_open_input(Other,In)->Other\=@=In)),!, 
+parse_meta_term(Pred, Other, Expr) :- quietly((l_open_input(Other,In)->Other\=@=In)),!,
   repeat, (at_end_of_stream(In)->(!,fail);true),
   parse_meta_term(Pred, In, Expr).
 

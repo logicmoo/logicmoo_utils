@@ -60,6 +60,10 @@ call_call(G):-call(G).
    
    rtrace_break(:),
    quietly(:),
+   quietly1(:),
+   quietly2(:),
+   quietly3(:),
+   quietly4(:),
    ftrace(:),
    visible_rtrace(+,:).
 
@@ -85,7 +89,7 @@ on_x_debug(Goal):-
  ((( tracing; t_l:rtracing),!,maybe_leash(+exception))) 
   -> Goal
    ;
-   (catchv(Goal,E,(ignore(debugCallWhy(on_x_debug(E,Goal),rtrace(Goal))),throw(E)))).
+   (catchv(quietly(Goal),E,(ignore(debugCallWhy(on_x_debug(E,Goal),rtrace(Goal))),throw(E)))).
 
 
 
@@ -100,7 +104,13 @@ maybe_leash(-Some):- !, leash(-Some).
 maybe_leash(Some):- notrace((should_maybe_leash->leash(Some);true)).
 
 old_swi(_).
-my_totally_hide(G):- '$hide'(G), old_swi(totally_hide(G)).
+with_unlocked_pred_local(MP,Goal):- strip_module(MP,M,P),Pred=M:P,
+   (predicate_property(Pred,foreign)-> true ;
+ setup_call_cleanup(unlock_predicate(Pred),
+   catch(Goal,E,throw(E)),lock_predicate(Pred))),!.
+
+my_totally_hide(G):- 
+  with_unlocked_pred_local(G, '$hide'(G)), old_swi(totally_hide(G)).
 
 :- my_totally_hide(maybe_leash/1).
 
@@ -222,8 +232,10 @@ quietly3(Goal):- \+ tracing -> Goal ;
      (YN == true -> trace ; (trace;(notrace,fail)));
   (trace,!,notrace(fail)))).
 
+quietly(Goal):- quietly3(Goal).
+
 % version 4 
-quietly(M:Goal):- \+ tracing 
+quietly4(M:Goal):- \+ tracing 
  -> M:Goal ;
   (get_trace_reset(W), scce_orig(notrace(visible(-all)),M:Goal,W)).
 
@@ -408,14 +420,17 @@ ERROR: Unhandled exception: good
 set_leash_vis(OldL,OldV):- '$leash'(_, OldL),'$visible'(_, OldV),!.
 :- my_totally_hide(set_leash_vis/2).
 
-restart_rtrace:-
+restart_rtrace:- restart_rtrace1,!.
+restart_rtrace.
+restart_rtrace1:-
    notrace,leash(-all),
    set_prolog_flag(gui_tracer,false),
    visible(+all),
    maybe_leash(+exception),
    trace.
 :- 'my_totally_hide'(restart_rtrace/0).
-      
+:- export(restart_rtrace/0).
+
 rtrace(Goal):- trace,
   get_trace_reset(W),scce_orig(restart_rtrace,Goal,W).
 

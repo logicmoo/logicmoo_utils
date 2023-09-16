@@ -764,7 +764,7 @@ pretty_three(H):-
  ignore(((compound_name_arity(H,F,_), fail,
   nop((wl:init_args(N,F),integer(N),
    A is N + 1,   
-   arg(A,H,R),may_debug_var_weak('KeysNRest',R)))),
+   must_be(compound,H),arg(A,H,R),may_debug_var_weak('KeysNRest',R)))),
    compound_name_arguments(H,F,[P1|ARGS]),  
    must_maplist_det(pretty_three,[P1|ARGS]))),!. 
 
@@ -779,7 +779,7 @@ pretty_final(H,F,A,P1,ARGS):- atom_codes_w_blobs(F,[T|Rest]),\+ char_type(T, alp
 pretty_final(_H,'',_A,P1,ARGS):- must_maplist_det(guess_varnames,[P1|ARGS]),!.
 pretty_final(H,F,A,P1,ARGS):- 
    maplist(guess_varnames,[P1|ARGS]),
-   arg(A,H,R),may_debug_var_weak([F,'_'],R),
+   must_be(compound,H),arg(A,H,R),may_debug_var_weak([F,'_'],R),
    ignore((A>2, may_debug_var_weak([F,'_P_',A,'_v'],P1))),   
    !. 
 

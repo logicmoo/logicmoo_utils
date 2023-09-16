@@ -1831,7 +1831,7 @@ replace_in_string(F,R,OriginalString,K):-atom(OriginalString),!,atom_string(Orig
 replace_in_string(Find,Repl,OriginalString,ModifiedString):-  atomic_list_concat(List,Find,OriginalString),atomics_to_string(List,Repl,ModifiedString).
 
 replace_in_string([KV|FR],OriginalString,O):-!,
-  arg(1,KV,F),arg(2,KV,R),
+  compound(KV),arg(1,KV,F),arg(2,KV,R),
   replace_in_string(F,R,OriginalString,M),
   replace_in_string(FR,M,O).
 replace_in_string([],O,O).

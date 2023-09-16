@@ -46,7 +46,7 @@ gvar_list0(BB,retractall,Value):- args_all_vars(Value)-> nb_setval(BB,[]) ;
   ((   must(nb_current(BB,List)) , gvar_remove_all_list_matches(BB,List,Value) )).
 
 
-args_all_vars(Value):- not((arg(_,Value,Nv),nonvar(Nv))).
+args_all_vars(Value):- compound(Value), \+ ((arg(_,Value,Nv),nonvar(Nv))).
 
 gvar_remove_all_list_matches(BB,List,Value) :-
   ( List ==[] -> true ; 

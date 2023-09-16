@@ -2375,7 +2375,7 @@ prolog_ecall_fa(_,_,F,0,Call):-
 % A=1 , (unwrap = true )
 prolog_ecall_fa(BDepth,Wrapper,F,1,Call):-
   on_prolog_ecall(F,1,unwrap,true),
-  arg(1,Call,Arg),!,
+  compound(Call),arg(1,Call,Arg),!,
   with_each(BDepth,Wrapper,Arg).
 
 % A>1 , (unwrap = true )
@@ -2715,7 +2715,7 @@ caller_module(Module):-caller_module2(Module,v(function_expansion,func,user,'$to
 % Hook To [t_l:caller_module/2] For Module Logicmoo_util_bugger.
 % Caller Module.
 %
-caller_module2(Module,Skipped):- module_stack(Module,_), \+ arg(_,Skipped,Module).
+caller_module2(Module,Skipped):- module_stack(Module,_), compound(Skipped), \+ arg(_,Skipped,Module).
 
 :- module_transparent(module_stack/2).
 
