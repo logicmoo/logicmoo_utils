@@ -56,7 +56,9 @@ echo_source_file_no_catchup(F):-
  ignore((
    \+ t_l:echoing_file(F),
    asserta(t_l:echoing_file(F)),!,
-   get_file_from_stream(S,F), character_count(S,Pos),
+   stream_property(S,file_name(F)),
+   %get_file_from_stream(S,F),
+   character_count(S,Pos),
    assume_caughtup_to(F,S,Pos))),!.
 
 check_current_echo:-
