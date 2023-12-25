@@ -1,4 +1,7 @@
-% This file is mostly all inside if/endifs so it doesnt interfere with `module/2`
+:- if((prolog_load_context(source,File),prolog_load_context(file,File));current_prolog_flag(xref,true)).
+:- else.
+
+test_completed% This file is mostly all inside if/endifs so it doesnt interfere with `module/2`
 :- if((set_stream(current_output,tty(true)))).  :- endif.
 
 :- dumpST.
@@ -113,4 +116,4 @@
 :- if((prolog_load_context(source,F),echo_source_file_no_catchup(F))).  :- endif.
 :- endif.
 
-
+:- endif.
