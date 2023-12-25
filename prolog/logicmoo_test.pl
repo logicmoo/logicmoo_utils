@@ -11,7 +11,7 @@
 % ===================================================================
 */
 :- if((prolog_load_context(source,File),prolog_load_context(file,File));current_prolog_flag(xref,true)).
-:- module(logicmoo_test,[]).
+%:- module(logicmoo_test,[]).
 :-endif.
 
 :- define_into_module(
