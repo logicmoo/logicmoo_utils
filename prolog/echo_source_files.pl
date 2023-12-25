@@ -13,7 +13,7 @@
 */
 % File:  $PACKDIR/subclause_expansion/prolog/echo_files.pl
 :- module(echo_files,
-          [get_file_from_stream/2]).
+          [get_file_from_stream/2,assume_caughtup_to/3]).
 
 :- define_into_module(
  [
@@ -59,7 +59,7 @@ echo_source_file_no_catchup(F):-
    stream_property(S,file_name(F)),
    %get_file_from_stream(S,F),
    character_count(S,Pos),
-   assume_caughtup_to(F,S,Pos))),!.
+   echo_files:assume_caughtup_to(F,S,Pos))),!.
 
 check_current_echo:-
    source_location(F,_), prolog_load_context(source,S), S\==F,!,
