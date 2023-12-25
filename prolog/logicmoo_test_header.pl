@@ -11,7 +11,7 @@
  set_prolog_flag(runtime_debug, 3), % 2 = important but dont sacrifice other features for it
  set_prolog_flag(runtime_safety, 3),  % 3 = very important
  set_prolog_flag(unsafe_speedups, false),
- set_prolog_flag(logicmoo_message_hook,junit),
+ create_prolog_flag(logicmoo_message_hook,junit,[type(term),keep(false)]),
  %mpred_trace_exec,
  true)).
 :- endif.
@@ -32,8 +32,8 @@
 :- endif.
 
 % Load SWI Utils
-:- if(( \+ exists_source(library(logicmoo_utils)), 
-   prolog_load_context(directory,X),absolute_file_name('../../',O,[relative_to(X),file_type(directory)]), attach_packs(O))).  
+:- if(( \+ exists_source(library(logicmoo_utils)),
+   prolog_load_context(directory,X),absolute_file_name('../../',O,[relative_to(X),file_type(directory)]), attach_packs(O))).
 :- endif.
 :- if(use_module(library(logicmoo_utils))). :-endif.
 
@@ -57,7 +57,7 @@
 :- if(( \+ current_prolog_flag(test_module,_),set_prolog_flag(test_module,baseKB),assert(baseKB:this_is_baseKB))). :- endif.
 :- if(( \+ current_prolog_flag(test_typein_module,_), set_prolog_flag(test_typein_module,baseKB))). :- endif.
 
-:- if(current_prolog_flag(loaded_test_header,_)). 
+:- if(current_prolog_flag(loaded_test_header,_)).
 :- wdmsg(reload_of_test_header).
 :- mpred_reset.
 :- else.
@@ -80,7 +80,7 @@
 :- if((prolog_load_context(source,File),!,
    ignore((((sub_atom(File,_,_,_,'.pfc')
    -> (sanity(is_pfc_file),set_prolog_flag(is_pfc_file_dialect,true))
-   ; nop((sanity( \+ is_pfc_file),set_prolog_flag(is_pfc_file_dialect,false))))))))).  
+   ; nop((sanity( \+ is_pfc_file),set_prolog_flag(is_pfc_file_dialect,false))))))))).
 :- if((current_prolog_flag(test_module,Module), clifops:clif_op_decls(OPS), call(Module:OPS))). :- endif.
 :- endif.
 
@@ -97,7 +97,7 @@
 
 :- if((dmsg(this_test_might_need(:- use_module(library(logicmoo_plarkc)))))).  :- endif.
 
-:- if((ensure_loaded(library(logicmoo_test)))). 
+:- if((ensure_loaded(library(logicmoo_test)))).
 :- if(at_halt(system:test_completed)). :- endif.
 :- endif.
 

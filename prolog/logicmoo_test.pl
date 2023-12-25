@@ -15,7 +15,7 @@
 :-endif.
 
 :- define_into_module(
-   [mpred_test/1,    
+   [mpred_test/1,
     run_junit_tests/0,
     must_ex/1,
     quietly_must_ex/1,
@@ -24,7 +24,7 @@
     %echo_source_file_no_catchup/1,
     run_tests_and_halt/0,
     run_tests_and_halt/1]).
-                      
+
 
 :- use_module('../prolog/logicmoo_common').
 :- use_module('../prolog/echo_source_files').
@@ -41,14 +41,14 @@
 
 
 :- set_prolog_flag(ran_junit_tests,false).
-run_junit_tests_at_halt:- 
-   current_prolog_flag(ran_junit_tests,true)-> true;  
+run_junit_tests_at_halt:-
+   current_prolog_flag(ran_junit_tests,true)-> true;
    call_with_time_limit(20,run_junit_tests).
 
 %:- at_halt(run_junit_tests_at_halt).
 
 %  main test runner
-run_junit_tests:-  
+run_junit_tests:-
   run_junit_tests(all).
 
 run_junit_tests(Spec) :-
@@ -61,23 +61,23 @@ run_junit_tests(Spec) :-
   set_prolog_flag(ran_junit_tests,true),
   term_to_atom(Spec,SpecAtom),
   statistics(cputime,Y),
-  (getenv_safe('TESTING_TEMP',TESTING_TEMP)->true;TESTING_TEMP='/tmp'), %tmp_file(SpecAtom,TmpName), 
+  (getenv_safe('TESTING_TEMP',TESTING_TEMP)->true;TESTING_TEMP='/tmp'), %tmp_file(SpecAtom,TmpName),
   atomic_list_concat([TESTING_TEMP,'/',SpecAtom,Y,'-junit.xml'],FileName),
   capturing_user_error(string(UserErr), (run_junit_tests_user_error(Spec,UnitXml),plunit:check_for_test_errors)),
   sformat(JUnitStr,"~w~n~w]]>></system-out></testsuites>\n",[UnitXml,UserErr]),
   format(user_error,"~N% Writing: ~w~n",[FileName]),
   setup_call_cleanup(open(FileName, write, Out),write(Out,JUnitStr),close(Out)),
   write(JUnitStr),!.
-  % Now we fail if all did not go right?  
+  % Now we fail if all did not go right?
 
 :- create_prolog_flag(junit_show_converage, false, [keep(true)]).
 
 do_show_coverage(Spec,TotalConverage):- current_prolog_flag(junit_show_converage, false),!,
-    TotalConverage = "% use :- set_prolog_flag(junit_show_converage, true). ", 
+    TotalConverage = "% use :- set_prolog_flag(junit_show_converage, true). ",
     (Spec==all -> run_tests ; run_tests(Spec)).
 
 do_show_coverage(Spec,TotalConverage):-
-  patch_show_coverage,  
+  patch_show_coverage,
   nb_setval(seen, 0),
   nb_setval(covered, 0),
   (
@@ -139,10 +139,10 @@ do_show_coverage(Spec,TotalConverage):-
 
 run_junit_tests_user_error(Spec,UnitXml):-
   set_prolog_flag(verbose, normal),
-  do_show_coverage(Spec,TotalConverage),   
+  do_show_coverage(Spec,TotalConverage),
   with_output_to(string(UnitXml),
   (format(
-    
+
     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<testsuites>\n", []
   ),
   forall(
@@ -169,7 +169,7 @@ capturing_user_error(To, Goal):-
   setup_call_cleanup(once(stream_property(Stream,alias(A));A=[]),
   setup_call_cleanup(
     (tracing->true;set_stream(Stream,alias(user_error))),
-    call(Goal),  
+    call(Goal),
     set_stream(Was,alias(user_error))),
      once(A=[];set_stream(Stream,alias(A)))))).
 
@@ -234,10 +234,10 @@ run_tests_and_halt(Spec) :-
 getenv_safe(N,V):- getenv(N,V),!.
 getenv_safe(N,N).
 
-unit_to_sn(Unit,SuiteName,Package):- getenv_safe('JUNIT_PACKAGE',Package),getenv_safe('JUNIT_SUITE',Suite), 
+unit_to_sn(Unit,SuiteName,Package):- getenv_safe('JUNIT_PACKAGE',Package),getenv_safe('JUNIT_SUITE',Suite),
   sformat(SuiteName,"~w_~w",[Suite,Unit]).
-name_to_tc(Name,Line,SCName,Classname):-  
-  getenv_safe('JUNIT_CLASSNAME',Classname), 
+name_to_tc(Name,Line,SCName,Classname):-
+  getenv_safe('JUNIT_CLASSNAME',Classname),
   sformat(TCName,"~w@Test_0001_Line_~4d ~w",[Classname,Line,Name]),
   replace_in_string(['_0.'='_'],TCName,SCName),!.
 
@@ -334,12 +334,12 @@ mpred_test(Testcase, G):- ignore(mpred_test_fok(Testcase, G)).
 must_det_l_ex(G):- must_det_l(ignore(G)),!.
 %must_det_l_ex(G):- must_det_l(G).
 
-mpred_test_fok(Testcase, G):-   
-  junit_incr(tests), 
-  junit_incr(test_number), 
+mpred_test_fok(Testcase, G):-
+  junit_incr(tests),
+  junit_incr(test_number),
   ignore((var(Testcase),generate_test_name(G, Testcase))),
   add_test_info(testsuite,testcase,Testcase),
-  locally(t_l:mpred_current_testcase(Testcase), 
+  locally(t_l:mpred_current_testcase(Testcase),
   (must_det_l_ex((
     wdmsg('?-'(mpred_test(Testcase, G))),
     add_test_info(Testcase,goal,G),
@@ -348,7 +348,7 @@ mpred_test_fok(Testcase, G):-
     replace_in_string( [ "/opt/logicmoo_workspace"
         ="https://logicmoo.org/gitlab/logicmoo/logicmoo_workspace/-/edit/master"],
         URI,URL),
-    add_test_info(Testcase,url,URL))),    
+    add_test_info(Testcase,url,URL))),
     get_time(Start))),
     Answers = nb(0),
     catch( ( call_u_hook(G) *-> TestResult = passed; TestResult = failure), E, TestResult=error(E)),
@@ -356,7 +356,7 @@ mpred_test_fok(Testcase, G):-
       must_det_l_ex((get_time(End),
       Elapsed is End - Start,
       add_test_info(Testcase,time,Elapsed),
-      process_test_result(TestResult, G),    
+      process_test_result(TestResult, G),
       TestResult=..[Type|Info],add_test_info(Testcase,Type,Info),
       add_test_info(Testcase,result,Type),
       ignore((getenv('TEE_FILE',Tee),
@@ -369,17 +369,17 @@ mpred_test_fok(Testcase, G):-
     nb_setarg(1,Answers,1))),
     Type == passed.
 
-kill_junit_tee:- 
+kill_junit_tee:-
   ignore((getenv('TEE_FILE',Tee),
           sformat(Exec,'cat /dev/null > ~w',[Tee]),
           shell(Exec))).
 
 process_test_result(TestResult, G):- TestResult == passed, !, save_info_to(TestResult, why_was_true(G)).
 process_test_result(TestResult, G):- TestResult \== failure,junit_incr(errors), !, save_info_to(TestResult, catch(rtrace(call_u_hook(G)), E, writeln(E))).
-process_test_result(TestResult, G):- !, 
+process_test_result(TestResult, G):- !,
   junit_incr(failures),
   negate_call(G, Retry),
-  save_info_to(TestResult, 
+  save_info_to(TestResult,
     (why_was_true(Retry),
      nop(ftrace(G)))).
 
@@ -433,13 +433,13 @@ gtn_no_pack(G,Name):- is_list(G),!,maplist(gtn_no_pack,G,NameL), atomic_list_con
 gtn_no_pack(G,Name):- compound_name_arguments(G,F,A), gtn_no_pack([F|A],Name).
 */
 
-  
 
-source_context_name(SCName):- 
-  (source_location(_,L); (_='',L=0)), flag(test_number,X,X), 
+
+source_context_name(SCName):-
+  (source_location(_,L); (_='',L=0)), flag(test_number,X,X),
   sformat(Name,'Test_~4d_Line_~4d',[X,L]),
-  replace_in_string(['_0.'='_'],Name,SCName). 
-                    
+  replace_in_string(['_0.'='_'],Name,SCName).
+
 :- module_transparent(pfc_feature/1).
 :- dynamic(pfc_feature/1).
 :- export(pfc_feature/1).
@@ -505,7 +505,7 @@ skip_warning(C):- compound_name_arguments(C,N,A),member(E,[N|A]),skip_warning(E)
 with_output_to_tracing(Where,Goal):- \+ tracing,!,with_output_to(Where,Goal).
 with_output_to_tracing(_Where,Goal):- call(Goal).
 
-save_info_to(TestResult,Goal):- 
+save_info_to(TestResult,Goal):-
  with_output_to_tracing(string(S),
   (fmt(TestResult=info(Goal)),
    ignore(Goal))), write(S),
@@ -539,8 +539,8 @@ inform_message_hook(error(existence_error(procedure,'$toplevel':_),_),error,_).
 % inform_message_hook(_,warning,_).
 
 inform_message_hook(T,Type,Term):- atom(Type),
-  memberchk(Type,[error,warning]),!, 
-  once((nop(dmsg_pretty(message_hook_type(Type))),dmsg_pretty(message_hook(T,Type,Term)),  
+  memberchk(Type,[error,warning]),!,
+  once((nop(dmsg_pretty(message_hook_type(Type))),dmsg_pretty(message_hook(T,Type,Term)),
   ignore((source_location(File,Line),dmsg_pretty(source_location(File,Line)))),
   with_output_to(string(Text),
    ignore((set_stream(current_output,tty(true)),
@@ -549,7 +549,7 @@ inform_message_hook(T,Type,Term):- atom(Type),
   add_test_info(Type,Text),
   write(Text),
   nop(dumpST),
-  nop(dmsg_pretty(message_hook(File:Line:T,Type,Term))))),   
+  nop(dmsg_pretty(message_hook(File:Line:T,Type,Term))))),
   fail.
 inform_message_hook(T,Type,Term):-
   ignore(source_location(File,Line)),
@@ -571,12 +571,12 @@ inform_message_to_string(Term,Str):- format(string(Str), '~q', [Term]),!.
 %list_test_results:- !.
 list_test_results:-
   write('\n<'),writeln('!-- '),
-  % listing(j_u:junit_prop/3), 
+  % listing(j_u:junit_prop/3),
   show_all_junit_suites,
   write(' -'),writeln('->'),!.
-  
 
-show_all_junit_suites:- 
+
+show_all_junit_suites:-
   %listing(j_u:junit_prop/3),
   outer_junit((xml_header,writeln('<testsuites>'))),
   findall(File,j_u:junit_prop(testsuite,file,File),L),list_to_set(L,S),
@@ -601,7 +601,7 @@ system:halt_junit:- asserta(j_u:junit_prop(system,halted_junit,true)),!,
 junit_term_expansion(Var , _ ):- notrace(var(Var)),!,fail.
 junit_term_expansion(M:I,M:O):- !, junit_term_expansion(I,O).
 
-junit_term_expansion(_ , _ ):- prolog_load_context(file,Src),  \+ j_u:junit_prop(testsuite,file,Src), 
+junit_term_expansion(_ , _ ):- prolog_load_context(file,Src),  \+ j_u:junit_prop(testsuite,file,Src),
    \+ current_prolog_flag(test_src,Src), !, fail.
 junit_term_expansion( (end_of_file), [] ):-  !, test_completed.
 
@@ -609,14 +609,14 @@ junit_term_expansion((:- I),O):- !, junit_dirrective_expansion(I,M), (is_list(M)
 
 junit_dirrective_expansion(I,O):- junit_expansion(junit_dirrective_exp,I,O).
 
-junit_dirrective_exp( I , O ) :- junit_goal_exp(I,O) -> I\=@=O. 
-junit_dirrective_exp( listing(X), dmsg(skipped(listing(X))) ):- keep_going. 
+junit_dirrective_exp( I , O ) :- junit_goal_exp(I,O) -> I\=@=O.
+junit_dirrective_exp( listing(X), dmsg(skipped(listing(X))) ):- keep_going.
 junit_dirrective_exp( \+ X, mpred_test( \+ X ) ):- is_junit_test_file.
 %junit_dirrective_exp( X, X  ):- predicate_property(X,static).
 %junit_dirrective_exp( X, X  ):- predicate_property(X,built_in).
 %junit_dirrective_exp( X, mpred_test( X ) ).
 junit_dirrective_exp( X, X  ):- !.
- 
+
 junit_expansion(_,Var , Var ):- var(Var),!.
 junit_expansion(P,(A,B),(AO,BO)):- !,junit_expansion(P,A,AO),junit_expansion(P,B,BO).
 junit_expansion(P,(A;B),(AO;BO)):- !,junit_expansion(P,A,AO),junit_expansion(P,B,BO).
@@ -630,8 +630,8 @@ junit_goal_exp( sanity(A),mpred_test(A)) :- is_junit_test_file.
 junit_goal_exp( mpred_why(A),mpred_test(A)) :- is_junit_test_file.
 junit_goal_exp( test_boxlog(A),mpred_test(test_boxlog(A))) :- is_junit_test_file.
 
-junit_goal_exp( Break, dmsg(skipped(blocks_on_input,Break))):- blocks_on_input(Break), keep_going. 
-junit_goal_exp( Messy, dmsg(skipped(messy_on_output,Messy))):- messy_on_output(Messy), keep_going. 
+junit_goal_exp( Break, dmsg(skipped(blocks_on_input,Break))):- blocks_on_input(Break), keep_going.
+junit_goal_exp( Messy, dmsg(skipped(messy_on_output,Messy))):- messy_on_output(Messy), keep_going.
 
 
 
@@ -649,9 +649,9 @@ test_completed_props(error).
 test_completed_props(result).
 
 % explain_junit_results:- listing(j_u::junit_prop/3).
-explain_junit_results:- 
+explain_junit_results:-
   j_u:junit_prop(S,V,O),
-  once(test_completed_props(V);(fail,term_to_atom(O,Atom), atom_length(Atom,L), L<200)), 
+  once(test_completed_props(V);(fail,term_to_atom(O,Atom), atom_length(Atom,L), L<200)),
   write_testcase_prop(S,V,O),
   fail.
 explain_junit_results:- nl, ttyflush.
@@ -671,8 +671,8 @@ test_completed_exit(_):- ttyflush,fail.
 test_completed_exit(N):- dmsg_pretty(test_completed_exit(N)),fail.
 test_completed_exit(_):- dumpST,fail.
 test_completed_exit(_):- ttyflush,fail.
-test_completed_exit(_):- current_prolog_flag(test_completed,MGoal), strip_module(MGoal,M,Goal), Goal\=[], 
-   Goal\==test_completed,  callable(Goal), call(M:Goal). 
+test_completed_exit(_):- current_prolog_flag(test_completed,MGoal), strip_module(MGoal,M,Goal), Goal\=[],
+   Goal\==test_completed,  callable(Goal), call(M:Goal).
 
 test_completed_exit(_):- ttyflush,fail.
 % test_completed_exit(N):- keep_going,!, halt(N).
@@ -692,21 +692,21 @@ calc_exit_code0(8):- \+ \+ j_u:junit_prop(_,result,failure).
 calc_exit_code0(16):- \+ \+ j_u:junit_prop(_,warning,_).
 calc_exit_code0(32):- once(j_u:junit_prop(_,error,_) ; j_u:junit_prop(_,result,error)).
 calc_exit_code0(64):- \+ j_u:junit_prop(_,result,failure), \+ \+ j_u:junit_prop(_,result,passed).
-  
+
 
 
 :- dynamic(j_u:started_test_completed/0).
 :- volatile(j_u:started_test_completed/0).
 system:test_completed:- j_u:started_test_completed,!.
-system:test_completed:- 
+system:test_completed:-
  ignore((asserta(j_u:started_test_completed),logicmoo_test:calc_exit_code(XC),logicmoo_test:test_completed_exit_maybe(XC))).
 
 system:test_repl:-  assertz(j_u:junit_prop(need_retake,warn,need_retake)).
 system:test_retake:- system:halt_junit,logicmoo_test:test_completed_exit_maybe(3).
 
-save_junit_results:-  
+save_junit_results:-
  \+ \+ j_u:junit_prop(testsuite,file,_),
- forall(j_u:junit_prop(testsuite,file,File), 
+ forall(j_u:junit_prop(testsuite,file,File),
     (with_output_to(string(Text),show_junit_suite_xml(File)),
      save_to_junit_file(File,Text))),!.
 save_junit_results:- test_src(Named),
@@ -714,12 +714,12 @@ save_junit_results:- test_src(Named),
      save_to_junit_file(Named,Text)),!.
 save_junit_results:- wdmsg(unused(no_junit_results)).
 
-show_junit_suite_xml(File):- 
+show_junit_suite_xml(File):-
   xml_header,
   writeln('<testsuites>'),
   maplist(show_junit_suite,File),
   writeln('</testsuites>'),!.
-  
+
 
 junit_count(tests).
 junit_count(errors).
@@ -732,13 +732,13 @@ clear_suite_attribs:- forall(junit_count(F),flag(F,_,0)),
   retractall(j_u:junit_prop(testsuite,start,_)),
   get_time(Start),asserta(j_u:junit_prop(testsuite,start,Start)).
 
-get_suite_attribs(SuiteAttribs):-    
+get_suite_attribs(SuiteAttribs):-
   with_output_to(string(SuiteAttribs),
 (( ignore((getenv('JUNIT_PACKAGE',Package), format(' package="~w"', [Package]))),
    ignore((j_u:junit_prop(testsuite,start,Start),get_time(End),Elapsed is End - Start,format(' time="~3f"',[Elapsed]))),
    forall((junit_count(F),flag(F,C,C)),format(' ~w="~w"',[F,C]))))).
 
-show_junit_suite(File):- 
+show_junit_suite(File):-
    (getenv_safe('JUNIT_SUITE',SuiteName);SuiteName=File),!,
   get_suite_attribs(SuiteAttribs),
   format("  <testsuite name=\"~w\" ~w>\n", [SuiteName, SuiteAttribs]),
@@ -747,7 +747,7 @@ show_junit_suite(File):-
    writeln("  </testsuite>"),
    clear_suite_attribs.
 
-find_issue_with_name(Name,IssueNumber):- 
+find_issue_with_name(Name,IssueNumber):-
   issue_labels(Name,Labels),
   fail, % until those are ready
   find_issues_by_labels(Labels,[Issue|_]),
@@ -762,12 +762,12 @@ create_issue_with_name(Name,FileName,IssueNumber):-
   dmsg(todo(create_issue_with_name(Name,FileName,Labels))),
   IssueNumber=find(labels=Labels),!.
 
-  
-issue_labels(Name,[Package,ShortClass,TestNum]):- 
+
+issue_labels(Name,[Package,ShortClass,TestNum]):-
   getenv_safe('JUNIT_CLASSNAME',Classname),
   classname_to_package(Classname,Package,ShortClass),
   sub_string(Name,1,9,_,TestNum).
-  
+
 
 save_single_testcase(Name):-
  must_det_l_ex((
@@ -781,7 +781,7 @@ save_single_testcase(Name):-
 xml_header :- write('<?'),write('xml version="1.0" '), writeln('encoding="utf-8"?>').
 
 save_single_testcase_shrink(_Name,_FileName):- \+ j_u:junit_prop(testsuite,file,_File),!.
-save_single_testcase_shrink(Name,FileName):- 
+save_single_testcase_shrink(Name,FileName):-
  must_det_l_ex((
  with_output_to(string(Text),
   (xml_header,
@@ -807,7 +807,7 @@ classname_to_package(CN,P,C):- atomic_list_concat(List,'.',CN), append(Left,[C],
 %  atomic_list_concat(['prolog.',test_,N1,'.',N2,'.',N3,'.',N4],'',RSName).
 
 shorten_and_clean_name(Name,RSName):- shorten_and_clean_name(Name,-30,RSName),!.
-shorten_and_clean_name(Name,Size,RSName):- 
+shorten_and_clean_name(Name,Size,RSName):-
   ensure_compute_file_link(Name,Name0),
   replace_in_string(
   ['https://logicmoo.org:2082/gitlab/logicmoo/'="",
@@ -830,7 +830,7 @@ clean_away_ansi(DirtyText,DirtyText).
   is_control_code(10):-!, fail.  is_control_code(13):-!, fail.
   is_control_code(C):- C < 32.  is_control_code(C):- \+ char_type(C,print),!.
   is_control_code(C):- C>128.
-  
+
   clean_ansi_codes([],[]).
   clean_ansi_codes([27,_|Codes],CodesC):- !, clean_ansi_codes(Codes,CodesC).
   clean_ansi_codes([C|Codes],CodesC):- is_control_code(C),!, clean_ansi_codes(Codes,CodesC).
@@ -843,10 +843,10 @@ save_to_junit_file_text(Full,Text,FullF):- j_u:last_saved_junit(Full),!,
     atomic_list_concat([Full,'_',X,'-junit.xml'],FullF),
     format('~N% saving_junit: ~w~n',[FullF]),
   setup_call_cleanup(open(FullF, write, Out),writeln(Out,Text), close(Out)),!.
-save_to_junit_file_text(Full,Text,FullF):- 
+save_to_junit_file_text(Full,Text,FullF):-
     asserta(j_u:last_saved_junit(Full)),
     atomic_list_concat([Full,'-junit.xml'],FullF),
-    format('~N% saving_junit: ~w~n',[FullF]),    
+    format('~N% saving_junit: ~w~n',[FullF]),
   setup_call_cleanup(open(FullF, write, Out),writeln(Out,Text), close(Out)),!.
 
 save_to_junit_file(Name,DirtyText,FileName):-
@@ -879,7 +879,7 @@ suite_to_package(Suite,Package):- shorten_and_clean_name(Suite,Suite0),
   atomic_list_concat(Split,'/logicmoo_workspace/',Suite0),last(Split,Right),
   replace_in_string([".pfc"="",".pl"="",'/'='.'],Right,Package),!.
 
-show_junit_testcase(Suite,Testcase):- 
+show_junit_testcase(Suite,Testcase):-
  j_u:junit_prop(Testcase,goal,Goal),
  (getenv_safe('JUNIT_CLASSNAME',Classname)-> true ; suite_to_package(Suite,Classname)),
  %(getenv_safe('JUNIT_PACKAGE',Package) -> true ; classname_to_package(Classname,Package,_ShortClass)),
@@ -907,7 +907,7 @@ junit_env_var('JUNIT_CLASSNAME').
 %junit_env_var('JUNIT_SUITE').
 junit_env_var('JUNIT_CMD').
 
-write_testcase_std_info(Testcase):- 
+write_testcase_std_info(Testcase):-
  with_output_to(string(StdErr),
  (write_testcase_env(Testcase),
   ignore((j_u:junit_prop(Testcase,out,Str),format('~w',[Str]))),
@@ -915,7 +915,7 @@ write_testcase_std_info(Testcase):-
   shrink_to(StdErr,200,Summary),
   replace_in_string(['CDATA'='CDAT4'],Summary,SummaryClean),
   format("  <system-err>~wCD~w[~w]]></system-err>",['<![','ATA',SummaryClean]),!.
- 
+
 write_testcase_prop(S,V,O):- format('~N'), write(S),write_testcase_n_v(V,O), format('~N').
 write_testcase_prop(Type,Term):- format('~N'), write_testcase_n_v(Type,Term), format('~N').
 
@@ -930,9 +930,9 @@ write_testcase_n_v(Type,Term):- format('\t~w\t=\t~q. ',[Type,Term]).
 escape_attribute(I,O):-xml_quote_attribute(I,O).
 
 
-get_nongood_strings(Testcase,NonGood):- 
-  with_output_to(string(NonGood), 
-    forall((j_u:junit_prop(Testcase,Type,Term), nongood_type(Type)), 
+get_nongood_strings(Testcase,NonGood):-
+  with_output_to(string(NonGood),
+    forall((j_u:junit_prop(Testcase,Type,Term), nongood_type(Type)),
       format('~N~w = ~q.~n',[Type,Term]))).
 
 write_testcase_info(Testcase):- j_u:junit_prop(Testcase,result,failure),!,
@@ -947,8 +947,8 @@ write_testcase_info(Testcase):- \+ j_u:junit_prop(Testcase,result,passed),!,
 
 write_testcase_info(Testcase):- write_testcase_std_info(Testcase),!.
 
-write_message_ele(Ele,NonGood):-  
-  text_to_string(NonGood,SNonGood),  
+write_message_ele(Ele,NonGood):-
+  text_to_string(NonGood,SNonGood),
   escape_attribute(SNonGood,ENonGood),
   shrink_to(ENonGood,250,NonGoodTrimmed),
   format("  <~w message=\"~w\" />\n", [Ele,NonGoodTrimmed]).
@@ -981,13 +981,13 @@ message_hook_dontcare(_, error, _):- source_location(File,4235),atom_concat(_,'/
 
 
 message_hook_handle(Term, Kind, Lines):- message_hook_dontcare(Term, Kind, Lines),!.
-message_hook_handle(message_lines(_),error,['~w'-[_]]). 
+message_hook_handle(message_lines(_),error,['~w'-[_]]).
 message_hook_handle(error(resource_error(portray_nesting),_),
    error, ['Not enough resources: ~w'-[portray_nesting], nl,
-      'In:', nl, '~|~t[~D]~6+ '-[9], '~q'-[_], nl, '~|~t[~D]~6+ '-[64], 
-        _-[], nl, nl, 'Note: some frames are missing due to last-call optimization.'-[], nl, 
+      'In:', nl, '~|~t[~D]~6+ '-[9], '~q'-[_], nl, '~|~t[~D]~6+ '-[64],
+        _-[], nl, nl, 'Note: some frames are missing due to last-call optimization.'-[], nl,
         'Re-run your program in debug mode (:- debug.) to get more detail.'-[]]).
-message_hook_handle(T,Type,Term):- 
+message_hook_handle(T,Type,Term):-
   ((current_prolog_flag(runtime_debug, N),N>2) -> true ; source_location(_,_)),
   memberchk(Type,[error,warning]),once(inform_message_hook(T,Type,Term)),fail.
 
@@ -1007,14 +1007,14 @@ message_hook_handle(T,Type,Term):-
 :- dynamic prolog:message//1, user:message_hook/3.
 :- module_transparent prolog:message//1, user:message_hook/3.
 
-user:message_hook(T,Type,Term):- 
+user:message_hook(T,Type,Term):-
    %notrace
   ((
    Type \== silent, Type \== debug, Type \== informational,
    current_prolog_flag(logicmoo_message_hook,Was),Was\==none,Was\==false)),
-   setup_call_cleanup(set_prolog_flag(logicmoo_message_hook,none),
+   setup_call_cleanup(create_prolog_flag(logicmoo_message_hook,none,[type(term),keep(false)])),
      once(catch(message_hook_handle(T,Type,Term),_,fail)),
-      set_prolog_flag(logicmoo_message_hook,Was)),!.
+      create_prolog_flag(logicmoo_message_hook,Was,[type(term),keep(false)])),!.
 
 %:- initialization(set_prolog_flag(logicmoo_message_hook,none),prepare_state).
 
@@ -1061,16 +1061,16 @@ system:goal_expansion(I,P,O,PO):- notrace((nonvar(P),is_junit_test, junit_goal_e
 
 
 <suite name="SingleSuite" verbose="2" thread-count="4">
- 
+
   <parameter name="n" value="42" />
- 
+
   <test name="Regression2">
     <groups>
       <run>
         <exclude name="broken" />
       </run>
     </groups>
- 
+
     <classes>
       <class name="test.listeners.ResultEndMillisTest" />
     </classes>
@@ -1079,8 +1079,8 @@ system:goal_expansion(I,P,O,PO):- notrace((nonvar(P),is_junit_test, junit_goal_e
 
 */
 
-/* 
-<?xml version="1.0" 
+/*
+<?xml version="1.0"
 encoding="UTF-8"?>
 <!-- a description of the JUnit XML format and how Jenkins parses it. See also junit.xsd -->
 
