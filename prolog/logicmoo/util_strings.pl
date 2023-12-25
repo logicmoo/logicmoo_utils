@@ -95,7 +95,7 @@
             rejoined/3,
             remove_predupes/2,
             replace_in_string/3,
-            replace_in_string/4,            
+            replace_in_string/4,
             replace_in_string/5,
             replace_periods/2,
             replace_periods_string_list/2,
@@ -103,7 +103,7 @@
             starts_or_ends_with_icase/2,
             convert_to_string_list/2,
             convert_to_atoms_list/2,
-            
+
             starts_with_icase/2,
             str_contains_all/2,
             str_contains_all0/2,
@@ -142,16 +142,16 @@
             vars_to_ucase_0/2
           ]).
 /** <module> Utility LOGICMOO_UTIL_STRINGS
-This module introduces string replacements for find replacement in strings, capitalization, etc for text normalization.  
+This module introduces string replacements for find replacement in strings, capitalization, etc for text normalization.
 @author Douglas R. Miles
 @license LGPL
 */
 % autoloading user:portray_clause_pi/2 from /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_first
-:- multifile 
+:- multifile
         double_quotes_was_strings/1,
         %string_predicate/1,
         to_string_hook/3.
-:- meta_predicate 
+:- meta_predicate
         map_tree_to_list(2, ?, ?),
         toCase(2, ?, ?),
         toCaseSplit(?, 2, ?, ?).
@@ -271,7 +271,7 @@ This module introduces string replacements for find replacement in strings, capi
         vars_to_ucase_0/2.
 
 :- dynamic % (dynamic) :-
-                
+
         double_quotes_was_strings/1,
         to_string_hook/3.
 
@@ -312,7 +312,7 @@ get_text_restore_pred(Text,any_to_codelist):- is_codelist(Text),!.
 get_text_restore_pred(Text,any_to_codelist):- Text==[],!.
 get_text_restore_pred(_,any_to_string).
 
-%= 	 	 
+%=
 
 %% any_to_string( ?Atom, ?String) is semidet.
 %
@@ -327,7 +327,7 @@ maybe_keep_postion(Stream,Goal):-
     Goal,
     (stream_property(Stream,reposition(true))->set_stream_position(Stream,Pos);true)).
 
-%= 	 	 
+%=
 
 %% any_to_string1( ?Atom, ?String) is semidet.
 %
@@ -342,21 +342,21 @@ any_to_string1(Atom,String):- var(Atom),!,=(Atom,String).
 any_to_string1(Atom,String):- string(Atom),!,Atom=String.
 any_to_string1(Atom,String):- is_s_string(Atom),!,convert_to_string(Atom,String).
 %any_to_string1(_,_):- stack_depth(X),X>2000,!,sanity(fail),fail.
-any_to_string1(s(Atom),String):- !, any_to_string1(Atom,String). 
+any_to_string1(s(Atom),String):- !, any_to_string1(Atom,String).
 % any_to_string1(Atom,String):- is_string(Atom),!,text_to_string(String).
 
 any_to_string1(Atom,String):- number(Atom),!,number_string(Atom,String).
 any_to_string1(Atom,String):- atomic(Atom),!,convert_to_string(Atom,String),!.
 any_to_string1(Empty,""):- empty_str(Empty),!.
 
-any_to_string1(string(Atom),String):- !, any_to_string1(Atom,String). 
-any_to_string1(atom(Atom),String):- !, any_to_string1(Atom,String). 
-any_to_string1(text(Atom),String):- !, any_to_string1(Atom,String). 
+any_to_string1(string(Atom),String):- !, any_to_string1(Atom,String).
+any_to_string1(atom(Atom),String):- !, any_to_string1(Atom,String).
+any_to_string1(text(Atom),String):- !, any_to_string1(Atom,String).
 any_to_string1(fmt(Fmt,Args),String):-!,must(sformat(String,Fmt,Args)).
 any_to_string1(txtFormatFn(Fmt,Args),String):-!,must(sformat(String,Fmt,Args)).
 % any_to_string1([Atom],String):-  !, any_to_string1(Atom,String).
 any_to_string1(List,String):- text_to_string_safe(List,String),!.
-any_to_string1(List,String):- is_list(List),!,must_maplist(any_to_string1,List,StringList), 
+any_to_string1(List,String):- is_list(List),!,must_maplist(any_to_string1,List,StringList),
     must(atomics_to_string(StringList, ' ', String)),!.
 any_to_string1(List,String):- on_x_debug(format(string(String),'~w',[List])).
 
@@ -387,12 +387,12 @@ is_s_string(I):-compound(I),functor(I,s,_),!.
 convert_to_cycString(I,O):- t_l:no_cycstrings,!,any_to_string(I,O).
 %convert_to_cycString(I,O):- is_s_string(I),!,O=I.
 convert_to_cycString(I,O):- convert_to_string_list(I,M),delistify_single_element(M,O).
-   
-                                                                            
+
+
 convert_to_s_string(I,O):- convert_to_sel_string(fail,=,sl,I,O).
 
-/* 
-   "Hi there" 
+/*
+   "Hi there"
    s("Hi",there).
    s('Hi',there).
    s(['Hi',there]).
@@ -409,7 +409,7 @@ convert_to_s_string(I,O):- convert_to_sel_string(fail,=,sl,I,O).
 
    s(hi,there).
    s([hi,there]).
-   
+
 
 */
 
@@ -420,7 +420,7 @@ convert_to_sel_string(S,E,L,I,O):- quietly((convert_to_atoms_list(I,SL),must_map
 
 
 to_sel_1e_string(sf,M,s(O)):-!,M=O.
-to_sel_1e_string(l,M,[O]):-!,M=O.                     
+to_sel_1e_string(l,M,[O]):-!,M=O.
 to_sel_1e_string(sl,M,s([O])):-!,M=O.
 to_sel_1e_string(=,M,O):-!,M=O.
 to_sel_1e_string(U,M,O):- must(call(call,U,M,O)).
@@ -517,7 +517,7 @@ local_sanity_test:- sanity(dehyphenize_const('a-b','aB')).
 local_sanity_test:- must(dehyphenize_const('a-2b','a_2b')).
 local_sanity_test:- must(dehyphenize_const('uitype-ProductDescriptionTemplate','uitypeProductDescriptionTemplate')).
 
-%= 	 	 
+%=
 
 %% string_to_atom_safe( ?ISO, ?LISTO) is semidet.
 %
@@ -544,7 +544,7 @@ string_lower(M,U):-toLowercase(M,U).
 :- dynamic(to_string_hook/3).
 
 
-%= 	 	 
+%=
 
 %% camelSplitters( ?V) is semidet.
 %
@@ -554,7 +554,7 @@ camelSplitters(V):-arg(_,v(' ','-','_',':' /*,'mt','doom','Mt','Doom'*/ ),V).
 
 
 
-%= 	 	 
+%=
 
 %% concat_atom_safe( ?I, ?O) is semidet.
 %
@@ -563,7 +563,7 @@ camelSplitters(V):-arg(_,v(' ','-','_',':' /*,'mt','doom','Mt','Doom'*/ ),V).
 concat_atom_safe(I,O):-concat_atom_safe(I,'',O).
 
 
-%= 	 	 
+%=
 
 %% concat_atom_safe( ?A, ?B, ?C) is semidet.
 %
@@ -580,7 +580,7 @@ concat_atom_safe(A,B,C):-concat_atom(A,B,C).
 % Atom / String functions
 %================================================================
 
-%= 	 	 
+%=
 
 %% atomsSameCI( ?Name1, ?Name1) is semidet.
 %
@@ -590,7 +590,7 @@ atomsSameCI(Name1,Name1):-!.
 atomsSameCI(Name1,Name2):-atom(Name1),atom(Name2),downcase_atom(Name1,D1),downcase_atom(Name2,D2),!,D1=D2.
 
 
-%= 	 	 
+%=
 
 %% clean_codes( ?X, ?Y) is semidet.
 %
@@ -601,7 +601,7 @@ clean_codes(X,X).
 
 %clean_out_atom(X,Y):-atomSplit(X,C),delete(C,'',O),concat_atom_safe(C,' ',Y).
 
-%= 	 	 
+%=
 
 %% clean_out_atom( ?X, ?Y) is semidet.
 %
@@ -612,7 +612,7 @@ clean_out_atom(X,Y):-atom_codes(X,C),clean_codes(C,D),!,atom_codes(X,D),!,Y=X.
 %%atomSplit(A,B):-token_stream_of(A,AA),findall(B0,arg(1,AA,B),B).
 
 
-%= 	 	 
+%=
 
 %% all_upper_atom( ?X) is semidet.
 %
@@ -621,7 +621,7 @@ clean_out_atom(X,Y):-atom_codes(X,C),clean_codes(C,D),!,atom_codes(X,D),!,Y=X.
 all_upper_atom(X):-toUppercase(X,N),!,N=X.
 
 
-%= 	 	 
+%=
 
 %% atom_contains( ?F, ?X) is semidet.
 %
@@ -642,7 +642,7 @@ any_to_atom(Any,A):- any_to_string(Any,T), format(atom(A),'~w',[T]).
 % any_to_atom(A,A):- any_to_string(A,T), format(atom(A),'~w',[T]).
 
 
-%= 	 	 
+%=
 
 %% any_to_string_or_var( ?StringO, ?String) is semidet.
 %
@@ -652,7 +652,7 @@ any_to_string_or_var(StringO,String):- notrace(((var(StringO);var(String)),!,Str
 any_to_string_or_var(StringO,String):- notrace((any_to_string(StringO,StringOS1),any_to_string(String,StringOS2),!,StringOS1=StringOS2)).
 
 
-%= 	 	 
+%=
 
 %% atomic_list_concat_safe( ?List, ?StringO) is semidet.
 %
@@ -673,7 +673,7 @@ sub_string_or_atom(V, NBefore, Len, NumAfter, Atom):- (atom(V);atom(Atom)),!,sub
 sub_string_or_atom(V, NBefore, Len, NumAfter, Atom):- assertion(string(V);string(Atom)),sub_string(V, NBefore, Len, NumAfter, Atom).
 
 
-%= 	 	 
+%=
 
 %% atomic_list_concat_safe( ?List, ?Sep, ?StringO) is semidet.
 %
@@ -707,7 +707,7 @@ atomic_list_concat_safe([V],_Sep,V):-!.
 
 % convert any ftTerm to 'atom' string
 
-%= 	 	 
+%=
 
 %% convert_to_string( ?I, ?ISO) is semidet.
 %
@@ -722,7 +722,7 @@ convert_to_string(I,ISO):-
 		text_to_string(LISTO,ISO). % string_to_atom_safe(ISO,LISTO),!.
 */
 
-%= 	 	 
+%=
 
 %% list_replace( ?List, ?Char, ?Replace, ?NewList) is semidet.
 %
@@ -738,7 +738,7 @@ list_replace(List,_Char,_Replace,List):-!.
 
 % :- export(atomic_concat/3).
 
-%= 	 	 
+%=
 
 %% atomic_concat( ?A, ?B, ?C, ?Out) is semidet.
 %
@@ -754,7 +754,7 @@ atomic_concat(A,B,C,Out):-atomic_list_concat_safe([A,B,C],Out).
 isSlot(V):- is_ftVar(V).
 
 
-%= 	 	 
+%=
 
 %% noCaseChange( ?VAR) is semidet.
 %
@@ -768,7 +768,7 @@ noCaseChange(MiXed):-atom(MiXed),atom_concat('#$',_,MiXed),!.
 noCaseChange(c(_)):-!.
 
 
-%= 	 	 
+%=
 
 %% first_char_to_upper( ?CX, ?Y) is semidet.
 %
@@ -776,7 +776,7 @@ noCaseChange(c(_)):-!.
 %
 first_char_to_upper(CX,Y):- name(CX,[S|SS]),char_type(S,to_lower(NA)),name(NA,[N]),name(Y,[N|SS]),!.
 
-%= 	 	 
+%=
 
 %% first_char_to_lower( ?CX, ?Y) is semidet.
 %
@@ -784,7 +784,7 @@ first_char_to_upper(CX,Y):- name(CX,[S|SS]),char_type(S,to_lower(NA)),name(NA,[N
 %
 first_char_to_lower(CX,Y):- name(CX,[S|SS]),char_type(S,to_upper(NA)),name(NA,[N]),name(Y,[N|SS]),!.
 
-%= 	 	 
+%=
 
 %% to_titlecase( ?CX, ?Y) is semidet.
 %
@@ -795,7 +795,7 @@ to_titlecase('',''):-!.
 to_titlecase(CX,Y):- first_char_to_upper(CX,Y).
 
 
-%= 	 	 
+%=
 
 %% text_to_string_safe( ?Expr, ?Forms) is semidet.
 %
@@ -805,7 +805,7 @@ text_to_string_safe(Expr,Forms):- notrace(on_x_fail(text_to_string(Expr,Forms)))
 
 
 
-%= 	 	 
+%=
 
 %% toLowercase( ?I, ?O) is semidet.
 %
@@ -815,7 +815,7 @@ toLowercase(I,O):-integer(I),!,to_lower(I,O).
 toLowercase(I,O):-toCase(downcase_atom,I,O).
 
 
-%= 	 	 
+%=
 
 %% toUppercase( ?I, ?O) is semidet.
 %
@@ -825,7 +825,7 @@ toUppercase(I,O):-integer(I),!,to_upper(I,O).
 toUppercase(I,O):-toCase(upcase_atom,I,O).
 
 
-%= 	 	 
+%=
 
 %% toCamelcase( ?I, ?O) is semidet.
 %
@@ -834,7 +834,7 @@ toUppercase(I,O):-toCase(upcase_atom,I,O).
 toCamelcase(I,O):-toCaseSplit('',first_char_to_upper,I,O).
 
 
-%= 	 	 
+%=
 
 %% unCamelcase( ?I, ?O) is semidet.
 %
@@ -846,7 +846,7 @@ toCamelcase(I,O):-toCaseSplit('',first_char_to_upper,I,O).
 unCamelcase(I,O):-toCaseSplit('_',first_char_to_lower,I,O).
 
 
-%= 	 	 
+%=
 
 %% toPropercase( ?I, ?O) is semidet.
 %
@@ -856,7 +856,7 @@ toPropercase(I,O):-toCaseSplit(_Same,to_titlecase,I,O).
 
 
 
-%= 	 	 
+%=
 
 %% toCase( :PRED2Pred, ?MiXed, ?MiXed) is semidet.
 %
@@ -876,7 +876,7 @@ toCase( Pred,MiXed,CASED):-compound(MiXed),MiXed=..MList,
 
 
 
-%= 	 	 
+%=
 
 %% toCaseSplit( ?UPARAM1, :PRED2VALUE2, ?MiXed, ?MiXed) is semidet.
 %
@@ -899,7 +899,7 @@ toCaseSplit(_     ,Pred,MiXed,UPPER):-must((compound(MiXed),MiXed=..MList,
   UPPER=..UList)).
 
 
-%= 	 	 
+%=
 
 %% rejoined( ?Rejoin, ?V, ?VV) is semidet.
 %
@@ -909,7 +909,7 @@ rejoined(Rejoin,V,VV):-ignore(Rejoin=VV),ignore(V=VV),!.
 
 
 
-%= 	 	 
+%=
 
 %% empty_str( ?E) is semidet.
 %
@@ -925,7 +925,7 @@ empty_str(E):-nonvar(E),memberchk(E,[``,"",'']).
 :- export(capitalized/1).
 
 
-%= 	 	 
+%=
 
 %% capitalized( ?Type) is semidet.
 %
@@ -938,7 +938,7 @@ capitalized(Type):- string_codes(Type,[S|_]),char_type(S,upper),must(char_type(S
 % ===========================================================
 :- export(to_case_breaks/2).
 
-%= 	 	 
+%=
 
 %% to_case_breaks( ?Text, ?New) is semidet.
 %
@@ -949,7 +949,7 @@ to_case_breaks(Text,New):- string_codes(Text,[C|Codes]), char_type_this(C,WillBe
 
 to_case_break_atoms(I,O):- any_to_atom(I,A),to_case_breaks(A,M),maplist(arg(1),M,L),maplist(any_to_atom,L,O).
 
-%= 	 	 
+%=
 
 %% char_type_this( ?C, ?Lower) is semidet.
 %
@@ -958,7 +958,7 @@ to_case_break_atoms(I,O):- any_to_atom(I,A),to_case_breaks(A,M),maplist(arg(1),M
 char_type_this(C,Lower):- notrace((ctype_switcher(Lower),char_type(C,Lower))),!.
 
 
-%= 	 	 
+%=
 
 %% ctype_switcher( ?VALUE1) is semidet.
 %
@@ -972,20 +972,21 @@ ctype_switcher(lower).
 ctype_switcher(upper).
 
 
-%= 	 	 
+%=
 
 %% breaked_codes( ?S, ?C0) is semidet.
 %
 % Breaked Codes.
 %
+breaked_codes(S,C):- notrace(nonvar(S)),notrace(catch((number_codes(_,C),string_codes(S,C)),_,fail)),!.
 breaked_codes(S,C0):- notrace(nonvar(S)),on_x_fail(write_to_codes(S,C)),!,C=C0.
-breaked_codes(S,C):- notrace(catch(number_codes(S,C),_,
-  (string_codes(S,C)->true;
+breaked_codes(S,C):-
+ (string_codes(S,C)->true;
     (atom_codes(S,C)->true;
-       string_equal_ci(S,C))))).
+       string_equal_ci(S,C))),!.
 
 
-%= 	 	 
+%=
 
 %% ctype_continue( ?X, ?X) is semidet.
 %
@@ -995,7 +996,7 @@ ctype_continue([_],upper,lower).
 ctype_continue(_ ,X,X):-ctype_switcher(X).
 
 
-%= 	 	 
+%=
 
 %% ctype_switch( ?T1, ?T2) is semidet.
 %
@@ -1006,26 +1007,28 @@ ctype_switch(T1,T2):-ctype_switcher(T1),ctype_switcher(T2),T1\=T2.
 
 
 
-%= 	 	 
+%=
 
 %% hide_char_type( ?VALUE1) is semidet.
 %
 % Hide Char Type.
 %
-hide_char_type(white).
+%hide_char_type(white).
+hide_char_type(red).
 %hide_char_type(punct).
 
 % to_case_breaks(+Codes,+SoFarC,+Lower,List)
 
-%= 	 	 
+%=
 
 %% to_case_breaks( :TermC___Codes, ?WillBe, ?SoFar, ?Upper, ?OUT) is semidet.
 %
 % Converted To Case Breaks.
 %
+to_case_breaks([C2|Codes],_,[C],WillBe,[xti(Left,WillBe)|New]):- C2\==C, WillBe==punct, !, text_to_string([C],Left),to_case_breaks([C2|Codes],New).
 to_case_breaks([      ],_WillBe,   [],_,     []):-!.
 to_case_breaks([       ],WillBe,SoFar,_NewType,[xti(Left,WillBe)]):-breaked_codes(Left,SoFar),!.
-to_case_breaks([C|Codes],WillBe,SoFar,Upper,New):- ctype_continue(SoFar,Upper,Lower), 
+to_case_breaks([C|Codes],WillBe,SoFar,Upper,New):- ctype_continue(SoFar,Upper,Lower),
       char_type_this(C,Lower),append(SoFar,[C],SoFarC),!,
       to_case_breaks(Codes,WillBe,SoFarC,Lower,New).
 
@@ -1033,7 +1036,7 @@ to_case_breaks(C___Codes,WillBe,SoFar,Upper,OUT):- is_list(OUT),OUT=[xti(Left,Wi
   to_first_break_w(C___Codes,SoFar,Upper,Left,New,RType).
 
 
-to_case_breaks([C|Codes],WillBe,SoFar,Upper,OUT):- ctype_switch(Upper,Digit), char_type_this(C,Digit),!, 
+to_case_breaks([C|Codes],WillBe,SoFar,Upper,OUT):- ctype_switch(Upper,Digit), char_type_this(C,Digit),!,
   breaked_codes(Left,SoFar), to_case_breaks(Codes,Digit,[C],Digit,New),!,
   (hide_char_type(WillBe)->OUT=New;OUT=[xti(Left,WillBe)|New]).
 
@@ -1041,7 +1044,7 @@ to_case_breaks([C|Codes],WillBe,SoFar,Upper,New):- append(SoFar,[C],SoFarC),to_c
 
 :- export(to_first_break/2).
 
-%= 	 	 
+%=
 
 %% to_first_break( ?Text, ?Left) is semidet.
 %
@@ -1050,7 +1053,7 @@ to_case_breaks([C|Codes],WillBe,SoFar,Upper,New):- append(SoFar,[C],SoFarC),to_c
 to_first_break(Text,Left):-to_first_break(Text,_LeftType,Left,_Right,_NextType).
 :- export(to_first_break/5).
 
-%= 	 	 
+%=
 
 %% to_first_break( ?Text, ?LType, ?Left, ?Right, ?RType) is semidet.
 %
@@ -1061,7 +1064,7 @@ to_first_break(Text,LType,Left,Right,RType):- string_codes(Text,[C|Codes]), char
 to_first_break(Text,LType,Left,Right,RType):- string_codes(Text,[C|Codes]), !,to_first_break_w(Codes,[C],LType,Left,Right,RType).
 
 
-%= 	 	 
+%=
 
 %% to_first_break_w( :TermARG1, ?SoFar, ?Some, ?Left, ?VALUE5, ?VALUE6) is semidet.
 %
@@ -1078,7 +1081,7 @@ to_first_break_w([C|Codes],SoFar,Lower,Left,Rest,RType):- append(SoFar,[C],SoFar
 % ===========================================================
 
 
-%= 	 	 
+%=
 
 %% quoteAtomString( ?QU, ?QU) is semidet.
 %
@@ -1090,7 +1093,7 @@ quoteAtomString(QU,QU):-concat_atom_safe(['"'|_],QU),!.
 quoteAtomString(UQ,QU):-concat_atom_safe(['"',UQ,'"'],QU),!.
 
 
-%= 	 	 
+%=
 
 %% unquoteAtom( ?Atom, ?New) is semidet.
 %
@@ -1103,7 +1106,7 @@ unquoteAtom(Atom,New):-concat_atom_safe(LIST,'"',Atom),concat_atom_safe(LIST,'',
 % ===========================================================
 
 
-%= 	 	 
+%=
 
 %% is_charlist( :TermX) is semidet.
 %
@@ -1118,7 +1121,7 @@ any_to_charlist(A,C):- is_charlist(A),!,A=C.
 any_to_charlist(A,C):- any_to_string(A,S),atom_chars(S,C).
 
 
-%= 	 	 
+%=
 
 %% is_codelist( :TermA) is semidet.
 %
@@ -1129,14 +1132,14 @@ is_codelist(L):- ground(L), L\==[], is_list(L),!,maplist(is_codelist_code,L).
 :- export(is_codelist_code/1).
 is_codelist_code(H):- \+ integer(H),!,fail.
 is_codelist_code(H):- H<32,!,fail.
-is_codelist_code(H):- H>=128,!,fail. 
+is_codelist_code(H):- H>=128,!,fail.
 is_codelist_code(H):- integer(H), swish_render_codes_charset_code(_,H),!.
 
 swish_render_codes_charset_code(_,9).
 swish_render_codes_charset_code(_,10).
 swish_render_codes_charset_code(_,13).
 swish_render_codes_charset_code(_,27).
-swish_render_codes_charset_code(ascii, C) :- 
+swish_render_codes_charset_code(ascii, C) :-
     between(32, 126, C).
 swish_render_codes_charset_code(iso_latin_1, C) :-
     (   between(32, 126, C)
@@ -1148,7 +1151,7 @@ swish_render_codes_charset_code(iso_latin_1, C) :-
 any_to_codelist(A,C):- is_codelist(A),!,A=C.
 any_to_codelist(A,C):- any_to_string(A,S),atom_codes(S,C).
 
-%= 	 	 
+%=
 
 %% is_ftString2( ?X) is semidet.
 %
@@ -1164,7 +1167,7 @@ is_ftString2(L):-is_codelist(L),!.
 
 
 
-%= 	 	 
+%=
 
 %% isWhitespace( ?N) is semidet.
 %
@@ -1179,7 +1182,7 @@ isWhitespace(N):-N<33;N>128.
 % ===========================================================
 
 
-%= 	 	 
+%=
 
 %% escapeString( ?R, ?RS) is semidet.
 %
@@ -1188,7 +1191,7 @@ isWhitespace(N):-N<33;N>128.
 escapeString(R,RS):- (string(R);is_list(R)) ,string_to_atom(R,A),atom_codes(A,Codes),escapeCodes([34,92],92,Codes,RS),!.
 
 
-%= 	 	 
+%=
 
 %% escapeCodes( ?Escaped, ?EscapeChar, :TermARG3, :TermARG4) is semidet.
 %
@@ -1209,7 +1212,7 @@ escapeCodes(Escaped,EscapeChar,[Skipped|Source],[Skipped|New]):-
 
 
 
-%= 	 	 
+%=
 
 %% destringify( :TermX, :TermX) is semidet.
 %
@@ -1228,7 +1231,7 @@ destringify(B,A):- (atom(A),atom_concat('#$',A,B))->true;A=B.
 
 %stringToList(X,Y):-writeq(string_to_list(X,Y)),nl,fail.
 
-%= 	 	 
+%=
 
 %% stringToList( :TermX, ?Y) is semidet.
 %
@@ -1245,7 +1248,7 @@ stringToList([X|XX],Y):-concat_atom_safe([X|XX],' ',XXX),!,string_to_list(XXX,Y)
 %prologPredToCyc(Predicate):-arity(PredicateHead)
 
 
-%= 	 	 
+%=
 
 %% stringToCodelist( ?S, ?CL) is semidet.
 %
@@ -1254,7 +1257,7 @@ stringToList([X|XX],Y):-concat_atom_safe([X|XX],' ',XXX),!,string_to_list(XXX,Y)
 stringToCodelist(S,CL):- stringToCodelist2(S,SL),!,escapeString(SL,CS),!,stringToList(CL,CS),!.
 
 
-%= 	 	 
+%=
 
 %% stringToCodelist2( :TermS, ?Codes) is semidet.
 %
@@ -1281,7 +1284,7 @@ stringToCodelist2(Term,Codes):-sformat(Codes,'~q',[Term]),true.
 :- set_prolog_flag(double_quotes,codes).
 
 
-%= 	 	 
+%=
 
 %% trim( ?S, ?Y) is semidet.
 %
@@ -1290,7 +1293,7 @@ stringToCodelist2(Term,Codes):-sformat(Codes,'~q',[Term]),true.
 trim(S,Y):-flatten(S,S2),trim2(S2,Y).
 
 
-%= 	 	 
+%=
 
 %% trim2( ?S, ?Y) is semidet.
 %
@@ -1304,7 +1307,7 @@ trim2(S,Y):-
       ltrim(Rv,RY),lists:reverse(RY,Y),!.
 
 
-%= 	 	 
+%=
 
 %% addSpaceBeforeSym( ?H, ?H) is semidet.
 %
@@ -1317,7 +1320,7 @@ addSpaceBeforeSym(H,H).
 :- set_prolog_flag(double_quotes,string).
 
 
-%= 	 	 
+%=
 
 %% ltrim( ?X, ?X) is semidet.
 %
@@ -1335,7 +1338,7 @@ ltrim(X,X).
 
 :- export(atomic_list_concat_catch/3).
 
-%= 	 	 
+%=
 
 %% atomic_list_concat_catch( ?List, ?Sep, ?Atom) is semidet.
 %
@@ -1345,7 +1348,7 @@ atomic_list_concat_catch(List,Sep,Atom):-catch(atomic_list_concat_safe(List,Sep,
 
 
 
-%= 	 	 
+%=
 
 %% catch_read_term_from_atom( ?Sub, ?Term, ?NewOnes) is semidet.
 %
@@ -1357,7 +1360,7 @@ catch_read_term_from_atom(Sub,Term,NewOnes):-
 /*
 :- export(splt_words/3).
 
-%= 	 	 
+%=
 
 %% splt_words( ?Atom, ?Terms, ?Var) is semidet.
 %
@@ -1367,7 +1370,7 @@ splt_words(Atom,Terms,Var):- on_x_fail((quietly(once(splt_words_0(Atom,Terms,Var
 splt_words(Atom,Words1,[]):- on_x_fail(atomic_list_concat_safe(Words1,' ',Atom)),!.
 
 
-%= 	 	 
+%=
 
 %% splt_words_0( ?S, ?Terms, ?Var) is semidet.
 %
@@ -1376,7 +1379,7 @@ splt_words(Atom,Words1,[]):- on_x_fail(atomic_list_concat_safe(Words1,' ',Atom))
 splt_words_0(S,Terms,Var):-any_to_atom(S,Atom),!,splt_words_0_atom(Atom,Terms,Var),!.
 
 
-%= 	 	 
+%=
 
 %% splt_words_0_atom( ?Atom, :TermTerm, ?Vars) is semidet.
 %
@@ -1396,7 +1399,7 @@ splt_words_0_atom(Atom,[L0|ListO],Vars):-atomic_list_concat([L0,L1|List],' ',Ato
 */
 
 
-%= 	 	 
+%=
 
 %% merge_vars( :TermNewVars, ?VALUE2, :TermNewVars) is semidet.
 %
@@ -1410,7 +1413,7 @@ merge_vars([X=Y|More],OldVars,[X=Y|NewVars]):-
    merge_vars(More,OldVars,NewVars).
 
 
-%= 	 	 
+%=
 
 %% vars_to_ucase( ?VALUE1, :TermList) is semidet.
 %
@@ -1421,7 +1424,7 @@ vars_to_ucase(Vars,[L|List]):- var(L),!,vars_to_ucase_0(Vars,[L|List]),!.
 vars_to_ucase(Vars,[_|List]):- vars_to_ucase(Vars,List).
 
 
-%= 	 	 
+%=
 
 %% vars_to_ucase_0( :TermN, ?List) is semidet.
 %
@@ -1433,7 +1436,7 @@ vars_to_ucase_0([N=V|Vars],List):-
    vars_to_ucase_0(Vars,List).
 
 
-%= 	 	 
+%=
 
 %% atomSplit( ?In, ?List) is semidet.
 %
@@ -1448,7 +1451,7 @@ atomSplit_old(In,List):- quietly(( ground(In),
 
 :- export(atomSplitEasy_unused/2).
 
-%= 	 	 
+%=
 
 %% atomSplitEasy_unused( ?Atom, ?WordsO) is semidet.
 %
@@ -1464,7 +1467,7 @@ atomSplitEasy_unused(Atom,WordsO):-
 %%atomSplit(Atom,WordsO):- atomSplit(Atom,WordsO,[' ','\'',';',',','"','`',':','?','!','.','\n','\t','\r','\\','*','%','(',')','#']),!.
 
 
-%= 	 	 
+%=
 
 %% atomSplit( ?S, ?WordsO, :TermList) is semidet.
 %
@@ -1476,7 +1479,7 @@ atomSplit(Atom,Words,[Space|AtomO]):-quietly((var(Atom),ground(Words),!,atomic_l
 
 
 
-%= 	 	 
+%=
 
 %% atomSplit2_unused( :TermARG1, :TermARG2, ?List) is semidet.
 %
@@ -1492,7 +1495,7 @@ atomSplit2_unused([Word|S],Words,List):- member(Space,List),Atoms=[_,_|_],atomic
 atomSplit2_unused([W|S],[W|Words],List):-atomSplit2_unused(S,Words,List),!.
 
 
-%= 	 	 
+%=
 
 %% interleave( :TermARG1, ?Space, :TermSpace) is semidet.
 %
@@ -1517,7 +1520,7 @@ interleave([Atom|More],Space,[Atom,Space|Result]):-interleave(More,Space,Result)
 %
 must_assign(From=To):-must_assign(From,To).
 
-%= 	 	 
+%=
 
 %% must_assign( ?From, ?To) is semidet.
 %
@@ -1528,7 +1531,7 @@ must_assign(From,To):- tlbugger:skipMust,!,ignore(To=From),!.
 must_assign(From,To):-dmsg(From),dmsg(=),dmsg(From),dmsg(must_assign),!,dtrace,To=From.
 
 
-	 	 
+
 
 %% map_tree_to_list( :PRED2VALUE1, ?PATTERN, ?Output) is semidet.
 %
@@ -1545,7 +1548,7 @@ map_tree_to_list(Pred,IN,Output):-
 map_tree_to_list(_,IN,IN):- dtrace,must_assign([IN],IN).
 
 
-%= 	 	 
+%=
 
 %% non_empty( ?A) is semidet.
 %
@@ -1553,7 +1556,7 @@ map_tree_to_list(_,IN,IN):- dtrace,must_assign([IN],IN).
 %
 non_empty(A):-must_det( \+ (empty_string(A))).
 
-%= 	 	 
+%=
 
 %% must_nonvar( ?A) is semidet.
 %
@@ -1563,7 +1566,7 @@ must_nonvar(A):-one_must(nonvar(A),trace_or_throw(must_nonvar(A))).
 
 
 
-%= 	 	 
+%=
 
 %% both_empty( ?A, ?B) is semidet.
 %
@@ -1571,7 +1574,7 @@ must_nonvar(A):-one_must(nonvar(A),trace_or_throw(must_nonvar(A))).
 %
 both_empty(A,B):-empty_string(A),!,empty_string(B),nop(dmsg(both_empty(A,B))).
 
-%= 	 	 
+%=
 
 %% either_empty( ?A, ?B) is semidet.
 %
@@ -1580,7 +1583,7 @@ both_empty(A,B):-empty_string(A),!,empty_string(B),nop(dmsg(both_empty(A,B))).
 either_empty(A,B):- (empty_string(B);empty_string(A)),!,nop(dmsg(either_empty(A,B))).
 
 
-%= 	 	 
+%=
 
 %% equals_icase( ?A, ?B) is semidet.
 %
@@ -1589,7 +1592,7 @@ either_empty(A,B):- (empty_string(B);empty_string(A)),!,nop(dmsg(either_empty(A,
 equals_icase(A,B):-either_empty(A,B),!,fail.
 equals_icase(A,B):- string_ci(A,U),string_ci(B,U).
 
-%= 	 	 
+%=
 
 %% starts_with_icase( ?A, ?B) is semidet.
 %
@@ -1599,7 +1602,7 @@ starts_with_icase(A,B):-either_empty(A,B),!,fail.
 starts_with_icase(A,B):- string_ci(A,UA),string_ci(B,UB),non_empty(UB),atom_concat(UB,_,UA).
 starts_with_icase(A,B):-both_empty(A,B),dmsg(warn(equals_icase(A,B))).
 
-%= 	 	 
+%=
 
 %% either_starts_with_icase( ?A, ?B) is semidet.
 %
@@ -1608,7 +1611,7 @@ starts_with_icase(A,B):-both_empty(A,B),dmsg(warn(equals_icase(A,B))).
 either_starts_with_icase(A,B):-either_empty(A,B),!,fail.
 either_starts_with_icase(A,B):- string_ci(A,UA),string_ci(B,UB),non_empty(UA),non_empty(UB),(atom_concat(UB,_,UA);atom_concat(UA,_,UB)).
 
-%= 	 	 
+%=
 
 %% starts_or_ends_with_icase( ?A, ?B) is semidet.
 %
@@ -1617,7 +1620,7 @@ either_starts_with_icase(A,B):- string_ci(A,UA),string_ci(B,UB),non_empty(UA),no
 starts_or_ends_with_icase(A,B):-either_empty(A,B),!,fail.
 starts_or_ends_with_icase(A,B):- string_ci(A,UA),string_ci(B,UB),non_empty(UA),non_empty(UB),(atom_concat(UB,_,UA);atom_concat(_,UA,UB)).
 
-%= 	 	 
+%=
 
 %% ends_with_icase( ?A, ?B) is semidet.
 %
@@ -1627,7 +1630,7 @@ ends_with_icase(A,B):-either_empty(A,B),!,fail.
 ends_with_icase(A,B):- string_ci(A,UA),string_ci(B,UB),non_empty(UB),atom_concat(_,UB,UA).
 
 
-%= 	 	 
+%=
 
 %% string_dedupe( ?StringI, ?StringO) is semidet.
 %
@@ -1637,7 +1640,7 @@ string_dedupe(StringI,StringO):- to_word_list(StringI,Words),remove_predupes(Wor
 
 
 
-%= 	 	 
+%=
 
 %% remove_predupes( :TermListI, ?ListO) is semidet.
 %
@@ -1648,7 +1651,7 @@ remove_predupes(ListI,ListO):- member(L0,["",[],"",'',[32],' ']),member(L0,ListI
 remove_predupes([L|ListI], ListO):- (member_ci(L,ListI) -> remove_predupes(ListI,ListO) ; (remove_predupes(ListI,ListM),[L|ListM]=ListO)),!.
 
 
-%= 	 	 
+%=
 
 %% member_ci( ?W, ?WL) is semidet.
 %
@@ -1658,7 +1661,7 @@ member_ci(L,[List|I]):-!,member(LL2,[List|I]),string_equal_ci(LL2,L).
 member_ci(W,WL):-to_word_list(WL,ListI),member(LL2,ListI),string_equal_ci(LL2,W).
 
 
-%= 	 	 
+%=
 
 %% string_ci( ?A, ?LIC) is semidet.
 %
@@ -1672,7 +1675,7 @@ string_ci(A,LIC):-quietly((must(nonvar(A)),non_empty(A),any_to_string(A,S),!,tex
 
 :- export(append_ci/3).
 
-%= 	 	 
+%=
 
 %% append_ci( ?A1, ?A2, ?A3) is semidet.
 %
@@ -1681,7 +1684,7 @@ string_ci(A,LIC):-quietly((must(nonvar(A)),non_empty(A),any_to_string(A,S),!,tex
 append_ci(A1,A2,A3):-to_word_list(A1,L1),to_word_list(A2,L2),to_word_list(A3,L3),!, append_ci0(L1,L2,L3),!.
 
 
-%= 	 	 
+%=
 
 %% append_ci0( ?L, ?L2, ?R) is semidet.
 %
@@ -1691,7 +1694,7 @@ append_ci0([],L1,L2):- string_equal_ci(L1,L2),!.
 append_ci0(L,L2,R):-divide_list(L,H1,L1),divide_list(R,H2,L3),string_equal_ci(H1,H2),!,append_ci0(L1,L2,L3).
 
 
-%= 	 	 
+%=
 
 %% divide_list( ?L, ?L0, ?LT) is semidet.
 %
@@ -1701,19 +1704,19 @@ divide_list(L,L0,LT):-is_list(L),!,length(L,X),X1 is X-1,between(1,X1,RS),length
 divide_list(L,L0,LT):-append(L0,LT,L).
 
 
-%= 	 	 
+%=
 
 %% string_equal_ci( ?A0, ?A0) is semidet.
 %
 % String Equal Ci.
-% 
-string_equal_ci(L0,L1):- 
+%
+string_equal_ci(L0,L1):-
  notrace((to_word_list(L0,WL0),WL0\==[],to_word_list(L1,WL1)->WL1\==[],!,
    string_equal_ci0(WL0,WL1))),!.
     % (string_equal_ci0(WL0,WL1);(var(L1),freeze(L1,string_equal_ci0(WL0,WL1)))).
 
 
-%= 	 	 
+%=
 
 %% string_equal_ci0( ?L0, ?R0) is semidet.
 %
@@ -1725,7 +1728,7 @@ string_equal_ci0(L0,R0):- string_equal_ci1(L0,R0),!.
 string_equal_ci0(L,R):-divide_list(L,L0,LT),divide_list(R,R0,RT),string_equal_ci1(L0,R0),!,string_equal_ci0(LT,RT).
 
 
-%= 	 	 
+%=
 
 %% string_equal_ci1( ?A0, ?A0) is semidet.
 %
@@ -1738,7 +1741,7 @@ string_equal_ci1(A0,B0):-as_nc_str(A0,AR),as_nc_str(B0,BR),!, AR = BR.
 
 
 
-%= 	 	 
+%=
 
 %% as_nc_str( ?A0, ?ASL) is semidet.
 %
@@ -1753,7 +1756,7 @@ as_nc_str(A0,ASL):-any_to_string(A0,AS),string_lower(AS,ASL).
 % as_nc_str(A0,A0).
 
 
-%= 	 	 
+%=
 
 %% ommitable( ?O) is semidet.
 %
@@ -1763,7 +1766,7 @@ ommitable(O):-empty_string(O).
 ommitable(O):- string_to_atom(O,A),atom_length(A,L),!,L<2.
 
 
-%= 	 	 
+%=
 
 %% atom_subst( ?A, ?F, ?R, ?K) is semidet.
 %
@@ -1773,7 +1776,7 @@ atom_subst(A,F,R,KA):-replace_in_string(F,R,A,K),!,string_to_atom(K,KA),!.
 
 
 
-%= 	 	 
+%=
 
 %% empty_string( ?A) is semidet.
 %
@@ -1793,7 +1796,7 @@ empty_string0("").
 % Meta-Interp that appends the arguments to the calls
 :- meta_predicate convert_members(?,?,?).
 
-%= 	 	 
+%=
 
 %% convert_members( ?Call, ?In, ?Out) is semidet.
 %
@@ -1811,7 +1814,7 @@ convert_members(call(Call), InOut,InOut):-  call(Call).
 convert_members(Call, In,Out):- call(call,Call,In,Out).
 
 
-%= 	 	 
+%=
 
 %% replace_in_string( ?SepChars, ?PadChars, ?Repl, ?A, ?C) is semidet.
 %
@@ -1820,7 +1823,7 @@ convert_members(Call, In,Out):- call(call,Call,In,Out).
 replace_in_string(SepChars, PadChars,Repl, A,C):- split_string(A,SepChars,PadChars,B),atomics_to_string(B,Repl,C).
 
 
-%= 	 	 
+%=
 
 %% replace_in_string( ?F, ?R, ?A, ?K) is semidet.
 %
@@ -1837,7 +1840,7 @@ replace_in_string([KV|FR],OriginalString,O):-!,
 replace_in_string([],O,O).
 
 
-%= 	 	 
+%=
 
 %% replace_periods( ?A, ?S) is semidet.
 %
@@ -1873,7 +1876,7 @@ replace_periods(A,S):-
 % L = [[hi, there, bub, !], [how, are, you, ?]] .
 
 
-%= 	 	 
+%=
 
 %% to_list_of_sents( ?WList, ?FirstSent) is semidet.
 %
@@ -1884,7 +1887,7 @@ to_list_of_sents(WList,[sent(FirstSent)|Groups]):-append(Left,[Last|Rest],WList)
 to_list_of_sents(WList,[sent(WList)]).
 
 
-%= 	 	 
+%=
 
 %% replace_periods_string_list( ?A, ?S) is semidet.
 %
@@ -1909,7 +1912,7 @@ append_subst4( [], L, L ).
 append_subst4( [H|T], L, [H|T1] ) :-
     append_subst4( T, L, T1 ).
 
-%= 	 	 
+%=
 
 %% to_word_list( ?A, ?SL) is semidet.
 %
@@ -1926,9 +1929,9 @@ to_word_list(A,SL):-once(quietly((unused_to_word_list_0(A,S0),(is_list(S0)->dele
 */
 
 % as_atom(A,A):-atom(A),!.
-% 
+%
 
-%= 	 	 
+%=
 
 %% as_atom( ?A, ?A) is semidet.
 %
@@ -1941,7 +1944,7 @@ as_atom(T,A):- term_to_atom(T,A).
 
 :- export(unused_to_word_list_0/2).
 
-%= 	 	 
+%=
 
 %% unused_to_word_list_0( ?V, ?V) is semidet.
 %
@@ -1957,7 +1960,7 @@ unused_to_word_list_0(A,WList):- must(any_to_string(A,String)),!,must(text_to_st
 
 
 
-%= 	 	 
+%=
 
 %% read_stream_to_arglist( ?Input, :TermARG2) is semidet.
 %
@@ -1968,7 +1971,7 @@ read_stream_to_arglist(Input,[]):- on_x_fail((once(wait_for_input([Input], Input
 read_stream_to_arglist(Input,[H|T]):-show_call(why,if_defined(lisp_read_from_input(Input,H))),!,(is_ending(H)->T=[];read_stream_to_arglist(Input,T)),!.
 
 
-%= 	 	 
+%=
 
 %% is_ending( ?List) is semidet.
 %
@@ -1977,7 +1980,7 @@ read_stream_to_arglist(Input,[H|T]):-show_call(why,if_defined(lisp_read_from_inp
 is_ending(List):-nonvar(List),(is_list(List)->last(List,whitepace("\n"));List==whitepace("\n")).
 
 
-%= 	 	 
+%=
 
 %% is_simple_split( ?S) is semidet.
 %
@@ -1986,7 +1989,7 @@ is_ending(List):-nonvar(List),(is_list(List)->last(List,whitepace("\n"));List==w
 is_simple_split(S):-text_to_string(S,SS),split_string(SS,`().!\"\'`,`()`,O),!,O=[SS].
 
 
-%= 	 	 
+%=
 
 %% unused_to_word_list_2( ?Input, ?WList) is semidet.
 %
@@ -1999,7 +2002,7 @@ unused_to_word_list_2(Input,WList):- open_string(Input,Stream),read_stream_to_ar
 unused_to_word_list_2(Input,Input).
 
 
-%= 	 	 
+%=
 
 %% str_contains_all( ?A, ?String) is semidet.
 %
@@ -2011,7 +2014,7 @@ str_contains_all(A,SL):- string_ci(SL,SLIC),SL\=SLIC,!,str_contains_all(A,SLIC).
 str_contains_all(List,String):-str_contains_all0(List,String).
 
 
-%= 	 	 
+%=
 
 %% str_contains_all0( :TermA, ?String) is semidet.
 %
@@ -2026,7 +2029,7 @@ str_contains_all0([A|Atoms],String):-
 
 
 
-%= 	 	 
+%=
 
 %% atoms_of( :TermC, ?L) is semidet.
 %
@@ -2046,7 +2049,7 @@ atoms_of([H|T],L):-!,atoms_of(H,HL),atoms_of(T,TL),append(HL,TL,L),!.
 atoms_of(C,L):-C=..CL,atoms_of(CL,L),!.
 
 
-%= 	 	 
+%=
 
 %% sort_by_strlen( ?List, ?Sorted) is semidet.
 %
@@ -2056,7 +2059,7 @@ sort_by_strlen(List,Sorted):-predsort(longest_string,List,Sorted).
 
 % longest_string(?Order, @Term1, @Term2)
 
-%= 	 	 
+%=
 
 %% longest_string( ?Order, ?TStr1, ?TStr2) is semidet.
 %

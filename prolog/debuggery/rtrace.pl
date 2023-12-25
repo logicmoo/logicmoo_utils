@@ -22,13 +22,13 @@
       srtrace/0, % Start non-intractive tracing at System level
       nortrace/0, % Stop non-intractive tracing
       push_tracer/0,pop_tracer/0,reset_tracer/0, % Reset Tracer to "normal"
-      on_x_debug/1, % Non-intractive tracing when exception occurs 
-      on_f_rtrace/1, % Non-intractive tracing when failure occurs 
+      on_x_debug/1, % Non-intractive tracing when exception occurs
+      on_f_rtrace/1, % Non-intractive tracing when failure occurs
       maybe_leash/1, % Set leash only when it makes sense
       should_maybe_leash/0,
       non_user_console/0,
       ftrace/1, % rtrace showing only failures
-      visible_rtrace/2, 
+      visible_rtrace/2,
       push_guitracer/0,pop_guitracer/0,
       on_x_rtrace/1,
       call_call/1
@@ -56,8 +56,8 @@ call_call(G):-call(G).
    rtrace(:),
    restore_trace(:),
    on_x_debug(:),
-   on_f_rtrace(:),  
-   
+   on_f_rtrace(:),
+
    rtrace_break(:),
    quietly(:),
    quietly1(:),
@@ -69,7 +69,7 @@ call_call(G):-call(G).
 
 %! on_f_rtrace( :Goal) is det.
 %
-% If :Goal fails trace it 
+% If :Goal fails trace it
 %
 
 
@@ -85,8 +85,8 @@ on_x_rtrace(G):-on_x_debug(G).
 %
 % If there If Is an exception in :Goal then rtrace.
 %
-on_x_debug(Goal):- 
- ((( tracing; t_l:rtracing),!,maybe_leash(+exception))) 
+on_x_debug(Goal):-
+ ((( tracing; t_l:rtracing),!,maybe_leash(+exception)))
   -> Goal
    ;
    (catchv(quietly(Goal),E,(ignore(debugCallWhy(on_x_debug(E,Goal),rtrace(Goal))),throw(E)))).
@@ -109,7 +109,7 @@ with_unlocked_pred_local(MP,Goal):- strip_module(MP,M,P),Pred=M:P,
  setup_call_cleanup(unlock_predicate(Pred),
    catch(Goal,E,throw(E)),lock_predicate(Pred))),!.
 
-my_totally_hide(G):- 
+my_totally_hide(G):-
   with_unlocked_pred_local(G, '$hide'(G)), old_swi(totally_hide(G)).
 
 :- my_totally_hide(maybe_leash/1).
@@ -130,7 +130,7 @@ get_trace_reset(Reset):- tracing, notrace, !,
 		 (current_prolog_flag(gui_tracer, GuiWas)->true;GuiWas=false),
                  reset_macro(tAt(GuiWas,OldV,OldL,tracing),Reset),
 		 trace,!.
-get_trace_reset(Reset):- 
+get_trace_reset(Reset):-
                  '$leash'(OldL, OldL),'$visible'(OldV, OldV),
                  current_prolog_flag(debug,WasDebug),
 		 (current_prolog_flag(gui_tracer, GuiWas)->true;GuiWas=false),
@@ -149,7 +149,7 @@ system:tAt(GuiWas,OldV,OldL,WasDebug):-
   notrace, set_prolog_flag(gui_tracer,GuiWas),
   '$leash'(_, OldL),'$visible'(_, OldV),
    (WasDebug\==tracing->set_prolog_flag(debug,WasDebug) ;trace).
-  
+
 :- my_totally_hide(tAt/4).
 :- my_totally_hide(tAt_normal/0).
 :- my_totally_hide(tAt_rtrace/0).
@@ -203,7 +203,7 @@ reset_tracer:- ignore((t_l:tracer_reset(Reset)->Reset;true)).
 
 user:prolog_exception_hook(error(_, _),_, _, _) :- leash(+all),fail.
 
-user:prolog_exception_hook(error(_, _),_, _, _) :- fail, 
+user:prolog_exception_hook(error(_, _),_, _, _) :- fail,
    notrace((  reset_tracer ->
      should_maybe_leash ->
      t_l:rtracing ->
@@ -212,21 +212,21 @@ user:prolog_exception_hook(error(_, _),_, _, _) :- fail,
 
 %! quietly( :Goal) is nondet.
 %
-% Unlike notrace/1, it allows nondet tracing 
+% Unlike notrace/1, it allows nondet tracing
 %
 % But also may be break when excpetions are raised during Goal.
 %
 % version 21
 quietly1(Goal):- \+ tracing -> Goal ; scce_orig(notrace,Goal,trace).
 
-% version 2 
+% version 2
 quietly2(Goal):- \+ tracing -> Goal ; (setup_call_cleanup(notrace,scce_orig(notrace,Goal,trace),trace)).
 
 :- old_swi('set_pred_attrs'(quietly(_),[trace=1,hide_childs=1])).
 
-% version 3 
+% version 3
 % quietly(Goal):- !, Goal.  % for overiding
-quietly3(Goal):- \+ tracing -> Goal ; 
+quietly3(Goal):- \+ tracing -> Goal ;
  (notrace,
   (((Goal,deterministic(YN))) *->
      (YN == true -> trace ; (trace;(notrace,fail)));
@@ -234,8 +234,8 @@ quietly3(Goal):- \+ tracing -> Goal ;
 
 quietly(Goal):- quietly3(Goal).
 
-% version 4 
-quietly4(M:Goal):- \+ tracing 
+% version 4
+quietly4(M:Goal):- \+ tracing
  -> M:Goal ;
   (get_trace_reset(W), scce_orig(notrace(visible(-all)),M:Goal,W)).
 
@@ -245,9 +245,9 @@ quietly4(M:Goal):- \+ tracing
 :- '$hide'(quietly/1).
 
 % Alt version?
-quietlySE(Goal):- %JUNIT \+ tracing 
+quietlySE(Goal):- %JUNIT \+ tracing
  true
- -> Goal ; 
+ -> Goal ;
  notrace((S = notrace, E = trace)),
  (S,
   (((Goal,deterministic(YN))) *->
@@ -255,7 +255,7 @@ quietlySE(Goal):- %JUNIT \+ tracing
   (E,!,notrace(fail)))).
 
 % Alt version?
-rtraceSE(Goal):-  
+rtraceSE(Goal):-
  notrace((S = rtrace, E = nortrace)),
  (S,
   (((Goal,deterministic(YN))) *->
@@ -265,7 +265,7 @@ rtraceSE(Goal):-
 
 
 deterministically_must(G):- (call(call,G),deterministic(YN),true),
-  (YN==true -> true; 
+  (YN==true -> true;
      ((wdmsg(failed_deterministically_must(G)),(!)))),!.
 
 
@@ -307,14 +307,14 @@ srtrace:- notrace, set_prolog_flag(access_level,system), rtrace.
 %
 % Stop Tracer.
 %
-stop_rtrace:- 
+stop_rtrace:-
   notrace,
   maybe_leash(+all),
   visible(+all),
   maybe_leash(+exception),
   retractall(t_l:rtracing),
   !.
-                                         
+
 :- 'my_totally_hide'(stop_rtrace/0).
 :- system:import(stop_rtrace/0).
 
@@ -334,13 +334,13 @@ nortrace:- stop_rtrace,ignore(pop_tracer).
 %
 % restore  Trace.
 %
-restore_trace(Goal):- 
+restore_trace(Goal):-
   setup_call_cleanup(
    push_leash_visible,
    scce_orig(push_tracer,Goal,pop_tracer),
    restore_leash_visible).
 
-restore_trace0(Goal):- 
+restore_trace0(Goal):-
   '$leash'(OldL, OldL),'$visible'(OldV, OldV),
    scce_orig(restore_leash_visible,
    ((Goal*-> (push_leash_visible, '$leash'(_, OldL),'$visible'(_, OldV)) ; fail)),
@@ -363,34 +363,34 @@ restore_leash_visible:- notrace((('$leash_visible'(OldL1,OldV1)->('$leash'(_, Ol
 %  total failure
 %
 % ?- rtrace(member(X,[1,2,3])).
-%    Call: (9) [lists] lists:member(_7172, [1, 2, 3])    
-%    Unify: (9) [lists] lists:member(_7172, [1, 2, 3])   
-%    Call: (10) [lists] lists:member_([2, 3], _7172, 1)  
-%    Unify: (10) [lists] lists:member_([2, 3], 1, 1)     
-%    Exit: (10) [lists] lists:member_([2, 3], 1, 1)      
-%    Exit: (9) [lists] lists:member(1, [1, 2, 3])        
-% X = 1 ;                                                
-%    Redo: (10) [lists] lists:member_([2, 3], _7172, 1)  
-%    Unify: (10) [lists] lists:member_([2, 3], _7172, 1) 
-%    Call: (11) [lists] lists:member_([3], _7172, 2)     
-%    Unify: (11) [lists] lists:member_([3], 2, 2)        
-%    Exit: (11) [lists] lists:member_([3], 2, 2)         
-%    Exit: (10) [lists] lists:member_([2, 3], 2, 1)      
-%    Exit: (9) [lists] lists:member(2, [1, 2, 3])        
-% X = 2 ;                                                
-%    Redo: (11) [lists] lists:member_([3], _7172, 2)     
-%    Unify: (11) [lists] lists:member_([3], _7172, 2)    
-%    Call: (12) [lists] lists:member_([], _7172, 3)      
-%    Unify: (12) [lists] lists:member_([], 3, 3)         
-%    Exit: (12) [lists] lists:member_([], 3, 3)          
-%    Exit: (11) [lists] lists:member_([3], 3, 2)         
-%    Exit: (10) [lists] lists:member_([2, 3], 3, 1)      
-%    Exit: (9) [lists] lists:member(3, [1, 2, 3])        
-% X = 3.                                                 
-%                                                        
-%  ?- rtrace(fail).                                      
-%    Call: (9) [system] fail                             
-%    Fail: (9) [system] fail                             
+%    Call: (9) [lists] lists:member(_7172, [1, 2, 3])
+%    Unify: (9) [lists] lists:member(_7172, [1, 2, 3])
+%    Call: (10) [lists] lists:member_([2, 3], _7172, 1)
+%    Unify: (10) [lists] lists:member_([2, 3], 1, 1)
+%    Exit: (10) [lists] lists:member_([2, 3], 1, 1)
+%    Exit: (9) [lists] lists:member(1, [1, 2, 3])
+% X = 1 ;
+%    Redo: (10) [lists] lists:member_([2, 3], _7172, 1)
+%    Unify: (10) [lists] lists:member_([2, 3], _7172, 1)
+%    Call: (11) [lists] lists:member_([3], _7172, 2)
+%    Unify: (11) [lists] lists:member_([3], 2, 2)
+%    Exit: (11) [lists] lists:member_([3], 2, 2)
+%    Exit: (10) [lists] lists:member_([2, 3], 2, 1)
+%    Exit: (9) [lists] lists:member(2, [1, 2, 3])
+% X = 2 ;
+%    Redo: (11) [lists] lists:member_([3], _7172, 2)
+%    Unify: (11) [lists] lists:member_([3], _7172, 2)
+%    Call: (12) [lists] lists:member_([], _7172, 3)
+%    Unify: (12) [lists] lists:member_([], 3, 3)
+%    Exit: (12) [lists] lists:member_([], 3, 3)
+%    Exit: (11) [lists] lists:member_([3], 3, 2)
+%    Exit: (10) [lists] lists:member_([2, 3], 3, 1)
+%    Exit: (9) [lists] lists:member(3, [1, 2, 3])
+% X = 3.
+%
+%  ?- rtrace(fail).
+%    Call: (9) [system] fail
+%    Fail: (9) [system] fail
 % ^  Redo: (8) [rtrace] rtrace:rtrace(user:fail)
 % false.
 
@@ -431,7 +431,7 @@ restart_rtrace1:-
 :- 'my_totally_hide'(restart_rtrace/0).
 :- export(restart_rtrace/0).
 
-rtrace(Goal):- trace,
+rtrace(Goal):- %trace,
   get_trace_reset(W),scce_orig(restart_rtrace,Goal,W).
 
 %:- '$hide'(system:tracing/0).
@@ -449,7 +449,7 @@ rtrace(Goal):- trace,
 
 %! rtrace_break( :Goal) is nondet.
 %
-% Trace a goal non-interactively and break on first exception 
+% Trace a goal non-interactively and break on first exception
 % or on total failure
 %
 rtrace_break(Goal):- \+ should_maybe_leash, !, rtrace(Goal).

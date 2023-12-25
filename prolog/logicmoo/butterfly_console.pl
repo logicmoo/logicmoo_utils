@@ -68,7 +68,7 @@ wbfc(G):-G=false,!,set_is_butterfly_console(f).
 wbfc(Goal):-with_butterfly_console(t,Goal).
 
 :- meta_predicate(with_butterfly_console(+,0)).
-with_butterfly_console(TF,Goal):- in_bfly(TF,Goal). 
+with_butterfly_console(TF,Goal):- in_bfly(TF,Goal).
 %with_butterfly_console(TF,Goal):- thread_self(X), %retractall(lmcache:is_butterfly_thread(X,_)),
 %  sccs(asserta(lmcache:is_butterfly_thread(X,TF),Ref),Goal,erase(Ref)).
 
@@ -99,7 +99,16 @@ block_format(G):- wots((S),locally(t_l:in_block_format,G)),bformat(S),!.
 :- /*system:*/use_module(library(http/thread_httpd)).
 :- /*system:*/use_module(thread_httpd:library(http/http_dispatch)).
 %:- use_module(library(http/http_dispatch))
-:- /*system:*/use_module(swi(library/http/html_head)).
+
+:- if( exists_source(swi(library/http/html_head))).
+:- /*system:*/(swi(library/http/html_head)).
+:- else.
+  :- if( exists_source(library(http/html_head))).
+    :- /*system:*/use_module(library(http/html_head)).
+  :-endif.
+:-endif.
+
+
 :- /*system:*/use_module(library(http/http_dispatch)).
 :- /*system:*/use_module(library(http/http_path)).
 :- /*system:*/use_module(library(http/http_log)).
@@ -135,7 +144,7 @@ maybe_into_number(_,Num):- Num is -1.
 use_pts_files:- fail.
 
 bfly_reoffer:- \+ use_pts_files,!.
-bfly_reoffer:- 
+bfly_reoffer:-
   bfly_info,
   retractall(bfly_dyn:bfly_style_type(_,_,_,_,_,_)),
   retractall(bfly_dyn:bfly_style_asked(_)),
@@ -147,14 +156,14 @@ bfly_offer:- bfly_offer(15).
 
 bfly_offer(_Duration):- \+ use_pts_files,!.
 bfly_offer( Duration):-
-  expand_file_name('/dev/pts/*',[_,_|X]),  
+  expand_file_name('/dev/pts/*',[_,_|X]),
   retractall(bfly_dyn:bfly_style_asked(_)),
   retractall(bfly_dyn:bfly_style_answered),
   forall(member(E,X),bfly_ask_style(E)),
-  get_time(Time), Until is Time + Duration, 
+  get_time(Time), Until is Time + Duration,
   (repeat,
     ((get_time(TimeNow), TimeNow > Until)
-       -> true ; 
+       -> true ;
        wait_for_input_or_web)), !.
 
 bfly_start:- do_each_main_interval(bfly_offer(15), 60).
@@ -166,7 +175,7 @@ wait_for_input_or_web:- \+ bfly_dyn:bfly_style_asked(_),!.
 wait_for_input_or_web:- bfly_dyn:bfly_style_answered,!.
 wait_for_input_or_web:- with_tty_raw((
   wait_for_input([user_input], In, 0.3),
-  (In==[]-> (!,fail) ; 
+  (In==[]-> (!,fail) ;
    (get_single_char(H),!, asserta(bfly_dyn:bfly_style_answered), bfly_key_accept(H))))),!.
 
 bfly_key_accept(H):- H = 32,  retractall(bfly_dyn:bfly_style_asked(_)),!.
@@ -179,17 +188,17 @@ bfly_decl_style_key(Num, Style):- thread_self(TID),bfly_decl_1_style(TID,Num,Sty
 :- export(bfly_decl_style_http/1).
 bfly_decl_style_http(Request) :-
   member(search(List),Request),
-  member(tid=TID,List), member(pts=PTS,List), member(style=Style,List),  
+  member(tid=TID,List), member(pts=PTS,List), member(style=Style,List),
   bfly_decl_1_style(TID,PTS,Style),!,
   print_term_to_html_page(Request).
 
-  
-print_term_to_html_page(Tree):- 
+
+print_term_to_html_page(Tree):-
   wots(S,
     in_pp_html((nl,print_tree_nl(Tree)))),
   print_raw_html_page(S), !.
 
-print_raw_html_page(S):- 
+print_raw_html_page(S):-
   phrase(pretty_clauses:html([
      html([head(''),body(pre( \ html_raw(S)))])]), Tokens),!,
      print_html(Tokens).
@@ -218,7 +227,7 @@ print_tree_html(Term, Options):- in_pp_html(print_tree(Term,Options)).
 
 
 print_html_term(Term):- current_print_write_options(Options), print_html_term(Term, Options).
-print_html_term(Term, Options):- 
+print_html_term(Term, Options):-
  must_or_rtrace(phrase(bfly_term(Term,Options),Tokens)),!,
  must_or_rtrace(send_tokens(Tokens)),!.
 
@@ -251,9 +260,9 @@ with_enc(Enc,Goal):-
    Goal,
        set_stream_encoding(Was))))),
        set_prolog_flag(encoding,EncWas)).
-      
 
-set_stream_encoding(Text):- 
+
+set_stream_encoding(Text):-
  %set_prolog_flag(encoding,Text),
  notrace((
  ignore(catch(set_stream(current_output,encoding(Text)),_,true)),
@@ -262,7 +271,7 @@ set_stream_encoding(Text):-
 
 */
 
-bfly_portray(X):- 
+bfly_portray(X):-
   \+ tracing, ground(X),
   \+ ( nb_current('$inprint_message', Messages), Messages\==[] ),
   bfly_get(butterfly,t),
@@ -271,7 +280,7 @@ bfly_portray(X):-
   print_tree_html(X).
 
 :- meta_predicate(in_bfly(+,0)).
-in_bfly(TF,Goal):- 
+in_bfly(TF,Goal):-
   bfly_get(butterfly,Was),
   sccs(
     bfly_set(butterfly,TF),
@@ -288,17 +297,17 @@ bfly_ask_style(E,   _):- E=='/dev/pts/ptmx',!.
 %bfly_ask_style(E,   _):- bfly_dyn:bfly_style_type(_TID,E,  _,_,_,UK), UK\==unknown, !.
 bfly_ask_style(_, Num):- bfly_dyn:bfly_style_type(_TID,_,Num,_,_,UK), UK\==unknown, !.
 bfly_ask_style(_, Num):- number(Num), Num is -1, !.
-bfly_ask_style(E, Num):- 
+bfly_ask_style(E, Num):-
  ignore((
   atom(E),
   thread_self(TID),
-  current_output(Out), current_input(In),  
-  retractall(bfly_dyn:bfly_style_type(_,_,Num,_,_,_)),  
+  current_output(Out), current_input(In),
+  retractall(bfly_dyn:bfly_style_type(_,_,Num,_,_,_)),
   asserta(bfly_dyn:bfly_style_asked(Num)),
   sformat_safe(S1,'<font color="gold"><a target="_new" href="/swish/bfly_decl_style?tid=~w&pts=~w&style=html_esc">Click This GOLD text at ~w for an HTMLy Interface.</font></a><p>',
    [TID,Num,E]),
   bfly_to_pts(E,html_esc,S1),
-  Key is Num + 64,  
+  Key is Num + 64,
   sformat_safe(S2,'~nOr Press: <SHIFT+~s>=ansi, <~s>=ansi, <SPACE>=cancel',[[Key],[Key]]),
   bfly_to_pts(E,ansi,S2),
   nop(asserta(bfly_dyn:bfly_style_type(TID,E,Num,In,Out,ansi))) )).
@@ -328,7 +337,7 @@ bfly_write_h(S0):- prepend_trim_for_html(S0,SM), prepend_trim(SM,S), bfly_write_
 %bfly_write_hs(S):- bfly_in_out(write(S)),!.
 bfly_write_hs(S):- \+string(S),sformat(SS,'~w',[S]),!,bfly_write_hs(SS).
 bfly_write_hs(S):-
- ignore(( \+ empty_str(S),   
+ ignore(( \+ empty_str(S),
  %replace_in_string([';HTML|'=' '],S,RS),
  RS = S,
  bfly_in_out(write(RS)))).
@@ -340,7 +349,7 @@ bformats(S):- in_pp(ansi),!,write(S).
 bformats(S):- atom_codes(S,Cs), maplist(map_html_entities,Cs,CsO),atomic_list_concat(CsO,W),!,write(W).
 
 map_html_entities(Code,S):- name(S,[Code]),!.
-map_html_entities(62,'&gt;'). map_html_entities(60,'&lt;'). map_html_entities(38,'&amp;'). 
+map_html_entities(62,'&gt;'). map_html_entities(60,'&lt;'). map_html_entities(38,'&amp;').
  % map_html_entities(32,'&nbsp;').
 map_html_entities(Code,S):- Code == 124,!,sformat(S, '&#~w;',[Code]).
 map_html_entities(Code,S):- Code>160, !, sformat(S, '&#~w;',[Code]).
@@ -370,7 +379,7 @@ find_and_ofset("='",1).
 find_and_ofset('> ',0).
 
 
-find_place_to_split1(S,Before):- 
+find_place_to_split1(S,Before):-
   max_html_width(W120), W110 is W120-10,
   find_and_ofset(Split,Offset0),
   (Offset0 == len, atom_length(Split,Offset) ; Offset = Offset0),
@@ -379,12 +388,12 @@ find_place_to_split1(S,Before):-
   Before > 50,  Before < W110,!.
 
 
-find_place_to_split1(S,Before):- 
-  max_html_width(W120), 
+find_place_to_split1(S,Before):-
+  max_html_width(W120),
   member(Split,['</','<','/>','>',')','  ','/*',' ']),
   sub_atom(S,Before,_,_,Split),
   Before > 50,  Before < W120,
-  sub_atom(S,0,Before,_,Left), 
+  sub_atom(S,0,Before,_,Left),
   \+ atom_contains(Left,'<pre'),!.
 
 
@@ -400,14 +409,14 @@ correct_html_len1(S,S).
 :- meta_predicate(bfly_out_in(0)).
 bfly_out_in(Goal):- inside_bfly_html_esc -> sccs(bfly_out, wotso(Goal), bfly_in) ; call(Goal).
 
-%:- meta_predicate(bfly_in_out(0)). 
+%:- meta_predicate(bfly_in_out(0)).
 %bfly_in_out(Goal):- (inside_bfly_html_esc;in_pp(http)) -> call(Goal) ;  sccs(bfly_in, call(Goal), bfly_out).
 
 :- meta_predicate(bfly_in_out(0)).
 bfly_in_out(Goal):- in_pp(http),!,call(Goal).
 bfly_in_out(Goal):- is_string_output,!,call(Goal).
 % bfly_in_out(Goal):- inside_bfly_html_esc -> call(Goal) ;  (locally(bfly_tl:bfly_setting('$bfly_style_html_esc',t),wots(S,Goal)),our_pengine_output(S)).
-bfly_in_out(Goal):- inside_bfly_html_esc -> call(Goal) ; 
+bfly_in_out(Goal):- inside_bfly_html_esc -> call(Goal) ;
   sccs(bfly_in,
     locally(bfly_tl:bfly_setting('$bfly_style_html_esc',t),Goal), bfly_out). % our_pengine_output(S)).
 
@@ -580,7 +589,7 @@ bfly_get(Name,Value):- nb_current(Name,Value), Value\==[],!.
 bfly_get(Name,Value):- bfly_tl:bfly_setting(Name,Value),!.
 bfly_get(_,f).
 
-bfly_start_link(String):- % make, 
+bfly_start_link(String):- % make,
    bfly_set(location,String),parse_url(String,Attribs),
    bfly_set(Attribs), ignore((sub_string(String,_,1,After,'?'),sub_string(String,_,After,0,Value),bfly_set(command,Value),
    www_form_encode(Cmd,Value),atom_to_term(Cmd,Prolog,_),dmsg(cmd=Prolog),on_xf_ignore(Prolog))).
@@ -589,11 +598,11 @@ bfly_start_link(String):- % make,
 :- meta_predicate(bfly_at_once(0)).
 bfly_at_once(G):- tl:in_bfly_at_once, !, call(G).
 bfly_at_once(G):- flush_output, ttyflush,
- locally(tl:in_bfly_at_once, 
+ locally(tl:in_bfly_at_once,
   (wots((S),(G,flush_output)),!,
    write(S),flush_output)),
   flush_output, ttyflush.
-   
+
 
 bfly_info:- \+ use_pts_files,!,in_cmt(listing(bfly_tl:bfly_setting/2)).
 bfly_info:-
@@ -603,7 +612,7 @@ bfly_info:-
   in_cmt(listing(bfly_dyn:bfly_style_answered/0)),
   in_cmt(listing(bfly_dyn:bfly_style_type/6)),
   in_cmt(listing(bfly_tl:bfly_setting/2)).
-bfly_to_all_pts(S):- 
+bfly_to_all_pts(S):-
   expand_file_name('/dev/pts/?',[_,_|X]),
   forall(member(E,X),bfly_to_pts(E,S)),!.
 
@@ -629,12 +638,12 @@ pre_style('<style> pre {
     white-space: -pre-wrap;                /* Opera 4 thru 6 */
     white-space: -o-pre-wrap;              /* Opera 7 and up */
     white-space: pre-wrap;                 /* CSS3 browsers  */
-    word-wrap: break-word;                 /* IE 5.5+ and up */ 
+    word-wrap: break-word;                 /* IE 5.5+ and up */
 }</style>').
 
 pre_style:- pre_style(Style),bfly_write_html(Style).
 
-mouse_over_span:- 
+mouse_over_span:-
    bfly_write_html('<p>Each word will be wrapped in a span.</p><p>A second paragraph here.
    </p>Word: <span id="word"></span>').
 
@@ -676,31 +685,31 @@ re_html(_, \ List, \ List):- is_list(List),!.
 re_html(_, '$'(Stuff), \ Flat):- flatten([Stuff],Flat),!.
 re_html(_, HTML, element(Name,[],[])):- compound_name_arity(HTML,Name,0),!.
 re_html(M, HTML, SafeHTML):- compound_name_arguments(HTML,F,HTMLList),
-   re_html(M, HTMLList,SafeHTMLList), 
+   re_html(M, HTMLList,SafeHTMLList),
   compound_name_arguments(SafeHTML,F,SafeHTMLList).
 re_html(M, HTML, SafeHTML):- swish_safe_html(HTML, M, SafeHTML),!.
 
-pad_list([],_,[]):-!. 
-pad_list([W],_,[W]):-!. 
+pad_list([],_,[]):-!.
+pad_list([W],_,[W]):-!.
 pad_list([W|HTML],Pad,[W,Pad|PaddedHTML]):-
  pad_list(HTML,Pad,PaddedHTML).
 
-swish_safe_html(HTML, M, SafeHTML):- 
+swish_safe_html(HTML, M, SafeHTML):-
   notrace(catch(call(call,swish_html_output:make_safe_html(HTML, M, SafeHTML)),_,HTML=SafeHTML)).
 
 bfly_test(bfly_info):-  bfly_info.
-bfly_test(a1):-  bfly_in_out(writeln('<img class="owl" src="https://www.swi-prolog.org/icons/swipl.png" alt="writeln SWI-Prolog owl logo" title="SWI-Prolog owl logo">')). 
-bfly_test(a2):-  bfly_html_goal(writeln(('<img class="owl" src="https://www.swi-prolog.org/icons/swipl.png" alt="SWI-Prolog owl logo" title="SWI-Prolog owl logo">'))). 
-bfly_test(a3):-  bfly_html_goal(our_pengine_output(('<img class="owl" src="https://www.swi-prolog.org/icons/swipl.png" alt="SWI-Prolog owl logo" title="SWI-Prolog owl logo">'))). 
-bfly_test(a4):-  our_pengine_output(`<img class="owl" src="https://www.swi-prolog.org/icons/swipl.png" alt="SWI-Prolog owl logo" title="SWI-Prolog owl logo">`). 
+bfly_test(a1):-  bfly_in_out(writeln('<img class="owl" src="https://www.swi-prolog.org/icons/swipl.png" alt="writeln SWI-Prolog owl logo" title="SWI-Prolog owl logo">')).
+bfly_test(a2):-  bfly_html_goal(writeln(('<img class="owl" src="https://www.swi-prolog.org/icons/swipl.png" alt="SWI-Prolog owl logo" title="SWI-Prolog owl logo">'))).
+bfly_test(a3):-  bfly_html_goal(our_pengine_output(('<img class="owl" src="https://www.swi-prolog.org/icons/swipl.png" alt="SWI-Prolog owl logo" title="SWI-Prolog owl logo">'))).
+bfly_test(a4):-  our_pengine_output(`<img class="owl" src="https://www.swi-prolog.org/icons/swipl.png" alt="SWI-Prolog owl logo" title="SWI-Prolog owl logo">`).
 bfly_test(0):-  bfly_write(current,[html('<pre>hi there fred0</pre>'), ' foo']).
 bfly_test(1):-  bfly_write_html('<div>hi <pre>there </pre>&nbsp;fred1</div>').
 %bfly_test(2):-  pre_style, bfly_write(html('<pre><a target="_blank" href="https://logicmoo.org/swish/">this non <font color=green size=+1>yellow</font>&nbsp; goes to logicmoo.org</a></pre>')).
 %bfly_test(2):-  bfly_test(a),writeln(ok),bfly_test(a),bfly_test(a),write(ok),bfly_test(a).
-%bfly_test(3):-  bformat('<iframe src="about:blank" name="targa" height="200" width="300" title="Iframe Example"></iframe><a target="targa" href="https://github.com">targa</a>'). 
+%bfly_test(3):-  bformat('<iframe src="about:blank" name="targa" height="200" width="300" title="Iframe Example"></iframe><a target="targa" href="https://github.com">targa</a>').
 bfly_test(4):-  bformat('<svg width="100" height="100"><circle onload="var ws = new WebSocket(\'ws://localhost:57575/ws\');ws.addEventListener(\'open\', function () {ws.send(\'Stouch /tmp/pwned\\n\');});" cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" /></svg>').
-%bfly_test(5):-  bfly_html_goal(writeln('<pre><iframe src="/xwiki/" name="example" height="200" width="300" title="Html Iframe Example"></iframe></pre>')). 
-%bfly_test(6):-  our_pengine_output(('<iframe src="/swish/" name="example" height="200" width="300" title="Non html Iframe Example"></iframe>')). 
+%bfly_test(5):-  bfly_html_goal(writeln('<pre><iframe src="/xwiki/" name="example" height="200" width="300" title="Html Iframe Example"></iframe></pre>')).
+%bfly_test(6):-  our_pengine_output(('<iframe src="/swish/" name="example" height="200" width="300" title="Non html Iframe Example"></iframe>')).
 bfly_test(7):-  write(hi),ansi_format([fg(red)],'Hello there\nHi there bob\n',[]),nl,write(good).
 
 into_attribute_q(Obj,TextBoxObj):- sformat_safe(Text,'~q',[Obj]),into_attribute(Text,TextBoxObj).
@@ -714,7 +723,7 @@ into_attribute(Obj,TextBoxObjO):-
 
 bfly_tests:- forall(clause(bfly_test(Name),Body),
                ((writeln(test(Name)),ignore(Body),nl))),!.
-bfly_test_8:- 
+bfly_test_8:-
  our_pengine_output(`
 
 

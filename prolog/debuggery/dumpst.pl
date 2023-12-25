@@ -99,7 +99,7 @@
 % % % OFF :- system:use_module((dmsg)).% WAS OFF  :- system:use_module(library(logicmoo_util_strings)).
 
 
-%= 	 	 
+%=
 
 %% dump_st is semidet.
 %
@@ -108,7 +108,7 @@
 dump_st:- prolog_current_frame(Current),dumpST0(Current,100),!.
 
 
-%= 	 	 
+%=
 
 %% dumpST0 is semidet.
 %
@@ -117,7 +117,7 @@ dump_st:- prolog_current_frame(Current),dumpST0(Current,100),!.
 dumpST0:- prolog_current_frame(Current),
   dbreak,(tracing->zotrace((CU=dtrace,notrace));CU=true),dumpST0(Current,800),!,CU.
 
-%= 	 	 
+%=
 
 %% dumpST0( ?Opts) is semidet.
 %
@@ -125,7 +125,7 @@ dumpST0:- prolog_current_frame(Current),
 %
 dumpST0(Opts):- prolog_current_frame(Current), once(nb_current('$dump_frame',Frame);Frame=Current),dumpST0(Frame,Opts).
 
-%= 	 	 
+%=
 
 %% dumpST0( ?Frame, ?MaxDepth) is semidet.
 %
@@ -146,7 +146,7 @@ dumpST0(Frame,MaxDepth):-  prolog_current_frame(Current),(number(Frame);get_dump
 
 % dumpstack_arguments.
 
-%= 	 	 
+%=
 
 %% dumpST is semidet.
 %
@@ -159,12 +159,12 @@ dumpST0(Frame,MaxDepth):-  prolog_current_frame(Current),(number(Frame);get_dump
 dumpST:- ((prolog_current_frame(Current),get_dump_frame(Current,Frame),
   no_bfly(zotrace(with_all_dmsg((b_setval('$dump_frame',Frame),dumpST1)))))).
 
-%no_bfly(Goal):- current_predicate(in_bfly/2)->in_bfly(f,Goal);call(Goal). 
+%no_bfly(Goal):- current_predicate(in_bfly/2)->in_bfly(f,Goal);call(Goal).
 
 :- thread_local(tlbugger:no_slow_io/0).
 :- multifile(tlbugger:no_slow_io/0).
 
-%= 	 	 
+%=
 
 %% dumpST1 is semidet.
 %
@@ -175,19 +175,19 @@ dumpST1:- tlbugger:no_slow_io,!,dumpST0,!.
 dumpST1:- tlbugger:ifHideTrace,!.
 dumpST1:- show_current_source_location,!,loop_check_early(dumpST9,dumpST0).
 
-%= 	 	 
+%=
 
 %% dumpST( ?Depth) is semidet.
 %
 % Dump S True Stucture.
 %
-dumpST(Depth):- 
+dumpST(Depth):-
    prolog_current_frame(Current),
    no_bfly((zotrace((b_setval('$dump_frame',Current))),
    loop_check_early(dumpST9(Depth),dumpST0(Depth)))).
 
 
-%= 	 	 
+%=
 
 %% get_m_opt( ?Opts, ?Max_depth, ?D100, ?RetVal) is semidet.
 %
@@ -197,7 +197,7 @@ get_m_opt(Opts,Max_depth,D100,RetVal):- univ_safe_2(E,[Max_depth,V]),(((member(E
 
 
 
-%= 	 	 
+%=
 
 %% dumpST9 is semidet.
 %
@@ -205,7 +205,7 @@ get_m_opt(Opts,Max_depth,D100,RetVal):- univ_safe_2(E,[Max_depth,V]),(((member(E
 %
 dumpST9:- prolog_current_frame(Current),get_dump_frame(Current,Frame),dumpST9(Frame,5000).
 
-%= 	 	 
+%=
 
 %% dumpST9( ?Depth) is semidet.
 %
@@ -216,7 +216,7 @@ dumpST9(Depth):-prolog_current_frame(Current),get_dump_frame(Current,Frame),dump
 
 get_dump_frame(Current,Frame):- (nb_current('$dump_frame',Frame),number(Frame))->true;Frame=Current.
 
-%= 	 	 
+%=
 
 %% dumpST9( ?Frame, :TermMaxDepth) is semidet.
 %
@@ -229,7 +229,7 @@ dumpST9(Frame,List):- is_list(List),dumpST_now(Frame,[show([level,has_alternativ
 
 
 
-%= 	 	 
+%=
 
 %% drain_framelist( ?Opts) is semidet.
 %
@@ -238,21 +238,21 @@ dumpST9(Frame,List):- is_list(List),dumpST_now(Frame,[show([level,has_alternativ
 drain_framelist(Opts):- repeat, \+ drain_framelist_ele(Opts).
 
 
-%= 	 	 
+%=
 
 %% drain_framelist_ele( ?Opts) is semidet.
 %
 % Drain Framelist Ele.
 %
-drain_framelist_ele(Opts):- 
+drain_framelist_ele(Opts):-
     nb_getval('$current_stack_frame_list',[N-Frame|Next]),
     nb_setval('$current_stack_frame_list',Next),!,
     printFrame(N,Frame,Opts),!.
-    
-        
 
 
-%= 	 	 
+
+
+%=
 
 %% dumpST_now( ?FrameIn, ?Opts) is semidet.
 %
@@ -266,10 +266,10 @@ dumpST_now(FrameInto,Opts):-
    b_setval('$current_stack_frame_list',[]),
    get_m_opt(Opts,max_depth,100,MD),
    b_setval('$current_stack_frame_handle',FrameIn),
-  (repeat,  
+  (repeat,
      nb_getval('$current_stack_frame_depth',N),
      nb_getval('$current_stack_frame_handle',Frame),
-    ((pushFrame(N,Frame,Opts),MD>N)-> 
+    ((pushFrame(N,Frame,Opts),MD>N)->
      ((getPFA2(Frame,parent,ParentFrame)->
        (nb_setval('$current_stack_frame_handle',ParentFrame),
        NN is N +1,nb_setval('$current_stack_frame_depth',NN),fail); !));
@@ -285,7 +285,7 @@ dumpST_now(FrameInto,Opts):-
 pushFrame(N,Frame,_Opts):- nb_getval('$current_stack_frame_list',Current),nb_setval('$current_stack_frame_list',[N-Frame|Current]).
 
 
-%= 	 	 
+%=
 
 %% printFrame( ?N, ?Frame, ?Opts) is semidet.
 %
@@ -296,7 +296,7 @@ printFrame(N,Frame,Opts):-
   ignore(((frame_to_fmsg(N,Frame,Opts,Out)),must(fmsg_rout(Out)))),!.
 
 
-%= 	 	 
+%=
 
 %% frame_to_fmsg( ?N, ?Frame, ?Opts, ?N) is semidet.
 %
@@ -308,10 +308,10 @@ frame_to_fmsg(_,Frame,Opts,[fr(Goal)]):- get_m_opt(Opts,show,goal,Ctrl),getPFA(F
 frame_to_fmsg(N,Frame,Opts,[nf(no(Ctrl),N,Frame,Opts)]):- get_m_opt(Opts,show,goal,Ctrl),!.
 frame_to_fmsg(N,Frame,Opts,[nf(noFrame(N,Frame,Opts))]).
 
- 
 
 
-%= 	 	 
+
+%=
 
 %% fmsg_rout( :TermRROut) is semidet.
 %
@@ -324,7 +324,7 @@ fmsg_rout([E|RROut]):- ignore(fdmsg(E)),!,fmsg_rout(RROut).
 fmsg_rout(RROut):- show_call(why,forall(member(E,RROut),fdmsg(E))),!.
 
 
-%= 	 	 
+%=
 
 %% neg1_numbervars( ?Out, ?Start, :GoalROut) is semidet.
 %
@@ -338,7 +338,7 @@ neg1_numbervars(Out,safe,ROut):-copy_term(Out,ROut),safe_numbervars(ROut).
 
 if_defined_mesg_color(G,C):- current_predicate(mesg_color/2),mesg_color(G,C).
 
-%= 	 	 
+%=
 
 %% fdmsg1( ?G) is semidet.
 %
@@ -356,7 +356,7 @@ fdmsg1(clause=[]):-'format'(' /*DYN*/ ',[]),!.
 fdmsg1(G):- if_defined_mesg_color(G,Ctrl),ansicall(Ctrl,fmt_gg(G)),!.
 fdmsg1(M):-dmsg(failed_fdmsg1(M)).
 
-do_fdmsg1(G):- 
+do_fdmsg1(G):-
   simplify_goal_printed(G,GG),!,
   (GG\==G->write('#');true),
   do_fdmsg2(GG),!.
@@ -377,7 +377,7 @@ do_fdmsg2(GG):-
 fmt_gg(GGG):- term_contains_ansi_b(GGG,_),!,write(' '),write(GGG),write('. ').
 fmt_gg(GGG):- format(' ~q. ',[GGG]).
 
-%= 	 	 
+%=
 
 %% simplify_m( ?G, ?M) is semidet.
 %
@@ -387,7 +387,7 @@ fmt_gg(GGG):- format(' ~q. ',[GGG]).
 % simplify_m(G,M):-atom(G),sub_atom(G,_,6,0,M),!.
 simplify_m(G,G).
 
-%= 	 	 
+%=
 
 %% fdmsg( ?M) is semidet.
 %
@@ -406,8 +406,8 @@ printable_variable_name(Var, Name) :- nonvar(Var),Var='$VAR'(Named), (nonvar(Nam
 printable_variable_name(Var, Name) :- nonvar(Var),format(atom(Name),"(_~q_)",[Var]).
 printable_variable_name(Var,Name):- (get_attr(Var, vn, Name1);
   get_attr(Var, varnames, Name1)),
- (var_property(Var,name(Name2))-> 
-   (Name1==Name2-> atom_concat(Name1,'_VN',Name) ; Name=(Name1:Name2)); 
+ (var_property(Var,name(Name2))->
+   (Name1==Name2-> atom_concat(Name1,'_VN',Name) ; Name=(Name1:Name2));
     (atom(Name1)->atom_concat('?',Name1,Name);
    format(atom(Name),"'$VaR'(~q)",[Var]))),!.
 printable_variable_name(Var,Name):- v_name1(Var,Name),!.
@@ -417,7 +417,7 @@ v_name1(Var,Name):- var_property(Var,name(Name)),!.
 v_name1(Var,Name):- get_varname_list(Vs),member(Name=V,Vs),atomic(Name),V==Var,!.
 v_name1(Var,Name):- nb_current('$old_variable_names', Vs),member(Name=V,Vs),atomic(Name),V==Var,!.
 v_name2(Var,Name):- get_varname_list(Vs),format(atom(Name),'~W',[Var, [variable_names(Vs)]]).
- 
+
 
 %attrs_to_list(att(sk,_,ATTRS),[sk|List]):-!,attrs_to_list(ATTRS,List).
 attrs_to_list(att(vn,_,ATTRS),List):-!,attrs_to_list(ATTRS,List).
@@ -484,15 +484,15 @@ simplify_goal_printed(I,O):- once(dumpst_hook:simple_rewrite(I,O)), I \== O,!.
 
 simplify_goal_printed(List,O):- current_prolog_flag(dmsg_len,Three),
   is_list(List),length(List,L),L>Three,
-   append([A,B,C],[F|_],List),F \='...'(_), !, 
+   append([A,B,C],[F|_],List),F \='...'(_), !,
   simplify_goal_printed([A,B,C,'....'(L>Three)],O).
 
 
-simplify_goal_printed([E|OList],O):- fail,  \+ is_list(OList), 
+simplify_goal_printed([E|OList],O):- fail,  \+ is_list(OList),
    append(List,Open,OList),var(Open),!,
     current_prolog_flag(dmsg_len,Three),
    is_list(List),length(List,L),L>Three,
-    append([A,B,C],[F|_],[E|List]),F \='...'(_), !, 
+    append([A,B,C],[F|_],[E|List]),F \='...'(_), !,
    simplify_goal_printed([A,B,C,'...'(_)],O).
 
 
@@ -510,7 +510,7 @@ simplify_goal_printed(G,GS):- univ_safe_2(G,[F|A]),maplist(simplify_goal_printed
 
 
 
-%= 	 	 
+%=
 
 %% getPFA( ?Frame, ?Ctrl, ?Goal) is semidet.
 %
@@ -520,7 +520,7 @@ getPFA(Frame,[L|List],Goal):- !,findall(R, (member(A,[L|List]),getPFA1(Frame,A,R
 getPFA(Frame,Ctrl,Goal):-getPFA1(Frame,Ctrl,Goal).
 
 
-%= 	 	 
+%=
 
 %% getPFA1( ?Frame, ?Txt, ?Txt) is semidet.
 %
@@ -532,7 +532,7 @@ getPFA1(Frame,Ctrl,Ctrl=Goal):-getPFA2(Frame,Ctrl,Goal),!.
 getPFA1(_,Ctrl,no(Ctrl)).
 
 
-%= 	 	 
+%=
 
 %% getPFA2( ?Frame, ?Ctrl, ?Goal) is semidet.
 %
@@ -541,7 +541,7 @@ getPFA1(_,Ctrl,no(Ctrl)).
 getPFA2(Frame,Ctrl,Goal):- catchv((prolog_frame_attribute(Frame,Ctrl,Goal)),E,Goal=[error(Ctrl,E)]),!.
 
 
-%= 	 	 
+%=
 
 %% clauseST( ?ClRef, :TermGoal) is semidet.
 %
@@ -557,7 +557,7 @@ clauseST(ClRef,Goal = HB):- ignore(((clause(Head, Body, ClRef),copy_term(((Head 
 :- thread_local(tlbugger:ifCanTrace/0).
 
 
-%= 	 	 
+%=
 
 %% end_dump( :TermGG) is semidet.
 %
@@ -573,7 +573,7 @@ end_dump(GG):-compound(GG),functor(GG,F,_),atom_concat(dump,_,F),nb_setval('$hid
 
 %:- redefine_system_predicate(system:dtrace()).
 dtrace:- wdmsg("DUMP_TRACE/0"), (thread_self_main->(dumpST,rtrace);(dumpST(30),abort)).
-%= 	 	 
+%=
 
 %% dtrace is semidet.
 %
@@ -591,14 +591,14 @@ dbreak:- wdmsg("DUMP_BREAK/0"),((ignore(on_x_fail(dumpST)), break,wdmsg("DUMP_BR
 :- thread_local(tlbugger:has_auto_trace/1).
 :-meta_predicate(dtrace(0)).
 
-%= 	 	 
+%=
 
 %% dtrace( :GoalG) is semidet.
 %
 % (debug) Trace.
 %
 
-dtrace(G):- zotrace((tlbugger:has_auto_trace(C),wdmsg(has_auto_trace(C,G)))),!,call(C,G). 
+dtrace(G):- zotrace((tlbugger:has_auto_trace(C),wdmsg(has_auto_trace(C,G)))),!,call(C,G).
 dtrace(G):- strip_module(G,_,dbreak),\+ thread_self_main,!.
 % dtrace(G):- zotrace((tracing,notrace)),!,wdmsg(tracing_dtrace(G)),
 %   scce_orig(notrace,restore_trace((leash(+all),dumptrace_or_cont(G))),trace).
@@ -607,7 +607,7 @@ dtrace(G):- zotrace((once(((G=dmsg(GG);G=_:dmsg(GG);G=GG),nonvar(GG))),wdmsg(GG)
  catch(dumptrace1(G),E, handle_dumptrace_signal(G,E)),fail. %always fails
 %dtrace(G):- \+ tlbugger:ifCanTrace,!,quietly((wdmsg((not(tlbugger:ifCanTrace(G)))))),!,badfood(G),!,dumpST.
 %dtrace(G):- \+ tlbugger:ifCanTrace,!,quietly((wdmsg((not(tlbugger:ifCanTrace(G)))))),!,badfood(G),!,dumpST.
-dtrace(G):- 
+dtrace(G):-
     catch(dumptrace1(G),E,handle_dumptrace_signal(G,E)).
 
 handle_dumptrace_signal(G,E):-arg(_,v(continue,abort),E),!,wdmsg(continuing(E,G)),notrace,nodebug.
@@ -619,7 +619,7 @@ handle_dumptrace_signal(_,E):-throw(E).
 
 % :-meta_predicate(dtrace(+,?)).
 
-%= 	 	 
+%=
 
 %% dtrace( +MSG, ?G) is semidet.
 %
@@ -628,7 +628,7 @@ handle_dumptrace_signal(_,E):-throw(E).
 dtrace(MSG,G):-wdmsg(MSG),dtrace(G).
 
 
-%= 	 	 
+%=
 
 %% to_wmsg( :TermG, :TermWG) is semidet.
 %
@@ -645,7 +645,7 @@ with_source_module(G):-
   '$current_source_module'(M),
   '$current_typein_module'(WM),
   scce_orig('$set_typein_module'(M),G,'$set_typein_module'(WM)).
-   
+
 
 
 % =====================
@@ -653,7 +653,7 @@ with_source_module(G):-
 % =====================
 % :-meta_predicate(dumptrace(?)).
 
-%= 	 	 
+%=
 
 %% dumptrace( ?G) is semidet.
 %
@@ -668,9 +668,9 @@ dumptrace(G):-
 
 dumptrace0(G):- zotrace((tracing,notrace,wdmsg(tracing_dumptrace(G)))),!, catch(((dumptrace0(G) *-> dtrace ; (dtrace,fail))),_,true).
 dumptrace0(G):-dumptrace1(G).
-dumptrace1(G):-   
+dumptrace1(G):-
   catch(attach_console,_,true),
-    repeat, 
+    repeat,
     (tracing -> (!,fail) ; true),
     to_wmsg(G,WG),
     fmt(in_dumptrace(G)),
@@ -680,12 +680,12 @@ dumptrace1(G):-
 :-meta_predicate(dumptrace(0,+)).
 
 ggtrace:-
-  leash(+all),
+  leash(-all),
   visible(+all),
   % debug,
   maybe_leash(+exception).
 
-%= 	 	 
+%=
 
 %% dumptrace( :GoalG, +C) is semidet.
 %
@@ -697,7 +697,7 @@ dumptrace(_,0'G):-!,zotrace(dumpST0(500000)),!,fail.
 dumptrace(_,0'D):-!,prolog_stack:backtrace(8000),!,fail.
 dumptrace(_,0'd):-!,prolog_stack:backtrace(800),!,fail.
 
-dumptrace(G,0'l):-!, 
+dumptrace(G,0'l):-!,
   restore_trace(( zotrace(ggtrace),G)),!,notrace.
 %dumptrace(G,0's):-!,quietly(ggtrace),!,(quietly(G)*->true;true).
 dumptrace(G,0'S):-!, wdmsg(skipping(G)),!.
@@ -723,7 +723,7 @@ dumptrace(_G,'p'):- in_cmt(if_defined(pp_DB,fail)),!,fail.
 dumptrace(_,C):-fmt(unused_keypress(C)),!,fail.
 % )))))))))))))) %  '
 
-%= 	 	 
+%=
 
 %% dumptrace_ret( ?G) is semidet.
 %
@@ -756,20 +756,20 @@ end_of_file.
 % Hook Message Hook.
 %
 % hook_message_hook
-hook_message_hook:- 
+hook_message_hook:-
  asserta((
- 
+
 %  current_predicate(logicmoo_bugger_loaded/0)
 
 user:message_hook(Term, Kind, Lines):- current_prolog_flag(runtime_message_hook, true),
- quietly(( 
+ quietly((
  loop_check((ignore((
  tlbugger:rtracing,
- \+ \+ 
+ \+ \+
  catch(((
  rtrace,
- (Kind= warning;Kind= error), 
- Term\=syntax_error(_), 
+ (Kind= warning;Kind= error),
+ Term\=syntax_error(_),
  backtrace(40), \+ baseKB:no_buggery, \+ tlbugger:no_buggery_tl,
  stop_rtrace,1trace,
   dmsg(message_hook(Term, Kind, Lines)),quietly(dumpST(10)),dmsg(message_hook(Term, Kind, Lines)),

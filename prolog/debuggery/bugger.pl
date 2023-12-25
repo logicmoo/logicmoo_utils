@@ -13,7 +13,7 @@
 % File: /opt/PrologMUD/pack/logicmoo_base/prolog/logicmoo/util/logicmoo_util_bugger.pl
 %:- if((prolog_load_context(source,F),prolog_load_context(file,F))).
 :- module(bugger,
-          [ 
+          [
           debug_logicmoo/1,
           swi_module/2,
           nodebug_logicmoo/1,
@@ -69,7 +69,7 @@
             default_ecall/3,
             define_if_missing/2,
             differnt_modules/2,
-            disabled_this/0,            
+            disabled_this/0,
             do_gc/0,
             do_gc0/0,
             do_gc1/0,
@@ -88,7 +88,7 @@
             gripe_time/2,
             on_f_debug/1,
             on_f_debug_ignore/1,
-            
+
             on_x_debug_cont/1,
             on_x_rtraceEach/1,
             has_gui_debug/0,
@@ -163,7 +163,7 @@
             randomVars/1,
             real_builtin_predicate/1,
             replace_elements/4,
-            rmust_det/1,            
+            rmust_det/1,
             saveUserInput/0,
             set_bugger_flag/2,
             set_gui_debug/1,
@@ -221,12 +221,12 @@
 
           ]).
 %:- endif.
-:- multifile '$exported_op'/3. 
-:- dynamic '$exported_op'/3. 
-:- discontiguous '$exported_op'/3. 
+:- multifile '$exported_op'/3.
+:- dynamic '$exported_op'/3.
+:- discontiguous '$exported_op'/3.
 '$exported_op'(_,_,_):- fail.
 
-:- multifile '$autoload'/3. 
+:- multifile '$autoload'/3.
 :- discontiguous '$autoload'/3.
 :- dynamic '$autoload'/3.
 '$autoload'(_,_,_):- fail.
@@ -242,10 +242,10 @@ module(_Skip,Exports):- maplist(export,Exports).
 This module supplies support for utilities, like DCG_must and must_trace, that allow for easier debugging.
 
  - @author Douglas R. Miles
- - @license LGPL 
+ - @license LGPL
 */
 :- meta_predicate with_skip_bugger(:).
-:- meta_predicate 
+:- meta_predicate
     do_ref_job(:,:),
         bugger_atom_change(:, -),
         bugger_atom_change(:, 0, +, +, -, -),
@@ -261,7 +261,7 @@ This module supplies support for utilities, like DCG_must and must_trace, that a
          on_x_rtraceEach(:),
         callsc(:),
         cli_ntrace(:),
-        
+
         on_x_debug_cont(:),
         on_f_debug(:),
         on_f_debug(:),
@@ -308,7 +308,7 @@ This module supplies support for utilities, like DCG_must and must_trace, that a
         rmust_det(:),
         set_gui_debug(:),
         showProfilerStatistics(:),
-        show_and_do(:),        
+        show_and_do(:),
         dcall0(:),
         bugger_t_expansion(:,0,:),
         bugger_goal_expansion(:,0,:),
@@ -490,8 +490,8 @@ if_debug_module(MG):- strip_module(MG,M,_),(debugging(M)-> MG; true).
 
 % bugger:isa(_,_).
 
-not_debugging:- \+ ( nb_current('$inprint_message', Messages), Messages\==[] ), 
- \+ tracing, 
+not_debugging:- \+ ( nb_current('$inprint_message', Messages), Messages\==[] ),
+ \+ tracing,
  \+ current_prolog_flag(debug,true).
 
 /*
@@ -513,7 +513,7 @@ all_source_file_predicates_are_transparent_bugger:-
 all_source_file_predicates_are_transparent_bugger(File):-
     debug(logicmoo(loader),'~N~p~n',[all_source_file_predicates_are_transparent_bugger(File)]),
     forall((source_file(ModuleName:P,File),functor(P,F,A)),
-      ignore(( 
+      ignore((
         ignore(( \+ atom_concat('$',_,F), ModuleName:export(ModuleName:F/A))),
             \+ (predicate_property(ModuleName:P,(transparent))),
                    % ( nop(dmsg(todo(module_transparent(ModuleName:F/A))))),
@@ -521,7 +521,7 @@ all_source_file_predicates_are_transparent_bugger(File):-
 
 
 
-:- 
+:-
       op(1150,fx,(baseKB:kb_shared)),
       op(1150,fx,meta_predicate),
       op(1150,fx,thread_local).
@@ -588,14 +588,14 @@ set_bugger_flag(F,V):-create_prolog_flag(F,V,[keep(true),tCol(ftTerm)]),!.
      on_x_cont/1, % same
         on_x_debug_cont/1,
 
-        must_det/1, % must leave no coice points behind 
+        must_det/1, % must leave no coice points behind
      on_f_throw/1, % Throws unless [Fail or Debug]
 
      % cant ignore - Throws but can be set to [Throw, Fail or Ignore or Debug]
      dsddf must/1, % must succeed at least once
      sanity/1, % doesnt run on release
      gmust/2, % like must/1 but arg2 must be ground at exit
-    
+
      must_each/1,  % list block must succeed once .. it smartly only debugs to the last failures
      on_x_log_cont/1,
      on_f_debug/1, % Succeeds but can be set to [Fail or Debug]
@@ -628,7 +628,7 @@ call_count_nth(C,N):-findall(C,C,L),nth1(N,L,C).
 ignore_each((A,B)):-ignore_each(A),ignore_each(B),!.
 ignore_each(A):-ignore(A).
 
-:- meta_predicate 
+:- meta_predicate
 	must_maplist(:, ?),
 	must_maplist(:, ?, ?),
         must_maplist(:, ?, ?, ?).
@@ -681,7 +681,7 @@ must_maplist( Goal, [Elem1|Tail1], [Elem2|Tail2], [Elem3|Tail3]) :-
 
 
 
-:- meta_predicate 
+:- meta_predicate
 	must_maplist_det(:, ?),
 	must_maplist_det(:, ?, ?),
         must_maplist_det(:, ?, ?, ?).
@@ -752,7 +752,7 @@ throw_safe(Exc):-trace_or_throw(Exc).
 % Test For Release.
 %
 test_for_release(File):-  source_file(File), \+ make:modified_file(File), !.
-test_for_release(File):-  
+test_for_release(File):-
  G = test_for_release(File),
   scce_orig(dmsg("~N~nPress Ctrl-D to begin ~n~n  :- ~q. ~n~n",[G]),
   if_interactive(prolog),
@@ -768,7 +768,7 @@ test_for_release(File):-
 % Test For Release Problems.
 %
 test_for_release_problems(_):-!.
-test_for_release_problems(File):-  
+test_for_release_problems(File):-
       dmsg("~N~nListing problems after ~q...~n",[File]),
       list_undefined,
       nop(after_boot(if_defined(gxref,true))),!.
@@ -788,7 +788,7 @@ if_interactive(_Goal,Else):- keep_going, !,
    terminal_ansi_goal(current_output,[fg(red)],(format("~n(NOT INTERACTIVE (~q))~n",[Else]))),!,
    terminal_ansi_goal(current_output,[fg(yellow)],(call(Else))).
 
-if_interactive(Goal,Else):- 
+if_interactive(Goal,Else):-
   thread_self(main),
   current_input(In),
   stream_property(In,input),
@@ -823,7 +823,7 @@ if_interactive(Goal,Else):-
     true -> fail))).
 
 
-if_interactive(_Goal,Else):- 
+if_interactive(_Goal,Else):-
    (format("~n(NOT INTERACTIVE (~q))~n",[Else]),!,call(Else)).
 
 
@@ -991,7 +991,7 @@ bugger_t_expansion(_,listing(A),listing(A)):-!.
 bugger_t_expansion(CM,M:T,M:TT):-!,bugger_t_expansion(CM,T,TT),!.
 bugger_t_expansion(_,test_is(A),test_is_safe(A)):-!.
 bugger_t_expansion(_,delete(A,B,C),delete(A,B,C)):-!.
-bugger_t_expansion(CM,T,TT):-  
+bugger_t_expansion(CM,T,TT):-
      compound_name_arguments(T,F,A),quietly((bugger_t_expansion(CM,A,AA),
      functor_h0(T,FH,AH))),
     ( (fail,bugger_atom_change(CM,T,F,FH,AH,FF))-> true; FF=F ),
@@ -1174,7 +1174,7 @@ has_gui_debug :- getenv('DISPLAY',NV),NV\==''.
 nodebugx(X):- current_prolog_flag(nodebugx,true),!,call(X).
 % nodebugx(X):- prolog_debug:debugging(Topic, true, _),!,scce_orig(nodebug(Topic),nodebugx(X),debug(Topic)).
 nodebugx(X):- current_prolog_flag(debug_threads,true),!,call(X).
-nodebugx(X):- 
+nodebugx(X):-
  locally(set_prolog_flag(nodebugx,true),
   locally(-tlbugger:ifCanTrace,
    locally(tlbugger:ifWontTrace,
@@ -1422,7 +1422,8 @@ show_entry(Call):-show_entry(mpred,Call).
 %
 % Dirrectly Call Primary Helper.
 %
-dcall0(Goal):- Goal. % on_x_debug(Goal). % dmsg(show_call(why,Goal)),Goal.      
+%dcall0(Goal):- catch(Goal,_,(trace,Goal)). % on_x_debug(Goal). % dmsg(show_call(why,Goal)),Goal.
+dcall0(Goal):- on_x_debug(Goal). % dmsg(show_call(why,Goal)),Goal.
 
 %= :- meta_predicate  show_call(+,0).
 
@@ -1466,12 +1467,12 @@ show_failure(Goal):- strip_module(Goal,Why,_),show_failure(Why,Goal).
 %
 
 % show_success(_Why,Goal):-!,Goal.
-show_success(Why,Goal):- 
+show_success(Why,Goal):-
   zotrace((ignore((cyclic_term(Goal),dumpST, dmsg(try_show_success(Why,cyclic_term)))))),
   dcall0(Goal),
   zotrace((cyclic_term(Goal)-> dmsg(show_success(Why,cyclic_term)) ; debugm(Why,show_success(Why,Goal)))).
 
-%= 	 	 
+%=
 
 %% debugm1( ?Why, ?Msg) is det.
 %
@@ -1534,7 +1535,7 @@ shrink_clause( HB,HB).
 :- asserta((tlbugger:ifCanTrace:-!)).
 % :- '$hide'(tlbugger:ifCanTrace/0).
 % thread locals should defaults to false: tlbugger:ifCanTrace.
-%MAIN 
+%MAIN
 
 :- export(tlbugger:ifWontTrace/0).
 :- thread_local(tlbugger:ifWontTrace/0).
@@ -1561,10 +1562,10 @@ set_no_debug:-
    set_prolog_flag(generate_debug_info, true),
    retractall(tlbugger:ifCanTrace),
    retractall(tlbugger:ifWontTrace),
-   asserta(tlbugger:ifWontTrace),   
-   set_prolog_flag(report_error,false),   
+   asserta(tlbugger:ifWontTrace),
+   set_prolog_flag(report_error,false),
    set_prolog_flag(debug_on_error,false),
-   set_prolog_flag(debug, false),   
+   set_prolog_flag(debug, false),
    set_prolog_flag(query_debug_settings, debug(false, false)),
    set_gui_debug(fail),
    maybe_leash(-all),
@@ -1580,7 +1581,7 @@ set_no_debug:-
 %
 % Set No Debug Thread.
 %
-set_no_debug_thread:- 
+set_no_debug_thread:-
   must_det_l((
    retractall(tlbugger:ifCanTrace),
    retractall(tlbugger:ifWontTrace),
@@ -1594,7 +1595,7 @@ set_no_debug_thread:-
 % Set Gui Debug.
 %
 set_gui_debug(TF):- current_prolog_flag(gui,true),!,
-   ((TF, has_gui_debug, set_yes_debug, ignore((use_module(library(gui_tracer)),catchv(guitracer,_,true)))) 
+   ((TF, has_gui_debug, set_yes_debug, ignore((use_module(library(gui_tracer)),catchv(guitracer,_,true))))
      -> set_prolog_flag(gui_tracer, true) ;
         set_prolog_flag(gui_tracer, false)).
 :- endif.
@@ -1610,12 +1611,12 @@ set_gui_debug(true):- dmsg("Warning: no GUI").
 %
 % Set Yes Debug.
 %
-set_yes_debug:- 
+set_yes_debug:-
   must_det_l((
    set_prolog_flag(generate_debug_info, true),
-   set_prolog_flag(report_error,true),   
+   set_prolog_flag(report_error,true),
    set_prolog_flag(debug_on_error,true),
-   % set_prolog_flag(debug, true),   
+   % set_prolog_flag(debug, true),
    set_prolog_flag(query_debug_settings, debug(true, true)),
    % set_gui_debug(true),
    maybe_leash(+all),
@@ -1751,7 +1752,7 @@ predicate_module(MPI,M):- strip_module(MPI,C,PI),predicate_module(C,PI,M),!.
 predicate_module(M:_,M):-!. %strip_module(P,M,_F),!.
 predicate_module(_P,user):-!. %strip_module(P,M,_F),!.
 % predicate_module(P,M):- strip_module(P,M,_F),!.
-                     
+
 predicate_module(C,PI,M):- var(PI),!,localize_module(C),C:predicate_property(PI,imported_from(M)),!.
 predicate_module(C,'//'(F,A),M):-!,atom(F),integer(A),AA is A +2,functor(P,F,AA),predicate_module_0(C,P,M).
 predicate_module(C,'/'(F,A),M):- !,atom(F),integer(A),functor(P,F,A),predicate_module_0(C,P,M).
@@ -1888,7 +1889,7 @@ singletons(_).
 
 :- set_prolog_flag(toplevel_print_factorized,true). % default false
 :- set_prolog_flag(toplevel_print_anon,true).
-:- set_prolog_flag(toplevel_mode,backtracking). % OR recursive 
+:- set_prolog_flag(toplevel_mode,backtracking). % OR recursive
 
 */
 :- set_prolog_flag(backtrace_depth,   2000).
@@ -1922,7 +1923,7 @@ do_gc:- do_gc0,!.
 % Do Gc Primary Helper.
 %
 do_gc0:- current_prolog_flag(gc, true),!,do_gc1.
-do_gc0:- set_prolog_flag(gc, true), do_gc1, set_prolog_flag(gc,false), 
+do_gc0:- set_prolog_flag(gc, true), do_gc1, set_prolog_flag(gc,false),
          dmsg(warning(set_prolog_flag(gc,false))).
 
 
@@ -2596,7 +2597,7 @@ if_prolog(_,_):-!. % Dont run SWI Specificd or others
 %
 time_call(Call):- gripe_time(0.5,Call).
 
-/*  statistics(runtime,[MSecStart,_]),   
+/*  statistics(runtime,[MSecStart,_]),
   ignore(show_failure(Call)*->),
   statistics(runtime,[MSecEnd,_]),
    MSec is (MSecEnd-MSecStart),
@@ -2614,9 +2615,9 @@ time_call(Call):- gripe_time(0.5,Call).
 % Gripe Time.
 %
 
-call_for_time(Goal,ElapseCPU,ElapseWALL,Success):- 
+call_for_time(Goal,ElapseCPU,ElapseWALL,Success):-
    statistics(cputime,StartCPU0),statistics(walltime,[StartWALL0,_]),
-   My_Starts = start(StartCPU0,StartWALL0),  
+   My_Starts = start(StartCPU0,StartWALL0),
    (Goal*->Success=true;Success=fail),
    statistics(cputime,EndCPU),statistics(walltime,[EndWALL,_]),
    arg(1,My_Starts,StartCPU), ElapseCPU is EndCPU-StartCPU,nb_setarg(1,My_Starts,EndCPU),
@@ -2695,7 +2696,7 @@ prolog_current_frames(Each):- prolog_current_frame(Frame),prolog_current_frame_o
 %
 % Prolog Current Frame Or Parent.
 %
-prolog_current_frame_or_parent(Frame,Each):- Each=Frame; 
+prolog_current_frame_or_parent(Frame,Each):- Each=Frame;
   (prolog_frame_attribute(Frame,parent,Parent),prolog_current_frame_or_parent(Parent,Each)).
 
 :- module_transparent(caller_module/1).
@@ -3071,7 +3072,7 @@ nth_frame(Nth, Key, Value):- prolog_current_frame(Frame), nth_frame_attribute(Nt
 %
 % Nth Frame Attribute.
 %
-nth_frame_attribute(Nth,NthIn, Frame, Key, Value):-  
+nth_frame_attribute(Nth,NthIn, Frame, Key, Value):-
  quietly((
    (NthIn>=0,Nth=NthIn,prolog_frame_attribute(Frame, Key, Value));
    ((prolog_frame_attribute(Frame, parent, ParentFrame),
@@ -3084,7 +3085,7 @@ nth_frame_attribute(Nth,NthIn, Frame, Key, Value):-
 %
 % In File Expansion.
 %
-in_file_expansion :- nth_pi(LF,_:'$load_file'/_),nth_pi(TL,'$toplevel':_/0),!,LF<TL, 
+in_file_expansion :- nth_pi(LF,_:'$load_file'/_),nth_pi(TL,'$toplevel':_/0),!,LF<TL,
   (nth_pi(ED,_:'$execute_directive_3'/_)-> (LF<ED) ; true).
 
 
@@ -3094,7 +3095,7 @@ in_file_expansion :- nth_pi(LF,_:'$load_file'/_),nth_pi(TL,'$toplevel':_/0),!,LF
 %
 % In File Directive.
 %
-in_file_directive :- nth_pi(LF,_:'$load_file'/_),nth_pi(TL,'$toplevel':_/0),!,LF<TL, 
+in_file_directive :- nth_pi(LF,_:'$load_file'/_),nth_pi(TL,'$toplevel':_/0),!,LF<TL,
   (nth_pi(ED,_:'$execute_directive_3'/_)-> (LF>ED) ; false).
 
 
@@ -3104,7 +3105,7 @@ in_file_directive :- nth_pi(LF,_:'$load_file'/_),nth_pi(TL,'$toplevel':_/0),!,LF
 %
 % In Toplevel.
 %
-in_toplevel :- nth_pi(LF,_:'$load_file'/_),nth_pi(TL,'$toplevel':_/0),!,LF>TL, 
+in_toplevel :- nth_pi(LF,_:'$load_file'/_),nth_pi(TL,'$toplevel':_/0),!,LF>TL,
   (nth_pi(ED,_:'$execute_directive_3'/_)-> (ED>TL) ; true).
 
 
@@ -3159,16 +3160,16 @@ bugger_error_info(C):-contains_var(existence_error(procedure,_/_),C).
 %
 % Disabled This.
 %
-disabled_this:- asserta((user:prolog_exception_hook(Exception, Exception, Frame, _):- 
+disabled_this:- asserta((user:prolog_exception_hook(Exception, Exception, Frame, _):-
  \+ current_prolog_flag(no_debug_ST,true),
  set_prolog_flag(no_debug_ST,true),
  get_thread_current_error(ERR),
     (   Exception = error(Term) ;   Exception = error(Term, _)),
-    Term \= type_error(number,_), 
-    Term \= type_error(character_code,_), 
-    Term \= type_error(character,_), 
-    Term \= type_error(text,_), 
-    Term \= syntax_error(_), 
+    Term \= type_error(number,_),
+    Term \= type_error(character_code,_),
+    Term \= type_error(character,_),
+    Term \= type_error(text,_),
+    Term \= syntax_error(_),
     Term \= existence_error(procedure,iCrackers1),
     prolog_frame_attribute(Frame,parent,PFrame),
     prolog_frame_attribute(PFrame,goal,Goal),
@@ -3185,7 +3186,7 @@ disabled_this:- asserta((user:prolog_exception_hook(Exception, Exception, Frame,
 
 :- dynamic(baseKB:no_buggery/0).
 % show the warnings origins
-:- multifile(user:message_hook/3). 
+:- multifile(user:message_hook/3).
 :- dynamic(user:message_hook/3).
 :- thread_local(tlbugger:no_buggery_tl/0).
 
@@ -3212,14 +3213,14 @@ disabled_this:- asserta((user:prolog_exception_hook(Exception, Exception, Frame,
 % :- '$hide'(tlbugger:_/_).
 % :- '$hide'(tlbugger:A/0).
 
-:-'$hide'(system:notrace/1). 
+:-'$hide'(system:notrace/1).
 
 
 
 /*
 
-must_det(Level,Goal) :- Goal,  
-  (deterministic(true) -> true ; 
+must_det(Level,Goal) :- Goal,
+  (deterministic(true) -> true ;
     (print_message(Level, assertion_failed(deterministic, Goal)),
        (member(Level,[informational,warn]) -> ! ; assertion_failed(deterministic, Goal)))).
 
@@ -3237,7 +3238,7 @@ must_det(Level,Goal) :- Goal,
 :- '$set_predicate_attribute'(system:true, trace, 0).
 :- swi_system_utilities:lock_predicate(system:true/0).
 
-% 
+%
 
 :- ignore((source_location(S,_),prolog_load_context(module,M),module_property(M,class(library)),
  forall(source_file(M:H,S),
@@ -3245,8 +3246,8 @@ must_det(Level,Goal) :- Goal,
   ignore(((\+ atom_concat('$',_,F),(export(F/A) , current_predicate(system:F/A)->true; system:import(M:F/A))))),
   ignore(((\+ predicate_property(M:H,transparent), module_transparent(M:F/A), \+ atom_concat('__aux',_,F),debug(modules,'~N:- module_transparent((~q)/~q).~n',[F,A]))))))))).
 
- 
- 
+
+
 :- export(logicmoo_bugger_loaded/0).
 
 

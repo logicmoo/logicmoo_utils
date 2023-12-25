@@ -49,7 +49,7 @@
     dmsg_hide/1,
     dmsg_hides_message/1,
     dmsg_log/3,
-    dmsg_pretty/1, 
+    dmsg_pretty/1,
     dmsg_show/1,
     dmsg_showall/1,
     dmsg_text_to_string_safe/2,
@@ -65,7 +65,7 @@
     fmt_ansi/1,
     fmt_or_pp/1,
     fmt_portray_clause/1,
-    format_to_message/3, 
+    format_to_message/3,
     functor_color/2,
     get_indent_level/1,
     good_next_color/1,
@@ -142,7 +142,7 @@
         if_color_debug(0),
         if_color_debug(0, 0),
         in_cmt(0),
-        keep_line_pos_w_w(?, 0),        
+        keep_line_pos_w_w(?, 0),
         prepend_each_line(?, 0),
         to_stderror(0),
         with_all_dmsg(0),
@@ -185,7 +185,7 @@ use_html_styles0 :- dis_pp(ansi),!,fail.
 %use_html_styles0 :- on_x_fail(httpd_wrapper:http_current_request(_)),!.
 %use_html_styles0 :- on_x_fail(pengines:pengine_self(_)),!.
 use_html_styles0 :- current_predicate(is_butterfly_console/0), (inside_bfly_html_esc;is_butterfly_console),!.
-%= 	 	 
+%=
 
 %% style_on_off(Out, ?Ctrl, ?OnCode, ?OffCode) is det.
 %
@@ -195,7 +195,7 @@ use_html_styles0 :- current_predicate(is_butterfly_console/0), (inside_bfly_html
 dis_pp(ansi):- keep_going,!.
 dis_pp(PP):- current_predicate(in_pp/1), in_pp(PP).
 
-using_style(Out,Ctrl,Goal,How):- 
+using_style(Out,Ctrl,Goal,How):-
   notrace(style_emitter(Out,Emitter)),!,
   using_style_emitter(Emitter, Out,Ctrl,Goal,How),!.
 
@@ -204,7 +204,7 @@ using_style_emitter(sgr,_Out,Ctrl,Goal,How):- fail,
      (set_stream_ignore(current_output, tty(true)),call(Goal))),
           terminal_ansi_format([Ctrl],'~s',[S])), !.
 
-using_style_emitter(Emitter,Out,Ctrl,Goal,How):- 
+using_style_emitter(Emitter,Out,Ctrl,Goal,How):-
   cnvt_in_out(Emitter,Out,Ctrl,OnCode,OffCode),!,
   How = scce_orig((OnCode,!),once(Goal),(OffCode,!)).
 
@@ -246,7 +246,7 @@ wldmsg_0(_CM,ops):-
  ignore((
  fail,
  %dmsgln(forall(stream_property(X,_))),
- % call(stream_property(X,position(Pos))-> 
+ % call(stream_property(X,position(Pos))->
  prolog_load_context(module,LM),
  dmsgln(prolog_load_context(module,LM)),
  dmsgln(forall(LM:current_op(_,_,LM:if))),
@@ -273,12 +273,12 @@ wldmsg_0(_,call(CM:Goal)):- callable(Goal), !,ignore((nonvar(Goal),wldmsg_0(CM,c
 wldmsg_0(CM,List):- is_list(List),!,maplist(wldmsg_0(CM),List).
 wldmsg_0(CM,forall(Goal)):- callable(Goal), !, ignore((nonvar(Goal),forall(CM:call(Goal), wldmsg_1(Goal)))).
 wldmsg_0(CM,call(Goal)):- callable(Goal), !, ignore((nonvar(Goal),CM:call(Goal), wldmsg_1(Goal))).
-wldmsg_0(_,Info):-wldmsg_1(Info). 
+wldmsg_0(_,Info):-wldmsg_1(Info).
 
 wldmsg_1(List):- is_list(List),!,maplist(wldmsg_1,List).
 wldmsg_1(Info):- compound(Info),compound_name_arguments(Info,F,[A]),!,wldmsg_1(F=A).
 wldmsg_1(Info):- compound(Info),compound_name_arguments(Info,(-),[F,A]),!,wldmsg_1(F=A).
-wldmsg_1(Info):- 
+wldmsg_1(Info):-
   get_real_user_output(O),flush_output(O),smart_format(O,'~N',[]),flush_output(O),
   wldmsg_2(Info),!.
 
@@ -378,7 +378,7 @@ if_defined_local(G,Else):- current_predicate(_,G)->G;Else.
         is_tty/1,
         last_used_fg_color/1,
         mesg_arg1/2,
-        
+
         msg_to_string/2,
         next_color/1,
         portray_clause_w_vars/1,
@@ -445,7 +445,7 @@ with_error_to_stream(S,Goal):-
 :- meta_predicate wete(+,0).
 wete(Dst,Goal):- with_error_to_each(Dst,Goal).
 :- meta_predicate with_error_to_each(+,0).
-with_error_to_each(Dest,Goal):- compound(Dest), \+ compound_name_arity(Dest,_,0), 
+with_error_to_each(Dest,Goal):- compound(Dest), \+ compound_name_arity(Dest,_,0),
   Dest=..[F,A],stream_u_type(F),!,
   Unset = (set_stream_ignore(Was,alias(current_error)),set_stream_ignore(Was,alias(user_error))),
   once((member(Alias,[user_error,current_error]),stream_property(Was,alias(Alias)))),
@@ -460,26 +460,26 @@ new_mfs(MFS):- MFS = mfs(Handle,_,Stream,_,_),
 
 mfs_start(MFS):- \+compound(MFS),!,throw(mfs_start(MFS)).
 mfs_start(MFS):-
-  arg(2,MFS,F), arg(3,MFS,OS), arg(4,MFS,Set), NMFS= mfs(Handle,F,Stream,Set,_Unset), 
+  arg(2,MFS,F), arg(3,MFS,OS), arg(4,MFS,Set), NMFS= mfs(Handle,F,Stream,Set,_Unset),
   (is_stream(OS)
-    -> Stream =OS 
+    -> Stream =OS
     ; (new_mfs(NMFS), nb_setarg(1,MFS,Handle),nb_setarg(3,MFS,Stream))),
  call(Set,Stream).
 
 set_error_stream(Stream):- set_stream_ignore(Stream,alias(current_error)),set_stream_ignore(Stream,alias(user_error)).
 
-mfs_end(MFS,A):- 
+mfs_end(MFS,A):-
   MFS = mfs(Handle,F,Stream,_Set,Unset),
   ignore((is_stream(Stream),close(Stream), mem_handle_to_substring(Handle,Str),substring_to_type(Str,F,A))),
   call(Unset).
-  
+
 
 
 
 stream_u_type(atom). stream_u_type(string). stream_u_type(codes). stream_u_type(chars).
 
 mem_handle_to_substring(Handle,String):- memory_file_to_string(Handle,String),!.
-mem_handle_to_substring(Handle,SubString):- 
+mem_handle_to_substring(Handle,SubString):-
   memory_file_line_position(Handle, _Line, _LinePos, Offset),
   %seek(Stream, 0, current, Offset)
   memory_file_substring(Handle, 0, Offset, _After, -SubString).
@@ -488,14 +488,14 @@ substring_to_type(Str,atom,Atom):- atom_string(Atom,Str).
 substring_to_type(Str,string,Str).
 substring_to_type(Str,codes,Codes):- string_codes(Str,Codes).
 substring_to_type(Str,chars,Chars):- string_chars(Str,Chars).
-  
+
 mem_handle_to_type(Handle,atom,Atom):- !, memory_file_to_atom(Handle,Atom).
 mem_handle_to_type(Handle,string,String):- !, memory_file_to_string(Handle,String).
 mem_handle_to_type(Handle,codes,Codes):- !, memory_file_to_codes(Handle,Codes).
 mem_handle_to_type(Handle,chars,Chars):- !, memory_file_to_string(Handle,Atom),string_chars(Atom,Chars).
 
 :- meta_predicate with_error_to_string(-,0).
-with_error_to_string(S,Goal):- 
+with_error_to_string(S,Goal):-
    new_memory_file(Handle),
    open_memory_file(Handle,write,Stream,[free_on_close(true)]),
    call_cleanup(with_error_to_each(Stream,Goal),
@@ -503,9 +503,9 @@ with_error_to_string(S,Goal):-
 
 :- meta_predicate with_output_to_each(+,0).
 
-with_output_to_each(Dest,Goal):- compound(Dest), \+ compound_name_arity(Dest,_,0), 
+with_output_to_each(Dest,Goal):- compound(Dest), \+ compound_name_arity(Dest,_,0),
   Dest=..[F,A],stream_u_type(F),!,
-  current_output(Was), 
+  current_output(Was),
   Unset = set_output_safe(Was),
   MFS = mfs(_,F,_,set_output_safe,Unset),
   Done = mfs_end(MFS,A),
@@ -521,7 +521,7 @@ with_output_to_each(Dest,Goal):- Dest=..[F,A],!,
         (close(Stream),mem_handle_to_type(Handle,F,Atom),nb_setarg(1,Dest,Atom),ignore(A=Atom))),
       (set_output_safe(Was))).
 */
-with_output_to_each(Dest,Goal):- 
+with_output_to_each(Dest,Goal):-
    current_output(Was),
     scce_orig(set_output_safe(Dest),Goal,set_output_safe(Was)).
 
@@ -536,19 +536,19 @@ with_output_to_each(Dest,Goal):-
 
 
 
-%= 	 	 
+%=
 
 %% with_all_dmsg( :Goal) is nondet.
 %
 % Using All (debug)message.
 %
 with_all_dmsg(Goal):-
-   locally(set_prolog_flag(dmsg_level,always),     
+   locally(set_prolog_flag(dmsg_level,always),
        locally( tlbugger:dmsg_match(show,_),Goal)).
 
 
 
-%= 	 	 
+%=
 
 %% with_show_dmsg( ?TypeShown, :Goal) is nondet.
 %
@@ -560,7 +560,7 @@ with_show_dmsg(TypeShown,Goal):-
 
 % = :- meta_predicate(with_no_dmsg(0)).
 
-%= 	 	 
+%=
 
 %% with_no_dmsg( :Goal) is nondet.
 %
@@ -570,7 +570,7 @@ with_show_dmsg(TypeShown,Goal):-
  % with_no_dmsg(Goal):- current_prolog_flag(dmsg_level,always),!,Goal.
 with_no_dmsg(Goal):-locally(set_prolog_flag(dmsg_level,never),Goal).
 
-%= 	 	 
+%=
 
 %% with_no_dmsg( ?TypeUnShown, :Goal) is nondet.
 %
@@ -582,7 +582,7 @@ with_no_dmsg(TypeUnShown,Goal):-
 
 % dmsg_hides_message(_):- !,fail.
 
-%= 	 	 
+%=
 
 %% dmsg_hides_message( ?C) is det.
 %
@@ -620,7 +620,7 @@ matches_term0(Filter,Term):- sub_term(STerm,Term),nonvar(STerm),call(call,matche
 hide_some_hiddens(P,P):- ((\+ compound(P));compound_name_arity(P,_,0)),!.
 hide_some_hiddens(pfc_hide(_),pfc_hide($)):-!.
 %hide_some_hiddens('{}'(_),'{}'($)):-!.
-hide_some_hiddens(S,M):- 
+hide_some_hiddens(S,M):-
    compound_name_arguments(S,F,Args),
    must_maplist(hide_some_hiddens,Args,ArgsO),
    compound_name_arguments(M,F,ArgsO),!.
@@ -636,7 +636,7 @@ wdmsg_pretty(In):- \+ \+ dzotrace((pretty_and_hide(In, Info),wdmsg(Info))).
 wdmsg_pretty(F,In):- !,notrace(in_cmt(format(F,In))).
 wdmsg_pretty(F,In):- \+ \+ dzotrace((pretty_and_hide(In, Info),wdmsg(F,Info))).
 
-%= 	 	 
+%=
 
 %% dmsg_hide( ?Term) is det.
 %
@@ -645,7 +645,7 @@ wdmsg_pretty(F,In):- \+ \+ dzotrace((pretty_and_hide(In, Info),wdmsg(F,Info))).
 dmsg_hide(isValueMissing):-!,set_prolog_flag(dmsg_level,never).
 dmsg_hide(Term):-set_prolog_flag(dmsg_level,filter),sanity(nonvar(Term)),aina( tlbugger:dmsg_match(hidden,Term)),retractall( tlbugger:dmsg_match(showing,Term)),nodebug(Term).
 
-%= 	 	 
+%=
 
 %% dmsg_show( ?Term) is det.
 %
@@ -654,7 +654,7 @@ dmsg_hide(Term):-set_prolog_flag(dmsg_level,filter),sanity(nonvar(Term)),aina( t
 dmsg_show(isValueMissing):-!,set_prolog_flag(dmsg_level,always).
 dmsg_show(Term):-set_prolog_flag(dmsg_level,filter),aina( tlbugger:dmsg_match(showing,Term)),ignore(retractall( tlbugger:dmsg_match(hidden,Term))),debug(Term).
 
-%= 	 	 
+%=
 
 %% dmsg_showall( ?Term) is det.
 %
@@ -663,7 +663,7 @@ dmsg_show(Term):-set_prolog_flag(dmsg_level,filter),aina( tlbugger:dmsg_match(sh
 dmsg_showall(Term):-ignore(retractall( tlbugger:dmsg_match(hidden,Term))).
 
 
-%= 	 	 
+%=
 
 %% indent_e( ?X) is det.
 %
@@ -675,7 +675,7 @@ indent_e(X):- catchvvnt((X < 2),_,true),write(' '),!.
 indent_e(X):-XX is X -1,!,write(' '), indent_e(XX).
 
 
-%= 	 	 
+%=
 
 %% dmsg_text_to_string_safe( ?Expr, ?Forms) is det.
 %
@@ -696,7 +696,7 @@ catchvvnt(T,E,F):-catchv(quietly(T),E,F).
 
 :- meta_predicate(catchvvnt(0,?,0)).
 
-%= 	 	 
+%=
 
 %% fmt0( ?X, ?Y, ?Z) is det.
 %
@@ -706,7 +706,7 @@ catchvvnt(T,E,F):-catchv(quietly(T),E,F).
 %fmt0(current_error,F,A):-!,get_thread_current_error(Err),!,smart_format(Err,F,A).
 fmt0(X,Y,Z):-catchvvnt((smart_format(X,Y,Z),flush_output_safe(X)),E,dfmt(E:smart_format(X,Y))).
 
-%= 	 	 
+%=
 
 %% fmt0( ?X, ?Y) is det.
 %
@@ -732,17 +732,17 @@ smart_format([X,Y]):- smart_format(X-Y),!.
 
 fmt0(X,Y):-catchvvnt((smart_format(X,Y),flush_output_safe),E,dfmt(E:smart_format(X,Y))).
 
-%= 	 	 
+%=
 
 %% fmt0( ?X) is det.
 %
 % Format Primary Helper.
 %
 fmt0(X):- (atomic(X);is_list(X)), dmsg_text_to_string_safe(X,S),!,format('~w',[S]),!.
-fmt0(X):- (atom(X) -> catchvvnt((smart_format(X,[]),flush_output_safe),E,dmsg(E)) ; 
+fmt0(X):- (atom(X) -> catchvvnt((smart_format(X,[]),flush_output_safe),E,dmsg(E)) ;
   (lmconf:term_to_message_string(X,M) -> 'smart_format'('~q~N',[M]);fmt_or_pp(X))).
 
-%= 	 	 
+%=
 
 %% fmt( ?X) is det.
 %
@@ -750,7 +750,7 @@ fmt0(X):- (atom(X) -> catchvvnt((smart_format(X,[]),flush_output_safe),E,dmsg(E)
 %
 fmt(X):-fresh_line,fmt_ansi(fmt0(X)).
 
-%= 	 	 
+%=
 
 %% fmt( ?X, ?Y) is det.
 %
@@ -758,7 +758,7 @@ fmt(X):-fresh_line,fmt_ansi(fmt0(X)).
 %
 fmt(X,Y):- fresh_line,fmt_ansi(fmt0(X,Y)),!.
 
-%= 	 	 
+%=
 
 %% fmt( ?X, ?Y, ?Z) is det.
 %
@@ -770,15 +770,15 @@ fmt(X,Y,Z):- fmt_ansi(fmt0(X,Y,Z)),!.
 
 :- module_transparent((format_to_message)/3).
 
-format_to_message(Format,Args,Info):- 
-  on_xf_cont(((( sanity(is_list(Args))-> 
+format_to_message(Format,Args,Info):-
+  on_xf_cont(((( sanity(is_list(Args))->
      smart_format(string(Info),Format,Args);
      (smart_format(string(Info),'~N~n~p +++++++++++++++++ ~p~n',[Format,Args])))))).
 
 new_line_if_needed:- tracing,!.
 new_line_if_needed:- ttyflush,format('~N',[]),flush_output.
 
-%= 	 	 
+%=
 
 %% fmt9( ?Msg) is det.
 %
@@ -804,7 +804,7 @@ print_tree_maybe(G):- compound(G),compound_name_arity(G,F,_), \+ current_op(_,_,
 % % % OFF :- system:use_module(library(ansi_term)).
 
 
-%= 	 	 
+%=
 
 %% tst_fmt is det.
 %
@@ -833,7 +833,7 @@ tst_fmt0(PP):-
   fail)).
 
 
-%= 	 	 
+%=
 
 %% fmt_ansi( :Goal) is nondet.
 %
@@ -842,7 +842,7 @@ tst_fmt0(PP):-
 fmt_ansi(Goal):- (ansicall([reset,bold,hfg(white),bg(black)],ignore(Goal))->true;call(Goal)).
 
 
-%= 	 	 
+%=
 
 %% fmt_portray_clause( ?X) is det.
 %
@@ -851,7 +851,7 @@ fmt_ansi(Goal):- (ansicall([reset,bold,hfg(white),bg(black)],ignore(Goal))->true
 fmt_portray_clause(X):- renumbervars_prev(X,Y),!, portray_clause(Y).
 
 
-%= 	 	 
+%=
 
 %% fmt_or_pp( ?X) is det.
 %
@@ -862,7 +862,7 @@ fmt_or_pp(portray(X)):- !,cfunctor(X,F,A),fmt_portray_clause((pp(F,A):-X)),!.
 fmt_or_pp(X):-format('~q~N',[X]).
 
 
-%= 	 	 
+%=
 
 %% with_output_to_console( :GoalX) is det.
 %
@@ -870,7 +870,7 @@ fmt_or_pp(X):-format('~q~N',[X]).
 %
 with_output_to_console(X):- get_main_error_stream(Err),!,with_output_to_stream(Err,X).
 
-%= 	 	 
+%=
 
 %% with_output_to_main( :GoalX) is det.
 %
@@ -879,7 +879,7 @@ with_output_to_console(X):- get_main_error_stream(Err),!,with_output_to_stream(E
 with_output_to_main(X):- get_main_error_stream(Err),!,with_output_to_stream(Err,X).
 
 
-%= 	 	 
+%=
 
 %% dfmt( ?X) is det.
 %
@@ -887,7 +887,7 @@ with_output_to_main(X):- get_main_error_stream(Err),!,with_output_to_stream(Err,
 %
 dfmt(X):- get_thread_current_error(Err),!,with_output_to_stream(Err,fmt(X)).
 
-%= 	 	 
+%=
 
 %% dfmt( ?X, ?Y) is det.
 %
@@ -896,7 +896,7 @@ dfmt(X):- get_thread_current_error(Err),!,with_output_to_stream(Err,fmt(X)).
 dfmt(X,Y):- get_thread_current_error(Err), with_output_to_stream(Err,fmt(X,Y)).
 
 
-%= 	 	 
+%=
 
 %% with_output_to_stream( ?Stream, :Goal) is det.
 %
@@ -907,12 +907,12 @@ with_output_to_stream(Stream,Goal):- is_stream(Stream),!,
    scce_orig(set_output_safe(Stream),
          Goal,
          set_output_safe(Saved)).
-with_output_to_stream(Prop,Goal):- compound(Prop), on_x_fail(stream_property(Stream,Prop)),!, 
+with_output_to_stream(Prop,Goal):- compound(Prop), on_x_fail(stream_property(Stream,Prop)),!,
   with_output_to_stream(Stream,Goal).
 with_output_to_stream(Out,Goal):- with_output_to_each(Out,Goal).
 
 
-%= 	 	 
+%=
 
 %% to_stderror( :Goal) is nondet.
 %
@@ -932,7 +932,7 @@ to_stderror(Goal):- get_thread_current_error(Err), with_output_to_stream(Err,Goa
 
 :- dynamic logger_property/2.
 
-%= 	 	 
+%=
 
 %% logger_property( ?VALUE1, ?VALUE2, ?VALUE3) is det.
 %
@@ -942,7 +942,7 @@ logger_property(todo,once,true).
 
 
 
-%= 	 	 
+%=
 
 %% setLogLevel( ?M, ?L) is det.
 %
@@ -951,7 +951,7 @@ logger_property(todo,once,true).
 setLogLevel(M,L):-retractall(logLevel(M,_)),(nonvar(L)->asserta(logLevel(M,L));true).
 
 
-%= 	 	 
+%=
 
 %% logLevel( ?S, ?Z) is det.
 %
@@ -963,7 +963,7 @@ logLevel(private,none).
 logLevel(S,Z):-current_stream(_X,write,Z),dtrace,stream_property(Z,alias(S)).
 
 
-%= 	 	 
+%=
 
 %% loggerReFmt( ?L, ?LRR) is det.
 %
@@ -973,7 +973,7 @@ loggerReFmt(L,LRR):-logLevel(L,LR),L \==LR,!,loggerReFmt(LR,LRR),!.
 loggerReFmt(L,L).
 
 
-%= 	 	 
+%=
 
 %% loggerFmtReal( ?S, ?F, ?A) is det.
 %
@@ -990,7 +990,7 @@ loggerFmtReal(S,F,A):-
 :- thread_local tlbugger:is_with_dmsg/1.
 
 
-%= 	 	 
+%=
 
 %% with_dmsg( ?Functor, :Goal) is det.
 %
@@ -1002,7 +1002,7 @@ with_dmsg(Functor,Goal):-
 
 % % % OFF :- system:use_module(library(listing)).
 
-%= 	 	 
+%=
 
 %% sformat( ?Str, ?Msg, ?Vs, ?Opts) is det.
 %
@@ -1019,7 +1019,7 @@ free_of_attrs_dmsg(Term):- term_attvars(Term,Vs),!,(Vs==[]->true;maplist(free_of
 
 % % % OFF :- system:use_module(library(listing)).
 
-%= 	 	 
+%=
 
 %% portray_clause_w_vars( ?Out, ?Msg, ?Vs, ?Options) is det.
 %
@@ -1030,9 +1030,9 @@ portray_clause_w_vars(Out,Msg,Vs,Options):- free_of_attrs_dmsg(Msg+Vs),!, portra
 portray_clause_w_vars(Out,Msg,Vs,Options):- fail, if_defined_local(serialize_attvars_now(Msg+Vs,SMsg+SVs),fail),!,
      \+ \+ portray_clause_w_vars2(Out,SMsg,SVs,Options).
 portray_clause_w_vars(Out,Msg,Vs,Options):- \+ \+ portray_clause_w_vars2(Out,Msg,Vs,Options).
- 
+
 portray_clause_w_vars2(Out,Msg,Vs,Options):- free_of_attrs_dmsg(Msg+Vs),!, portray_clause_w_vars5(Out,Msg,Vs,Options).
-portray_clause_w_vars2(Out,Msg,Vs,Options):-   
+portray_clause_w_vars2(Out,Msg,Vs,Options):-
    term_attvars(Msg,AttVars),
    copy_term(Msg+AttVars,Msg+AttVars,Goals),
    portray_append_goals(Msg,Goals,GMsg),
@@ -1042,7 +1042,7 @@ portray_clause_w_vars5(Out,Msg,Vs,Options):-
   copy_term_nat(v(Msg,Vs,Options),v(CMsg,CVs,COptions)),
   portray_clause_w_vars55(Out,CMsg,CVs,COptions),!.
 portray_clause_w_vars55(Out,Msg,Vs,Options):-
- \+ \+ (( 
+ \+ \+ ((
  (var(Vs)-> prolog_load_context(variable_names,Vs);true),
  prolog_listing:do_portray_clause(Out,Msg,
   [variable_names(Vs),numbervars(true),
@@ -1067,7 +1067,7 @@ dzotrace(G):- notrace(woi(no_bfly(G))),!.
 
 woi(G):- scce_orig(G,true,true).
 
-%= 	 	 
+%=
 
 %% portray_clause_w_vars( ?Msg, ?Vs, ?Options) is det.
 %
@@ -1075,7 +1075,7 @@ woi(G):- scce_orig(G,true,true).
 %
 portray_clause_w_vars(Msg,Vs,Options):- portray_clause_w_vars(current_output,Msg,Vs,Options).
 
-%= 	 	 
+%=
 
 %% portray_clause_w_vars( ?Msg, ?Options) is det.
 %
@@ -1085,7 +1085,7 @@ portray_clause_w_vars(Msg,Options):- source_variables_lwv(Msg,Vs),portray_clause
 
 :- export(portray_clause_w_vars/1).
 
-%= 	 	 
+%=
 
 %% portray_clause_w_vars( ?Msg) is det.
 %
@@ -1094,7 +1094,7 @@ portray_clause_w_vars(Msg,Options):- source_variables_lwv(Msg,Vs),portray_clause
 portray_clause_w_vars(Msg):- portray_clause_w_vars(Msg,[]),!.
 
 
-%= 	 	 
+%=
 
 %% print_prepended( ?Pre, ?S) is det.
 %
@@ -1128,14 +1128,15 @@ like_clause([S|Lines]):- (atom_contains(S,':-');atom_contains(S,'?-');(append(_,
 %
 
 print_prepended_lines(_,[]):- !.
-print_prepended_lines(X,[Line]):- (X==guess; X==(block); X==line), !, print_prepended_line('%~ ', Line).
-print_prepended_lines(guess,Lines):- !, 
+print_prepended_lines(X,[Line]):- (X==guess; X==(block); X==line), !, cmt_override(LineC,_S,_E),print_prepended_line(LineC, Line).
+print_prepended_lines(X,Lines):- cmt_override(LineC,_S,_E), (X==line ; X == LineC), like_clause(Lines), print_prepended_lines0(LineC,Lines).
+print_prepended_lines(guess,Lines):- !,
   (like_clause(Lines) -> print_prepended_lines(block,Lines);print_prepended_lines(line,Lines)).
-print_prepended_lines(X,Lines):- (X==line ; X == '%~ '), like_clause(Lines), print_prepended_lines0('%~ ',Lines).
 print_prepended_lines(block,[S|Lines]):- !, append(Mid,[E],Lines), % atom_contains(E,'.'),
-  format('~N/* '),write(S),
+  cmt_override(_,S,End),
+  format('~N~w ',[S]),write(S),
   print_prepended_lines0('   ',Mid),
-  format('~N ~w  */ ~n',[E]).
+  format('~N ~w ~w~n',[E,End]).
 print_prepended_lines(Pre,A):- !, print_prepended_lines0(Pre,A).
 
 print_prepended_lines0(_Pre,[]).
@@ -1143,14 +1144,14 @@ print_prepended_lines0(_Pre,['']):-!.
 print_prepended_lines0(Pre,[H|T]):- print_prepended_line(Pre,H),
   print_prepended_lines0(Pre,T),!.
 
-print_prepended_line(line,S):- !, print_prepended_line('%~ ',S).
+print_prepended_line(line,S):- cmt_override(Line,_S,_E),!, print_prepended_line(Line,S).
 print_prepended_line(Pre,S):- prepend_trim(S,H),
   ignore((H\=="",
   line_pos(current_output,LPos1),new_line_if_needed,line_pos(current_output,LPos2),
   (LPos1\==LPos2->format('~w~w',[Pre,H]); format('~w~w',[Pre,H])))).
 
 
-%= 	 	 
+%=
 
 %% in_cmt( :Goal) is nondet.
 %
@@ -1162,26 +1163,40 @@ print_prepended_line(Pre,S):- prepend_trim(S,H),
 
 in_cmt(Goal):- in_cmt(guess,Goal).
 
-in_cmt(line,Goal):- !, maybe_bfly_html(prepend_each_line('%~ ',Goal)),!.
-in_cmt(block,Goal):- !, maybe_bfly_html(scce_orig(write(' /* '), call(Goal),write(' */ '))).
-in_cmt(guess,Goal):- !, maybe_bfly_html(prepend_each_line('%~ ',Goal)),!.
-in_cmt(Block,Goal):- maybe_bfly_html(prepend_each_line(Block,Goal)),!.
+with_cmt_override(LineC,S,E,Goal):-
+   cmt_override(WLineC,WS,WE),
+   scce_orig(nb_setval(cmt_override,lse(LineC,S,E)),Goal,nb_setval(cmt_override,lse(WLineC,WS,WE))).
+cmt_override(LineC,S,E):- nb_current(cmt_override,lse(LineC,S,E)),!.
+cmt_override('%~ ','/*','*/').
+
+in_cmt(line,Goal):- !, maybe_bfly_html(prepend_each_line(line,Goal)),!.
+in_cmt(block,Goal):- cmt_override(_,S,E), !, maybe_bfly_html(scce_orig((write(' '),write(S),write(' ')), call(Goal),(write(' '),write(E),write(' ')))).
+in_cmt(guess,Goal):-
+   get_indent_level(Indent),
+   indent_to_spaces(Indent,Space),
+   wots(S,prepend_each_line(Space,Goal)),
+   trim2(S,SS),!,
+   %atomic_list_concat(SL,'\n',S),
+   ( atom_contains(SS,'\n')->in_cmt(block,write(S));in_cmt(line,write(S))).
 
 
-%= 	 	 
+in_cmt(Block,Goal):- maybe_bfly_html(print_prepended_line(Block,Goal)),!.
+
+
+%=
 
 %% with_current_indent( :Goal) is nondet.
 %
 % Using Current Indent.
 %
 %with_current_indent(Goal):- use_html_styles,!, Goal.
-with_current_indent(Goal):- 
-   get_indent_level(Indent), 
+with_current_indent(Goal):-
+   get_indent_level(Indent),
    indent_to_spaces(Indent,Space),
    prepend_each_line(Space,Goal).
 
 
-%= 	 	 
+%=
 
 %% indent_to_spaces( :PRED3N, ?Out) is det.
 %
@@ -1195,7 +1210,7 @@ indent_to_spaces(N,Out):- 1 is N rem 2,!, N1 is N-1, indent_to_spaces(N1,Spaces)
 indent_to_spaces(N,Out):- N2 is N div 2, indent_to_spaces(N2,Spaces),atom_concat(Spaces,Spaces,Out).
 
 
-%= 	 	 
+%=
 
 %% mesg_color( :TermT, ?C) is det.
 %
@@ -1228,8 +1243,8 @@ mesg_color(T,C):-nonvar(T),defined_message_color(F,C),matches_term(F,T),!.
 mesg_color(T,C):-cfunctor(T,F,_),!,functor_color(F,C),!.
 
 
-  
-%= 	 	 
+
+%=
 
 %% prepend_each_line( ?Pre, :Goal) is nondet.
 %
@@ -1258,12 +1273,13 @@ prepend_each_line1(Pre,Goal):-
   wots(string(Str),Goal)*->once((print_prepended(Pre,Str),new_line_if_needed)).
 
 into_cmt(SSS,Cmt):-
-  wots(Cmt,print_prepended('%', SSS)).
+ cmt_override(Line,_,_),
+  wots(Cmt,print_prepended(Line, SSS)).
 
 :- meta_predicate if_color_debug(0).
 :- meta_predicate if_color_debug(0,0).
 
-%= 	 	 
+%=
 
 %% if_color_debug is det.
 %
@@ -1271,7 +1287,7 @@ into_cmt(SSS,Cmt):-
 %
 if_color_debug:-current_prolog_flag(dmsg_color,true).
 
-%= 	 	 
+%=
 
 %% if_color_debug( :Goal) is nondet.
 %
@@ -1279,7 +1295,7 @@ if_color_debug:-current_prolog_flag(dmsg_color,true).
 %
 if_color_debug(Goal):- if_color_debug(Goal, true).
 
-%= 	 	 
+%=
 
 %% if_color_debug( :Goal, :GoalUnColor) is det.
 %
@@ -1289,7 +1305,7 @@ if_color_debug(Goal,UnColor):- (if_color_debug->Goal;UnColor),!.
 
 
 
-color_line(C,N):- 
+color_line(C,N):-
  dzotrace((
   new_line_if_needed,
     forall(between(1,N,_),ansi_term:
@@ -1313,7 +1329,7 @@ color_line(C,N):-
 
 
 :- thread_local(t_l:hide_dmsg/0).
-%= 	 	 
+%=
 
 %% dmsg( ?C) is det.
 %
@@ -1321,13 +1337,13 @@ color_line(C,N):-
 %
 dmsg(_):- t_l:hide_dmsg, \+ tlbugger:no_slow_io, !.
 dmsg(C):- dzotrace((tlbugger:no_slow_io,!,stream_property(X,file_no(2)),writeln(X,dmsg(C)))).
-dmsg(V):- quietly(likely_folded((locally(set_prolog_flag(retry_undefined,none), 
+dmsg(V):- quietly(likely_folded((locally(set_prolog_flag(retry_undefined,none),
   if_defined_local(dmsg0(V),logicmoo_util_catch:ddmsg(V)))))),!.
 %dmsg(F,A):- dzotrace((tlbugger:no_slow_io,on_x_fail(smart_format(atom(S),F,A))->writeln(dmsg(S));writeln(dmsg_fail(F,A)))),!.
 
 :- system:import(dmsg/1).
 % system:dmsg(O):-logicmoo_util_dmsg(O).
-%= 	 	 
+%=
 
 %% dmsg( ?F, ?A) is det.
 %
@@ -1342,7 +1358,7 @@ transform_mesg(info,A,info(A)).
 transform_mesg(information,A,A).
 transform_mesg(F,A,fmt0(F,A)).
 
-%dmsg(F,A):- 
+%dmsg(F,A):-
 %              if_defined_local(dmsg0(F,A),logicmoo_util_catch:ddmsg(F,A))),!.
 
 %with_output_to_main_error(G):- !,call(G).
@@ -1356,7 +1372,7 @@ with_output_to_main_error(G):-
 %:- volatile(tmp:real_main_error/1).
 :- dynamic(tmp:real_main_error/1).
 
-save_real_main_error:- 
+save_real_main_error:-
  % volatile(tmp:real_main_error/1),
   dynamic(tmp:real_main_error/1),
   stream_property(Err,file_no(2)),
@@ -1380,7 +1396,7 @@ with_output_to_main_error(G):-
   ignore((get_thread_current_error(TErr),
     \+ same_streams(TErr,Err),
     with_output_to_each(TErr,G))).
-  
+
 same_streams(TErr,Err):- TErr==Err,!.
 same_streams(TErr,Err):- stream_property(TErr,file_no(A)),stream_property(Err,file_no(B)),!,A==B.
 */
@@ -1395,12 +1411,12 @@ wdmsg(X):- likely_folded(wdmsg_goal(in_cmt(line,fmt(X)),dmsg(X))).
 
 likely_folded(X):- dis_pp(bfly)->pretty_clauses:with_folding_depth(1,X);call(X).
 
-wdmsg_goal(G,G2):-  
+wdmsg_goal(G,G2):-
   quietly((ignore(((format('~N'),ttyflush,with_all_dmsg(G2),format('~N'),ttyflush),
   (fmt_visible_to_console -> true ;ignore(on_x_fail(with_output_to_main_error((G))))))))), !.
 
-fmt_visible_to_console:- 
-  thread_self(main), 
+fmt_visible_to_console:-
+  thread_self(main),
   stream_property(Where,alias(current_output)),!,
   fmt_visible_to_console(Where).
 
@@ -1411,7 +1427,7 @@ fmt_visible_to_console(Where):- stream_property(StdOut,file_no(1)), same_streams
 
 
 
-%% wdmsg( ?F, ?X) is semidet.                                     
+%% wdmsg( ?F, ?X) is semidet.
 %
 % Wdmsg.
 %
@@ -1453,7 +1469,7 @@ wdmsgl(NAME,With,CNF):- call(With,NAME:-CNF),!.
 %
 dmsginfo(V):-dmsg(info,V).
 
-%= 	 	 
+%=
 
 
 %% vdmsg( ?L, ?F) is det.
@@ -1462,7 +1478,7 @@ dmsginfo(V):-dmsg(info,V).
 %
 vdmsg(L,F):-loggerReFmt(L,LR),loggerFmtReal(LR,F,[]).
 
-%= 	 	 
+%=
 
 %% dmsg( ?L, ?F, ?A) is det.
 %
@@ -1476,7 +1492,7 @@ dmsg(L,F,A):-loggerReFmt(L,LR),loggerFmtReal(LR,F,A).
 :- thread_local(t_l:no_kif_var_coroutines/1).
 
 
-%= 	 	 
+%=
 
 %% dmsg0( ?V) is det.
 %
@@ -1486,7 +1502,7 @@ dmsg(L,F,A):-loggerReFmt(L,LR),loggerFmtReal(LR,F,A).
 dmsg0(V):-notrace((locally(local_override(no_kif_var_coroutines,true),
    ignore(with_output_to_main_error(dmsg00(V)))))),!.
 
-%= 	 	 
+%=
 
 %% dmsg00( ?V) is det.
 %
@@ -1494,7 +1510,7 @@ dmsg0(V):-notrace((locally(local_override(no_kif_var_coroutines,true),
 %
 dmsg00(V):-notrace(var(V)),!,dmsg00(dmsg_var(V)).
 dmsg00(V):-cyclic_term(V),!,writeln(cyclic_term),flush_output,writeln(V),!.
-dmsg00(call(Code)):- callable(Code), !, with_output_to(string(S),catch((dzotrace(Code)->TF=true;TF=failed),TF,true)), 
+dmsg00(call(Code)):- callable(Code), !, with_output_to(string(S),catch((dzotrace(Code)->TF=true;TF=failed),TF,true)),
   (TF=true->dmsg(S);(smart_format(string(S2),'~Ndmsg(call(Code)) of ~q~n~q: ~s ~n',[Code,TF,S]),wdmsg(S2),!,fail)).
 dmsg00(V):- catch(dumpst:simplify_goal_printed(V,VV),_,fail),!,dmsg000(VV),!.
 dmsg00(V):- dmsg000(V),!.
@@ -1514,7 +1530,7 @@ dmsg000(V):-
 % = :- export(dmsg1/1).
 
 
-%= 	 	 
+%=
 
 %% dmsg1( ?V) is det.
 %
@@ -1530,7 +1546,7 @@ dmsg1(V):- locally(tlbugger:skipDMsg,((once(dmsg2(V)), ignore((tlbugger:dmsg_hoo
 
 % = :- export(dmsg2/1).
 
-%= 	 	 
+%=
 
 %% dmsg2( :TermNC) is det.
 %
@@ -1549,7 +1565,7 @@ dmsg2(ansi(Ctrl,Msg)):- !,  ansicall(Ctrl,without_color(dmsg3(Msg))).
 dmsg2(Msg):- notrace(mesg_color(Msg,Ctrl)),with_color(ansicall(Ctrl,without_color(dmsg3(Msg)))).
 
 
-%= 	 	 
+%=
 
 %% dmsg3( ?C) is det.
 %
@@ -1563,7 +1579,7 @@ dmsg3(C):- strip_module(C,_,SM),
 dmsg3(C):-dmsg4(C),!.
 
 
-%= 	 	 
+%=
 
 %% dmsg4( ?Msg) is det.
 %
@@ -1576,7 +1592,7 @@ dmsg4(Msg):- mline_number,dmsg5(Msg).
 mline_number:-  dis_pp(bfly),!.
 mline_number:- (1 is random(5)),!,ignore(dzotrace(once(show_source_location))).
 mline_number.
-%= 	 	 
+%=
 
 %% dmsg5( ?Msg) is det.
 %
@@ -1585,7 +1601,7 @@ mline_number.
 
 dmsg5(Msg):- to_stderror(in_cmt(line,fmt9(Msg))).
 
-%= 	 	 
+%=
 
 %% dmsg5( ?Msg, ?Args) is det.
 %
@@ -1595,7 +1611,7 @@ dmsg5(Msg):- to_stderror(in_cmt(line,fmt9(Msg))).
 
 
 
-%= 	 	 
+%=
 
 %% get_indent_level( :PRED2Max) is det.
 %
@@ -1644,7 +1660,7 @@ ansifmt(Stream, _Attr, Format, Args) :- 'smart_format'(Stream, Format, Args).
 
 % = :- export(ansifmt/2).
 
-%= 	 	 
+%=
 
 %% ansifmt( ?Ctrl, ?Fmt) is det.
 %
@@ -1653,7 +1669,7 @@ ansifmt(Stream, _Attr, Format, Args) :- 'smart_format'(Stream, Format, Args).
 ansifmt(Ctrl,Fmt):- colormsg(Ctrl,Fmt).
 % = :- export(ansifmt/3).
 
-%= 	 	 
+%=
 
 %% ansifmt( ?Ctrl, ?F, ?A) is det.
 %
@@ -1663,7 +1679,7 @@ ansifmt(Ctrl,F,A):- colormsg(Ctrl,(smart_format(F,A))).
 
 
 
-%= 	 	 
+%=
 
 %% debugm( ?X) is det.
 %
@@ -1672,7 +1688,7 @@ ansifmt(Ctrl,F,A):- colormsg(Ctrl,(smart_format(F,A))).
 debugm(X):-dzotrace((compound(X),cfunctor(X,F,_),!,debugm(F,X))),!.
 debugm(X):-dzotrace((debugm(X,X))).
 
-%= 	 	 
+%=
 
 %% debugm( ?Why, ?Msg) is det.
 %
@@ -1680,7 +1696,7 @@ debugm(X):-dzotrace((debugm(X,X))).
 %
 debugm(_,_):-dzotrace(current_prolog_flag(dmsg_level,never)),!.
 debugm(Why,Msg):- dzotrace((dmsg(debugm(Why,Msg)),!,debugm0(Why,Msg))).
-debugm0(Why,Msg):- 
+debugm0(Why,Msg):-
    /*\+ debugging(mpred),*/
    \+ debugging(Why), \+ debugging(mpred(Why)),!, debug(Why,'~N~p~n',[Msg]),!.
 debugm0(Why,Msg):- debug(Why,'~N~p~n',[Msg]),!.
@@ -1696,7 +1712,7 @@ colormsg(Ctrl,Msg):- ansicall(Ctrl,fmt0(Msg)).
 
 % = :- export(ansicall/2).
 
-%= 	 	 
+%=
 
 %% ansicall( ?Ctrl, :Goal) is nondet.
 %
@@ -1710,7 +1726,7 @@ ansicall(Ctrl,Goal):- ansicall(current_output,Ctrl,Goal),!.
 %in_color(Ctrl,Goal):- ansicall(Ctrl,Goal).
 
 
-%= 	 	 
+%=
 
 %% ansi_control_conv( ?Ctrl, ?CtrlO) is det.
 %
@@ -1731,7 +1747,7 @@ ansi_control_conv0(Ctrl,CtrlO):-flatten([Ctrl],CtrlO),!.
 
 
 
-%= 	 	 
+%=
 
 %% is_tty( ?Out) is det.
 %
@@ -1751,7 +1767,7 @@ woto_tty(S,TTY,Goal):- with_output_to_each(S,((set_stream_ignore(current_output,
 
 :- meta_predicate(woto(+,0)).
 :- export(woto/2).
-woto(S,Goal):- use_tty(S,TTY),
+woto(S,Goal):- once(use_tty(S,TTY);TTY=true),
   get_stream_setup(Setup), woto_tty(S,TTY,(Setup,Goal)).
 
 get_stream_setup(S):- S = true,!.
@@ -1762,7 +1778,7 @@ get_stream_setup(S):-
  G = S,
  Out = current_output,
  Template = set_stream_ignore(Prop),
-  bagof(Template,(stream_setup(Prop),stream_property(Out,Prop)),Setup). 
+  bagof(Template,(stream_setup(Prop),stream_property(Out,Prop)),Setup).
 
 set_stream_ignore(P):- ((current_output(S),set_stream_ignore(S,P)))->true;true.
 %set_stream_ignore(_,_):-!.
@@ -1774,7 +1790,7 @@ stream_setup(representation_errors(_)).
 
 :- meta_predicate(wots(-,0)).
 :- export(wots/2).
-wots(S,Goal):-  
+wots(S,Goal):-
    (nb_current('$wots_stack',Was);Was=[]),
    current_output(Out),
      locally(nb_setval('$wots_stack',[Out|Was]),woto(string(S),Goal)).
@@ -1791,7 +1807,7 @@ wote(G):-stream_property(X,file_no(2)), with_output_to_each(X,G).
 :- meta_predicate(weto(0)).
 %weto(G):- !, call(G).
 :- export(weto/1).
-weto(G):- 
+weto(G):-
   stream_property(UE,alias(user_error)),
   stream_property(CO,alias(current_output)),
   UE==CO,!,call(G).
@@ -1806,7 +1822,7 @@ weto(G):-
      (set_stream_nop(CO,alias(user_error)),set_stream_nop(CO,alias(user_output)),
          set_stream_nop(CO,alias(current_error)),set_stream_nop(CO,alias(current_output))),
 
-                locally_tl(thread_local_error_stream(CO),call(G)), 
+                locally_tl(thread_local_error_stream(CO),call(G)),
 
      (set_stream_nop(UE,alias(user_error)),set_stream_nop(CE,alias(current_error)),
          set_stream_nop(UO,alias(user_output)),set_stream_nop(CO,alias(current_output)))).
@@ -1821,12 +1837,12 @@ with_ioe(G):-
   stream_property(UO,alias(user_output)),
   once(stream_property(CE,alias(current_error));CE=UE),
   once(stream_property(CO,alias(current_output));current_output(CO)),!,
-  scce_orig(true, G, 
+  scce_orig(true, G,
      (set_stream_ignore(UE,alias(user_error)),set_stream_ignore(CE,alias(current_error)),
          set_stream_ignore(UO,alias(user_output)),set_stream_ignore(CO,alias(current_output)))).
 
 
-%= 	 	 
+%=
 
 %% ansicall( ?Out, ?UPARAM2, :Goal) is nondet.
 %
@@ -1862,7 +1878,7 @@ mUST_det_ll((X;Y)):- !, ((mUST_not_error(X);mUST_not_error(Y))->true;mUST_det_ll
 mUST_det_ll(\+ (X)):- !, (\+ mUST_not_error(X) -> true ; mUST_det_ll_failed(\+ X)).
 %mUST_det_ll((M:Y)):- nonvar(M), !, M:mUST_det_ll(Y).
 mUST_det_ll(once(A)):- !, once(mUST_det_ll(A)).
-mUST_det_ll(X):- 
+mUST_det_ll(X):-
   strip_module(X,M,P),functor(P,F,A),scce_orig(nop(trace(M:F/A,+fail)),(mUST_not_error(X)*->true;mUST_det_ll_failed(X)),
     nop(trace(M:F/A,-fail))).
 
@@ -1874,7 +1890,7 @@ mUST_det_ll_failed(X):- notrace,wdmsg(failed(X))/*,arcST*/,nortrace,trace,rRTrac
 rRTrace(X):- !, rtrace(X).
 rRTrace(X):- notrace,nortrace, arcST, sleep(0.5), trace, (notrace(\+ current_prolog_flag(gui_tracer,true)) -> rtrace(X); (trace,call(X))).
 
-%= 	 	 
+%=
 
 %% ansicall_4( ?Out, ?Ctrl, :Goal) is nondet.
 %
@@ -1896,14 +1912,14 @@ no_bfly(Goal):- current_predicate(in_bfly/2)->in_bfly(f,Goal);call(Goal).
 ansicall_6(Out,Ctrl,Goal):- quietly((must(using_style(Out,Ctrl,Goal,How)),!, call(How))).
 
 :- export(color_format/3).
-color_format(MC,F,A):- 
+color_format(MC,F,A):-
  notrace(((ansi_control_conv(MC,CC2),
    color_format2(CC2,F,A)))),!.
 
 :- b_setval('$lm_output_steam',[]).
 :- nb_setval('$lm_output_steam',[]).
 
-color_format2(C,F,A):- 
+color_format2(C,F,A):-
   (nb_current('$without_color',Was);Was=u),
   (stream_property(current_output, tty(TTY)); TTY=u),
   color_format3(TTY,Was,C,F,A).
@@ -1920,14 +1936,14 @@ terminal_ansi_format(Attr, Format, Args) :- terminal_ansi_format(current_output,
 terminal_ansi_format(Stream, Class, Format, Args):- terminal_ansi_goal(Stream, Class, format(Format, Args)),!.
 terminal_ansi_format(Stream, Class, Format, Args):- ansi_term:ansi_format(Stream, Class, Format, Args),!.
 
-terminal_ansi_goal(Stream, Class, Goal):- 
+terminal_ansi_goal(Stream, Class, Goal):-
  ansi_term:(
  class_attrs(Class, Attr),
     phrase(sgr_codes_ex(Attr), Codes),
     atomic_list_concat(Codes, ;, Code),
     with_output_to_each(
         Stream,
-        scce_orig(   
+        scce_orig(
             keep_line_pos(current_output, format('\e[~wm', [Code])),
             call(Goal),
             keep_line_pos(current_output, format('\e[0m'))
@@ -1937,7 +1953,7 @@ terminal_ansi_goal(Stream, Class, Goal):-
 
 
 
-%= 	 	 
+%=
 
 %% keep_line_pos_w_w( ?S, :GoalG) is det.
 %
@@ -1964,7 +1980,7 @@ set_stream_line_position_safe(S,Pos):-
 %tlbugger:term_color0(retract,magenta).
 %tlbugger:term_color0(retractall,magenta).
 
-%= 	 	 
+%=
 
 %% term_color0( ?VALUE1, ?VALUE2) is det.
 %
@@ -1978,7 +1994,7 @@ tlbugger:term_color0(mpred_op,hfg(blue)).
 
 
 
-%= 	 	 
+%=
 
 %% f_word( ?T, ?A) is det.
 %
@@ -1991,7 +2007,7 @@ f_word(T,A):- string_to_atom(T,P),sub_atom(P,0,10,_,A),A\==P,!.
 f_word(T,A):- string_to_atom(T,A),!.
 
 
-%= 	 	 
+%=
 
 %% mesg_arg1( :TermT, ?TT) is det.
 %
@@ -2008,7 +2024,7 @@ mesg_arg1(T,F):-cfunctor(T,F,_).
 :- dynamic(defined_message_color/2).
 
 
-%= 	 	 
+%=
 
 %% defined_message_color( ?A, ?B) is det.
 %
@@ -2021,7 +2037,7 @@ defined_message_color(A,B):-tlbugger:term_color0(A,B).
 
 
 
-%= 	 	 
+%=
 
 %% predef_functor_color( ?F, ?C) is det.
 %
@@ -2032,7 +2048,7 @@ predef_functor_color(F,C):- defined_message_color(F/_,C),!.
 predef_functor_color(F,C):- tlbugger:term_color0(F,C),!.
 
 
-%= 	 	 
+%=
 
 %% functor_color( ?F, ?C) is det.
 %
@@ -2047,7 +2063,7 @@ functor_color(F,C):- next_color(C),ignore(on_x_fail(assertz(tlbugger:term_color0
 % tlbugger:last_used_color(pink).
 
 
-%= 	 	 
+%=
 
 %% last_used_fg_color( ?LFG) is det.
 %
@@ -2057,7 +2073,7 @@ last_used_fg_color(LFG):-tlbugger:last_used_color(LU),fg_color(LU,LFG),!.
 last_used_fg_color(default).
 
 
-%= 	 	 
+%=
 
 %% good_next_color( ?C) is det.
 %
@@ -2068,7 +2084,7 @@ good_next_color(C):- last_used_fg_color(LFG),fg_color(C,FG),FG\=LFG,!.
 good_next_color(C):- not(unliked_ctrl(C)).
 
 
-%= 	 	 
+%=
 
 %% unliked_ctrl( ?X) is det.
 %
@@ -2082,7 +2098,7 @@ unliked_ctrl(hbg(white)).
 unliked_ctrl(X):-is_list(X),member(E,X),nonvar(E),unliked_ctrl(E).
 
 
-%= 	 	 
+%=
 
 %% fg_color( ?LU, ?FG) is det.
 %
@@ -2094,7 +2110,7 @@ fg_color(_,default).
 
 % = :- export(random_color/1).
 
-%= 	 	 
+%=
 
 %% random_color( ?M) is det.
 %
@@ -2110,7 +2126,7 @@ random_color([reset,M,FG,BG,font(Font)]):-Font is random(8),
 
 % = :- export(tst_color/0).
 
-%= 	 	 
+%=
 
 %% tst_color is det.
 %
@@ -2119,7 +2135,7 @@ random_color([reset,M,FG,BG,font(Font)]):-Font is random(8),
 tst_color:- make, ignore((( between(1,20,_),random_member(Goal,[colormsg(C,cm(C)),dmsg(color(C,dm(C))),ansifmt(C,C)]),next_color(C),Goal,fail))).
 % = :- export(tst_color/1).
 
-%= 	 	 
+%=
 
 %% tst_color( ?C) is det.
 %
@@ -2129,7 +2145,7 @@ tst_color(C):- make,colormsg(C,C).
 
 % = :- export(next_color/1).
 
-%= 	 	 
+%=
 
 %% next_color( :TermC) is det.
 %
@@ -2140,7 +2156,7 @@ next_color([underline|C]):- random_color(C),!.
 
 % = :- export(contrasting_color/2).
 
-%= 	 	 
+%=
 
 %% contrasting_color( ?A, ?VALUE2) is det.
 %
@@ -2158,7 +2174,7 @@ contrasting_color(_,default).
 
 
 
-%= 	 	 
+%=
 
 %% sgr_on_code( ?Ctrl, :PRED7OnCode) is det.
 %
@@ -2168,7 +2184,7 @@ sgr_on_code(Ctrl,OnCode):- sgr_on_code0(Ctrl,OnCode),!.
 sgr_on_code(_Foo,7):-!. %  dzotrace((format_to_error('~NMISSING: ~q~n',[bad_sgr_on_code(Foo)]))),!.
 
 
-%= 	 	 
+%=
 
 %% is_sgr_on_code( ?Ctrl) is det.
 %
@@ -2177,7 +2193,7 @@ sgr_on_code(_Foo,7):-!. %  dzotrace((format_to_error('~NMISSING: ~q~n',[bad_sgr_
 is_sgr_on_code(Ctrl):-dzotrace(sgr_on_code0(Ctrl,_)),!.
 
 
-%= 	 	 
+%=
 
 %% sgr_on_code0( ?Ctrl, :PRED6OnCode) is det.
 %
@@ -2188,7 +2204,7 @@ sgr_on_code0(blink, 6).
 sgr_on_code0(-Ctrl,OffCode):-  nonvar(Ctrl), sgr_off_code(Ctrl,OffCode).
 
 
-%= 	 	 
+%=
 
 %% sgr_off_code( ?Ctrl, :GoalOnCode) is det.
 %
@@ -2239,7 +2255,7 @@ into_color_name(C,C):- atom(C), ansi_term:ansi_color(C,_).
 
 
 
-%= 	 	 
+%=
 
 %% sgr_code_on_off( ?Ctrl, ?OnCode, ?OffCode) is det.
 %
@@ -2258,7 +2274,7 @@ once_in(G,Often):- term_to_atom(G,A),
 
 
 
-%= 	 	 
+%=
 
 %% msg_to_string( :TermVar, ?Str) is det.
 %
@@ -2277,7 +2293,7 @@ msg_to_string(Msg,Str):-sformat(Str,Msg,[],[]),!.
 :- thread_local t_l:formatter_hook/4.
 
 
-%= 	 	 
+%=
 
 %% withFormatter( ?Lang, ?From, ?Vars, ?SForm) is det.
 %
@@ -2287,7 +2303,7 @@ withFormatter(Lang,From,Vars,SForm):- t_l:formatter_hook(Lang,From,Vars,SForm),!
 withFormatter(_Lang,From,_Vars,SForm):-sformat(SForm,'~w',[From]).
 
 
-%= 	 	 
+%=
 
 %% flush_output_safe is det.
 %
@@ -2295,7 +2311,7 @@ withFormatter(_Lang,From,_Vars,SForm):-sformat(SForm,'~w',[From]).
 %
 flush_output_safe:-ignore(catch(flush_output,_,true)).
 
-%= 	 	 
+%=
 
 %% flush_output_safe( ?X) is det.
 %
@@ -2304,7 +2320,7 @@ flush_output_safe:-ignore(catch(flush_output,_,true)).
 flush_output_safe(X):-ignore(catch(flush_output(X),_,true)).
 
 
-%= 	 	 
+%=
 
 %% writeFailureLog( ?E, ?X) is det.
 %
@@ -2321,7 +2337,7 @@ writeFailureLog(E,X):-
 
 
 
-%= 	 	 
+%=
 
 %% cls is det.
 %
@@ -2329,7 +2345,7 @@ writeFailureLog(E,X):-
 %
 cls:- ignore(catch(system:shell(cls,0),_,fail)).
 
-% % % OFF 
+% % % OFF
 :- system:use_module(library(error)).
 :- system:use_module(library(random)).
 :- system:use_module(library(terms)).

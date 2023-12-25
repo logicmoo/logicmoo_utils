@@ -26,13 +26,13 @@
    print_tree_with_final/3]).
 
 /*
-:- multifile '$exported_op'/3. 
-:- dynamic '$exported_op'/3. 
-:- discontiguous '$exported_op'/3. 
+:- multifile '$exported_op'/3.
+:- dynamic '$exported_op'/3.
+:- discontiguous '$exported_op'/3.
 '$exported_op'(_,_,_):- fail.
 */
 
-:- multifile '$autoload'/3. 
+:- multifile '$autoload'/3.
 :- discontiguous '$autoload'/3.
 :- dynamic '$autoload'/3.
 '$autoload'(_,_,_):- fail.
@@ -139,7 +139,7 @@ etc.
 prolog_pprint_tree_term(Term):-  prolog_pprint(Term), !.
 
 
-user:test_pp:- 
+user:test_pp:-
   make,
   print_tree(a(a{ a:b, = : -1 })),
   %print_tree(a(a{ a:b, = : -1 })),
@@ -149,8 +149,8 @@ user:test_pp:-
   thread_local(bfly_tl:bfly_setting/2),
   test_print_tree.
 
-test_print_tree:- 
-  
+test_print_tree:-
+
   predicate_property(test_print_tree1(_),number_of_clauses(N)),
   forall((between(1,N,X),
      nth_clause(test_print_tree1(_),N,Ref),clause(_,Body,Ref),
@@ -164,7 +164,7 @@ test_print_tree(N):- integer(N), nth_clause(test_print_tree1(_),N,Ref),clause(_,
 
 :- meta_predicate(on_xf_ignore(0)).
 %on_xf_ignore(G):- \+ thread_self(main), !, notrace(ignore(on_x_fail(catch(G,E,wdmsg(G->E))))),!.
-%on_xf_ignore(G):- on_x_fail(G),!. 
+%on_xf_ignore(G):- on_x_fail(G),!.
 %on_xf_ignore(G):- call(G),!.
 %on_xf_ignore(G):- dmsg(failed(G)),!.
 on_xf_ignore(G):- notrace(ignore(catch(G,_,fail))).
@@ -172,7 +172,7 @@ on_xf_ignore(G):- notrace(ignore(catch(G,_,fail))).
 
 test_pp(PP,Goal):-
   with_pp(PP,test_pp_desc(PP,Goal)).
-test_pp_desc(PP,Goal):- 
+test_pp_desc(PP,Goal):-
   write('%====================================================\n'),
   format('% ?- ~p. ~n',[test_pp(PP,Goal)]),
   format('% ?- ~@. ~n',[print_tree_no_nl(test_pp(PP,Goal))]),
@@ -183,7 +183,7 @@ test_pp_desc(PP,Goal):-
   write('<==\n%==================END========================\n'),
    !.
 
-test_pp_each(G):- 
+test_pp_each(G):-
  ttyflush,
  maplist(on_xf_ignore,
  [test_pp(ansi,G),
@@ -203,19 +203,19 @@ test_print_tree1(1):-   print_tree(( e2c_lexical_segs =   [  w(is,[pos(aux),loc(
 
 %test_print_tree1(2):- nl,nl, test_rok,!.
 
-test_print_tree1(2):- 
+test_print_tree1(2):-
  print_tree_with_final( a(b(c(e(7
      %,M.len() := Len :-Len is sqrt(M.x**2 + X.y**2)
-    ),f), 
+    ),f),
    print_tree(a(b(c(e(7),f),d))), print_tree(a(b(c, X = point{x:1,y:2}.C1 , (e(X),f),d))),
     [print_tree,a,_BE,'$VAR'('SEE'),C1,e,1.3,-7,`abcd`,"abcd",['a','b','c'],f,d, print_tree,a,b,c,e,7,f,d],
     print_tree(a(b(c(e(7),f),d)),a)),x,y),'.').
 
-test_print_tree1(3):- 
- print_tree((print_tree_with_final( a(b(c(e(E7))))):- 
+test_print_tree1(3):-
+ print_tree((print_tree_with_final( a(b(c(e(E7))))):-
  print_tree_with_final( point{x:1,y:2}, a(b(c(e(E7
      %,M.len() := Len :-Len is sqrt(M.x**2 + X.y**2)
-    ),f), 
+    ),f),
    print_tree(a(b(c(e(7),f),d))), print_tree(a(b(c, X = point{x:1,y:2}.C1 , (e(X),f),d))),
     [print_tree,a,_BE,'$VAR'('SEE'),C1,e,1.3,-7,`abcd`,"abcd",['a','b','c'],f,d, print_tree,a,b,c,e,7,f,d],
     print_tree(a(b(c(e(7),f),d)))),x,y),'.'),!)),!.
@@ -321,15 +321,15 @@ sample_pp_term(( e2c_lexical_segs =   [  w(is,[pos(aux),loc(1),lnks(1),txt("is")
 
 sample_pp_term((  a(b(c(e(7
      %,M.len() := Len :-Len is sqrt(M.x**2 + X.y**2)
-    ),f), 
+    ),f),
    print_tree(a(b(c(e(7),f),d))), print_tree(a(b(c, X = point{x:1,y:2}.C1 , (e(X),f),d))),
     [print_tree,a,_BE,'$VAR'('SEE'),C1,e,1.3,-7,`abcd`,"abcd",['a','b','c'],f,d, print_tree,a,b,c,e,7,f,d],
     print_tree(a(b(c(e(7),f),d)))),x,y))).
 
-sample_pp_term(((print_tree_with_final( a(b(c(e(E7))))):- 
+sample_pp_term(((print_tree_with_final( a(b(c(e(E7))))):-
  print_tree_with_final( a(b(c(e(E7
      , M.len() := Len :-Len is sqrt(M.x**2 + X.y**2)
-    ),f), 
+    ),f),
    print_tree(a(b(c(e(7),f),d))), print_tree(a(b(c, X = point{x:1,y:2}.C1 , (e(X),f),d))),
     [print_tree,a,_BE,'$VAR'('SEE'),C1,e,1.3,-7,`abcd`,"abcd",['a','b','c'],f,d, print_tree,a,b,c,e,7,f,d],
     print_tree(a(b(c(e(7),f),d)))),x,y),'.'),!))).
@@ -369,7 +369,7 @@ prolog_pprint_0(Term, Options):- \+ memberchk(quoted(_), Options), !, prolog_ppr
 prolog_pprint_0(Term, Options):- %fail,
   mort((guess_pretty(Term), pretty_clauses:pprint_tree(Term, [output(current_output)|Options]))).
 
-prolog_pretty_pprint_tree(A,Options):- 
+prolog_pretty_pprint_tree(A,Options):-
   my_merge_options(Options,[portray(true), quoted(true), output(current_output)], OptionsNew),
   pretty_clauses:pprint_tree(A, OptionsNew).
 
@@ -379,9 +379,9 @@ str_repl(_,_,S,S).
 
 replcterm(F,R,S,O):- subst(S,F,R,O),!.
 
-if_string_repl(T, B, A, NewT):-   
+if_string_repl(T, B, A, NewT):-
    atomics_to_string(List, B, T), List=[_,_|_], !,
-   atomics_to_string(List, A, NewT). 
+   atomics_to_string(List, A, NewT).
 
 get_operators(P,[]):- \+ compound_gt(P, 0), !.
 get_operators([H|T],Ops):- !, get_operators(H,L),get_operators(T,R),append(L,R,Ops).
@@ -395,16 +395,16 @@ is_operator('<-').
 is_operator(F):- current_op(N,_,F),N>800.
 
 
-get_op_restore(OP,Restore):- 
+get_op_restore(OP,Restore):-
    findall(op(E,YF,OP),(member(YF,[xfx,xfy,yfx,fy,fx,xf,yf]),current_op(E,YF,OP)),List),
    Restore = maplist(call,List).
-get_op_zero(OP,Zero):- 
+get_op_zero(OP,Zero):-
    findall(op(0,YF,OP),(member(YF,[xfx,xfy,yfx,fy,fx,xf,yf])),List),
    Zero = maplist(call,List).
 
 with_op_cleanup(_NewP,_YF,_OP,Goal):- !, Goal.
 with_op_cleanup(NewP,YF,OP,Goal):-
-   (current_op(OldP,YF,OP);OldP=0) -> 
+   (current_op(OldP,YF,OP);OldP=0) ->
    get_op_restore(OP,Restore),
    get_op_zero(OP,Zero),
    Setup = (Zero,op(NewP,YF,OP)),
@@ -416,13 +416,13 @@ mid_pipe(In,[H|T],Out):- !,mid_pipe(In,H,Mid),mid_pipe(Mid,T,Out).
 mid_pipe(In,[],In):-!.
 mid_pipe(In,H,Out):- !, call(H,In,Out).
 
-trim_stop(S,O):- sub_string(S, N, 1, 0, Last), 
-  (Last = "." -> sub_string(S, 0, N, 1, O); 
+trim_stop(S,O):- sub_string(S, N, 1, 0, Last),
+  (Last = "." -> sub_string(S, 0, N, 1, O);
      ((Last="\n";Last="\r";Last=" ") -> (sub_string(S, 0, N, 1, Before),trim_stop(Before,O)) ; S=O)).
 
-get_print_opts(_Term, PrintOpts):- 
- get_varname_list(Vs), 
- PrintOpts = 
+get_print_opts(_Term, PrintOpts):-
+ get_varname_list(Vs),
+ PrintOpts =
 [portrayed(true),
  portray(true), partial(true),
      %spacing(next_argument),
@@ -438,12 +438,12 @@ clause_to_string_et(T,S):-
  print_et_to_string(T,S0,PrintOpts),!,
  notrace(trim_stop(S0,S)),!.
 
-clause_to_string(T,S):-  
+clause_to_string(T,S):-
  get_print_opts(T,PrintOpts),
  print_et_to_string(T,S0,PrintOpts),!,
  notrace(trim_stop(S0,S)),!.
 /*
-clause_to_string(T,S):-  
+clause_to_string(T,S):-
  get_print_opts(T,PrintOpts),
  wots((S0), prolog_listing:portray_clause(current_output,T,PrintOpts)),
  notrace(trim_stop(S0,S)).
@@ -453,8 +453,8 @@ clause_to_string(T,S):-
 :- export(compound_gt/2).
 compound_gt(P,GT):- notrace((compound(P), compound_name_arity(P, _, N), N > GT)).
 
-print_e_to_string_b(H, S):- 
-  compound_gt(H, 0), H=..[F,_,_], 
+print_e_to_string_b(H, S):-
+  compound_gt(H, 0), H=..[F,_,_],
   current_op(_,_,F),
   print_e_to_string(H, S0),
   mid_pipe(S0,[str_repl('\n',' \n')],S1),
@@ -465,15 +465,15 @@ print_e_to_string_b(H, HS):- print_e_to_string(H, HS),!.
 % print_e_to_string(T, _Ops, S):- wots(S,print_tree_with_final(T,'')),!.
 
 print_e_to_string(T,_Ops, S):- string(T),!,S=T.
-print_e_to_string(T, Ops, S):- member(Infix,['<-']), member(Infix, Ops), !, 
-   subst(T,Infix,(':-'),T0), 
+print_e_to_string(T, Ops, S):- member(Infix,['<-']), member(Infix, Ops), !,
+   subst(T,Infix,(':-'),T0),
    clause_to_string(T0,S0), !,
    mid_pipe(S0,str_repl(':-',Infix),S).
 
-print_e_to_string(T, Ops, S):- Pos=['<-','->','<->',':-'],  
+print_e_to_string(T, Ops, S):- Pos=['<-','->','<->',':-'],
    member(Infix,Pos), select(Infix,Ops,Rest), member(Infix2, Pos),
-    \+ member(Infix2,Rest), !, 
-   subst(T,Infix,(':-'),T0), 
+    \+ member(Infix2,Rest), !,
+   subst(T,Infix,(':-'),T0),
    clause_to_string(T0,S0), !,
    mid_pipe(S0,str_repl(':-',Infix),S).
 
@@ -496,17 +496,17 @@ print_e_to_string(T, Ops, S):-  member('<->', Ops), sformat(S0, '~p',[T]),
   mid_pipe(S0,str_repl('<->','<->\n  '),S).
 
 print_e_to_string(axiom(H,B), _, S):-
-  print_e_to_string((H-->B), S0),  
+  print_e_to_string((H-->B), S0),
   mid_pipe(S0,[str_repl(' \n','\n'),str_repl(' -->',','),str_repl('\n\n','\n')],S1),
   sformat(S,'axiom(~s)',[S1]).
 
 print_e_to_string(B, [Op|_], S):- ((Op== ';') ; Op==','), !,
-  print_e_to_string((:- B), S0),  
-  mid_pipe(S0,[str_repl(':-','')],S).  
+  print_e_to_string((:- B), S0),
+  mid_pipe(S0,[str_repl(':-','')],S).
 
 print_e_to_string(B, _, S):- is_list(B),  !,
-  print_e_to_string((:- B), S0),  
-  mid_pipe(S0,[str_repl(':-','')],S).  
+  print_e_to_string((:- B), S0),
+  mid_pipe(S0,[str_repl(':-','')],S).
 
 print_e_to_string(T, _Ops, S):-  is_list(T), print_et_to_string(T,S,[right_margin(200)]),!.
 print_e_to_string(T, _Ops, S):-  must(print_et_to_string(T,S,[])).
@@ -522,7 +522,7 @@ print_et_to_string(T,S,Options):-
                   %spacing(next_argument),
                   portray(false)],
    notrace(my_merge_options(Old,Options,WriteOpts)),
-   PrintOpts = [output(current_output)|Options],                                
+   PrintOpts = [output(current_output)|Options],
   sformat(S, '~@', [(sys:plpp(TT,WriteOpts,PrintOpts), ttyflush)]).
 
 % sys:plpp(T):- !, print(T).
@@ -530,37 +530,37 @@ sys:plpp(T):- sys:plpp(T,[]).
 
 sys:plpp(T, Opts):- notrace(sys:plpp(T, Opts)).
 
-plpp0(T, Opts):- 
+plpp0(T, Opts):-
  get_varname_list(Vs),
   numbervars_using_vs(T,TT,Vs),
    Old = [% numbervars(true),
-                  quoted(true), ignore_ops(false), no_lists(false), 
+                  quoted(true), ignore_ops(false), no_lists(false),
                   %spacing(next_argument), %portray(false),
                   portray_goal(print_tree_plpp)],
    notrace(my_merge_options(Old,Options,WriteOpts1)),
    notrace(my_merge_options(WriteOpts1,Opts,WriteOpts)),
-   PrintOpts = [output(current_output)|Options],                                
+   PrintOpts = [output(current_output)|Options],
   sys:plpp(TT,WriteOpts,PrintOpts).
 %sys:plpp(TT,WriteOpts,PrintOpts):- !,
 %   pprint_tree(TT, [write_options(WriteOpts)|PrintOpts]).
-sys:plpp(TT,WriteOpts,PrintOpts):- 
-   \+ \+ pprint_tree(TT, 
+sys:plpp(TT,WriteOpts,PrintOpts):-
+   \+ \+ pprint_tree(TT,
              [   %left_margin(1),
                  %operators(true),
                  %tab_width(2),
                  %max_length(120),
-                 %indent_arguments(auto),                  
+                 %indent_arguments(auto),
                  write_options(WriteOpts)|PrintOpts]).
 
-   
+
 print_tree_plpp(Term,Opts):- notrace(print_tree_loop(Term,Opts)).
 % print_tree_loop(Term):- current_print_write_options(Options), print_tree_loop(Term,Options).
- 
+
 print_tree_loop(Term,Options):- \+ pretty_tl:in_pretty,!,
   setup_call_cleanup(asserta(pretty_tl:in_pretty,Ref),
     print_tree_unit(Term,Options),
     erase(Ref)).
-print_tree_loop(Term, Options):- 
+print_tree_loop(Term, Options):-
   with_current_line_position(simple_write_term(Term, Options)).
 
 
@@ -573,14 +573,14 @@ to_ansi0([H|T],[H|T]).
 to_ansi0(C, [bold,hfg(C)]):- assertion(nonvar(C)), is_ansi_color(C),!.
 to_ansi0(H,[H]).
 
-is_ansi_color(white). is_ansi_color(black). is_ansi_color(yellow). is_ansi_color(cyan). 
+is_ansi_color(white). is_ansi_color(black). is_ansi_color(yellow). is_ansi_color(cyan).
 is_ansi_color(blue). is_ansi_color(red). is_ansi_color(green). is_ansi_color(magenta).
 
 
 is_output_lang(Lang):- atom(Lang), Lang \==[],
  \+ is_ansi_color(Lang), nb_current('$output_lang',E),E\==[], !, memberchk(Lang,E).
 is_output_lang(_).
-  
+
 %:- export(pprint_ec/2).
 %pprint_ec(C, P):- pprint_ec_and_f(C, P, '~n').
 
@@ -588,8 +588,8 @@ is_output_lang(_).
 duplicate_nat(P0,P1):- copy_term_nat(P0,P),duplicate_term(P,P1).
 
 :- export(pprint_ecp_cmt/2).
-pprint_ecp_cmt(C, P):- 
- notrace((mort((echo_newline_if_needed,  
+pprint_ecp_cmt(C, P):-
+ notrace((mort((echo_newline_if_needed,
   print_e_to_string(P, S0),
   into_space_cmt(S0,S),
   to_ansi(C, C0),
@@ -599,13 +599,13 @@ pprint_ecp_cmt(C, P):-
 pprint_ecp(C, P):- \+ is_output_lang(C), !, pprint_ecp_cmt(C, P).
 pprint_ecp(C, P):-
   maybe_mention_s_l(1),
-  echo_newline_if_needed,  
+  echo_newline_if_needed,
   maybe_bfly_html(pprint_ec_and_f(C, P, '.~n')).
 
 pprint_ec_and_f(C, P, AndF):-
  mort((
   maybe_mention_s_l(2),
-  pprint_ec_no_newline(C, P), 
+  pprint_ec_no_newline(C, P),
   echo_format(AndF))), !,
   ttyflush.
 
@@ -619,7 +619,7 @@ without_ec_portray_hook(Goal):-
 */
 
 exact_ec_portray_hook(Val,Goal):-
-   setup_call_cleanup(flag('$ec_portray', N, Val), 
+   setup_call_cleanup(flag('$ec_portray', N, Val),
      Goal, flag('$ec_portray',_, N)),!.
 
 with_ec_portray_hook(Goal):- exact_ec_portray_hook(0,Goal).
@@ -633,22 +633,22 @@ pc_portray(Term):- var(Term),!,fail.
 pc_portray(Term):- atom(Term), exists_file_safe(Term),public_file_link(Term,Public),write_q(Public).
 pc_portray(Term:L):- integer(L),atom(Term), exists_file_safe(Term),public_file_link(Term:L,Public),write_q(Public).
 pc_portray(mfl4(M,F,Term,L)):- integer(L),atom(Term), exists_file_safe(Term),public_file_link(Term:L,Public),write_q(mfl4(M,F,Public,L)).
-pc_portray(Term):- 
-  \+ ( nb_current('$inprint_message', Messages), Messages\==[] ), 
+pc_portray(Term):-
+  \+ ( nb_current('$inprint_message', Messages), Messages\==[] ),
   % (tracing->dumpST;true),
   \+ tracing,!,
   % dont screw up SWISH or PLDoc
   \+ toplevel_pp(swish), \+ toplevel_pp(http), % is_pp_set(_),
   ec_portray_hook(Term).
 
-ec_portray_hook(Term):-  
- setup_call_cleanup(flag('$ec_portray', N, N+1), 
+ec_portray_hook(Term):-
+ setup_call_cleanup(flag('$ec_portray', N, N+1),
   ec_portray(N, Term),
   flag('$ec_portray',_, N)).
 
 color_format_maybe(_,F,A):- format(F,A),!.
 
-:- export(write_q/1). 
+:- export(write_q/1).
 write_q(S):- maybe_pp_hook(write_q, S),!.
 write_q(X):- in_pp(bfly),!,print_html_term(X).
 write_q(O):- maybe_special_printing(O),!.
@@ -668,7 +668,7 @@ ec_portray(N,Term):- N > -1, N < 3, \+ is_dict(Term), ec_portray_now(Term).
 ec_portray_now(Var):- var(Var), !, get_var_name(Var,Name), color_format_maybe(fg(green),'~w',[Name]),!.
 ec_portray_now('$VAR'(Atomic)):- integer(Atomic), !, color_format_maybe(fg(yellow),'~w',['$VAR'(Atomic)]).
 
-ec_portray_now('$VAR'(Atomic)):- !, 
+ec_portray_now('$VAR'(Atomic)):- !,
   ((atom(Atomic), name(Atomic,[C|_]),code_type(C,prolog_var_start))->
      color_format_maybe(fg(yellow),'~w',[Atomic]);
      color_format_maybe(fg(red),"'$VAR'(~q)",[Atomic])).
@@ -694,24 +694,24 @@ pprint_ec_no_newline(C, P):-
   print_e_to_string(P, S),
   to_ansi(C, C0),
   real_ansi_format(C0, '~s', [S]))).
-  
+
 
 print_e_to_string(P, S):-  notrace(with_output_to(string(S),print_tree_unit(P))),!.
-print_e_to_string(P, S):- 
+print_e_to_string(P, S):-
   quietly(( must_det_l((
    pretty_numbervars(P, T),
    get_operators(T, Ops))),!,
    % maybe_bfly_html
    print_e_to_string(T, Ops, S))),!.
 /*
-print_e_to_string(P, S):- 
+print_e_to_string(P, S):-
    get_operators(P, Ops),
-   must(pretty_numbervars(P, T)), 
+   must(pretty_numbervars(P, T)),
    with_op_cleanup(1200,xfx,(<->),
      with_op_cleanup(1200,xfx,(->),
        with_op_cleanup(1200,xfy,(<-),
           print_e_to_string(T, Ops, S)))).
- 
+
 */
 
 pretty_trim_message(A,C):- replace_in_string(['\n\n\n'='\n\n'],A,B),A\==B,!,pretty_trim_message(B,C).
@@ -722,16 +722,16 @@ pretty_trim_message(A,C):- split_string(A, "", "`\s\t\n", [B]), A\==B,!,pretty_t
 pretty_trim_message(A,A).
 
 
-into_space_cmt(S00,O):- 
+into_space_cmt(S00,O):-
   pretty_trim_message(S00,S0),
   %normalize_space(string(S1),S0),
   str_repl('\n','\n     ',S0, S),
-  (S0==S -> sformat(O, '~N %  ~s.~n', [S]); 
+  (S0==S -> sformat(O, '~N %  ~s.~n', [S]);
     (maybe_mention_s_l(1),sformat(O, '~n /*  ~s.~n */~n', [S]))).
 
 % in_space_cmt(Goal):- call_cleanup(prepend_each_line(' % ', Goal), echo_newline_if_needed).
 %in_space_cmt(Goal):- setup_call_cleanup((echo_newline_if_needed, echo_format('/*\n ', []), Goal, echo_newline_if_needed, echo_format(' */~n', [])).
-in_space_cmt(Goal):- 
+in_space_cmt(Goal):-
    wots((S0),Goal),
    into_space_cmt(S0,S),
    real_format('~s', [S]), !.
@@ -742,7 +742,7 @@ in_space_cmt(Goal):- setup_call_cleanup((echo_newline_if_needed,echo_format('/*\
 
 read_line_to_string_echo(S, String):- read_line_to_string(S, String), ttyflush, real_ansi_format([bold, hfg(black)], '~s~n',[String]),
   ttyflush.
-  
+
 echo_flush:- ttyflush.
 :- export(echo_format/1).
 echo_format(S):- echo_flush, echo_format(S, []),!.
@@ -767,7 +767,7 @@ echo_newline_if_needed:- echo_format('~N').
 
 is_outputing_to_file:- nb_current('$ec_output_stream',Outs),is_stream(Outs), (stream_property_s(Outs,file_name(_));current_output(Outs)), !.
 %is_outputing_to_file:- nb_current('$ec_output_stream',Outs),
-is_outputing_to_file:- 
+is_outputing_to_file:-
   current_output(S),
   stream_property_s(S,file_name(_)).
 
@@ -777,14 +777,14 @@ get_ansi_dest(S):- \+ is_outputing_to_file,!,current_output(S).
 get_ansi_dest(S):- S = user_output, !.
 get_ansi_dest(S):- S = user_error, !.
 
-with_output_to_ansi_dest(Goal):- 
+with_output_to_ansi_dest(Goal):-
   maybe_bfly_html((get_ansi_dest(AnsiDest),stream_property_s(AnsiDest,output),
   with_output_to(AnsiDest,(Goal,ttyflush)),ttyflush)).
-  
+
 
 put_out(Char):- put(Char),
   (is_outputing_to_file -> with_output_to_ansi_dest(put(Char)) ; true),!.
-  
+
 
 real_format(Fmt, Args):- listify(Args,ArgsL), real_ansi_format([hfg(magenta)], Fmt, ArgsL).
 
@@ -806,7 +806,7 @@ maybe_mention_s_l(N):- etmp:last_s_l(B,L), LLL is L+N,  s_l(BB,LL), B==BB, !, (L
 maybe_mention_s_l(_):- mention_s_l.
 
 :- export(mention_s_l/0).
-mention_s_l:- 
+mention_s_l:-
   s_l(F,L), % real_ansi_format([fg(green)], '~N% From ~w~n', [F:L]),
   (o_s_l_diff->mention_o_s_l;true),
   retractall(etmp:last_s_l(F,_)),
@@ -859,14 +859,14 @@ out_o_s_l_2(F,L):- User_error = current_output,
       retractall(ec_reader:last_output_lc(_,_,_)),
       output_line_count(OLC),
       asserta(ec_reader:last_output_lc(OLC,F,L)),
-      (is_outputing_to_file -> 
-        (format('~N~q.~n', [:- was_s_l(F,L)]), 
+      (is_outputing_to_file ->
+        (format('~N~q.~n', [:- was_s_l(F,L)]),
            with_output_to(User_error,(public_file_link(F:L,FL),color_format_maybe([fg(green)], '~N% FRom ~w~n', [FL]),ttyflush)))
          ; nop((public_file_link(F:L,FL),color_format_maybe([fg(green)], '~N% FroM ~w~n', [FL]),ttyflush))),!.
 
 :- export(was_s_l/2).
 was_s_l(B,L):- retractall(ec_reader:o_s_l(_,_)),asserta(ec_reader:o_s_l(B,L)), out_o_s_l_2(B,L).
-  
+
 
 e_source_location(F,L):- nb_current('$ec_input_stream',Ins), any_line_count(Ins,L), any_stream(F,Ins),!.
 e_source_location(F,L):- nb_current('$ec_input_file',FS), absolute_file_name(FS,F), any_stream(F,Ins), any_line_count(Ins,L),!.
@@ -877,7 +877,7 @@ e_source_location(F,L):- stream_property_s(S, file_name(F)),atom_concat_safety(_
 :- export(s_l/2).
 s_l(F,L):- notrace(on_x_fail(e_source_location(B,L2))), !, L is L2-1, absolute_file_name(B,F).
 s_l(F,L):- source_location(F,L2), !, L is L2-1.
-% s_l(F,L):- ec_reader:o_s_l(F,L). 
+% s_l(F,L):- ec_reader:o_s_l(F,L).
 s_l(F,L):- any_stream(F,S), any_line_count(S,L),any_line_count(_,L), !.
 s_l(unknown,0).
 
@@ -931,7 +931,7 @@ any_line_count(_,0).
 print_tree_cmt(Mesg,C,P):-
  ensure_pp((
  mention_o_s_l,!,
- quietly((echo_newline_if_needed,  
+ quietly((echo_newline_if_needed,
   in_cmt(
     in_color(C,
     (format('~N~w: \n\n',[Mesg]),
@@ -957,17 +957,17 @@ maybe_special_printing(O):- nl,nl,nl,nl, print(O),!.
 write_simple(A):- maybe_special_printing(A),!.
 write_simple(A):- write_simple(A,[]).
 write_simple(S,_):- term_is_ansi(S), !, write_keeping_ansi(S).
-write_simple(A,Options):- get_portrayal_vars(Vs), 
+write_simple(A,Options):- get_portrayal_vars(Vs),
   my_merge_options(Options,[quoted(true), portrayed(true), variable_names(Vs)],OptionsNew),
   without_ec_portray_hook((
-   setup_call_cleanup(asserta(pretty_tl:in_pretty,Ref),    
+   setup_call_cleanup(asserta(pretty_tl:in_pretty,Ref),
      simple_write_term(A,OptionsNew),
      erase(Ref)))).
 
 portray_with_vars(A):- maybe_special_printing(A),!.
 portray_with_vars(A):- portray_with_vars(A,[]),!.
 
-portray_with_vars(A,Options):- 
+portray_with_vars(A,Options):-
    Ing = A+final,
    once(nb_current('$in_portray_with_vars',P);P=[]),
    \+ (member(E,P),E=@=Ing), !,
@@ -989,7 +989,7 @@ portray_with_vars1(A,Options):-
 
 :- thread_local(pretty_tl:in_pretty/0).
 
-prolog_pretty_print_term(A,Options):- 
+prolog_pretty_print_term(A,Options):-
   my_merge_options(Options,[portray(true),quoted(true), output(current_output)], OptionsNew),
   \+ \+ pprint_tree(A, OptionsNew).
 
@@ -1001,7 +1001,7 @@ prolog_pretty_print_term(A,Options):-
 system:simple_write_term(S):- maybe_special_printing(S),!.
 system:simple_write_term(S):- maybe_pp_hook(simple_write_term, S),!.
 system:simple_write_term(A):- in_pp(bfly),!,print_html_term(A).
-system:simple_write_term(A):- 
+system:simple_write_term(A):-
  current_print_write_options(Options),
    without_ec_portray_hook(\+ \+ write_term(A,Options)),!.
 system:simple_write_term(A):- write_q(A),!.
@@ -1028,7 +1028,7 @@ get_portrayal_vars(Vs):- nb_current('$variable_names',Vs)-> true ; Vs=[].
 
 system_portray(Term):- current_output_line_position(L), system_portray(L,Term).
 
-system_portray(Tab, Term, Options):-   
+system_portray(Tab, Term, Options):-
    with_write_options(Options,system_portray(Tab,Term)).
 
 
@@ -1037,7 +1037,7 @@ system_portray(Tab,Term):- maybe_pp_hook(system_portray(Tab), Term),!.
 system_portray(_Tab, S) :- term_is_ansi(S), !, write_keeping_ansi(S).
 %system_portray(Tab,Term,_Options) :-  ground(Term), Term = [tag(_,N),M], prefix_spaces(Tab),write([N,M]),!.
 %system_portray(Tab,Term,_Options) :-  ground(Term), Term = tag(_,N), prefix_spaces(Tab),write(N),!.
-system_portray(Tab,Term):- 
+system_portray(Tab,Term):-
    Ing = Term,
    once(nb_current('$in_system_portray',P);P=[]),
    \+ (member(E,P),E=@=Ing), !,
@@ -1049,7 +1049,7 @@ system_portray(Tab,Term):- prefix_spaces(Tab), portray_with_vars(Term), !.
 
 
 :- thread_local(pretty_tl:write_opts_local/1).
-current_print_write_options(Options):- 
+current_print_write_options(Options):-
  (pretty_tl:write_opts_local(Additions)->true;Additions=[]),
   current_prolog_flag(print_write_options,OptionsDefault),
   get_portrayal_vars(Vs), my_merge_options(OptionsDefault,[variable_names(Vs)|Additions],Options),!.
@@ -1057,7 +1057,7 @@ current_print_write_options(Options):-
 
 % merge options
 with_merged_write_options(Options,Goal):-
-  current_print_write_options(OldOptions), 
+  current_print_write_options(OldOptions),
   my_merge_options(OldOptions,Options,NewOptions),
    setup_call_cleanup(asserta(pretty_tl:write_opts_local(Options),Ref),
                       with_write_options(NewOptions,Goal),
@@ -1092,7 +1092,7 @@ maybe_reset_spaces(Pos):- ignore((current_output_line_position(PosNew), PosNew>P
 
 
 
-maybe_pp_hook(Why,S):- 
+maybe_pp_hook(Why,S):-
    current_print_write_options(Options),
    current_output_line_position(Pos),
    with_write_options(Options, pretty_clauses:pp_hook(Why, Pos, S)).
@@ -1101,10 +1101,10 @@ maybe_pp_hook(Why,S):-
 %print_tree(Term):- print_html_term_tree(Term).
 print_tree(Term):- ansi_ansi,current_output_line_position(Pos),!,print_tree_with_final(Term,''), maybe_reset_spaces(Pos).
 print_tree(Term):- ansi_ansi,!,print_tree_nl(Term).
-print_tree(Term):-  
+print_tree(Term):-
   wots(S,with_pp(http,print_tree_unit(Term))),write_html(S).
 /*
-print_html_term_tree(Term):- 
+print_html_term_tree(Term):-
  current_print_write_options(Options),
  must_or_rtrace(phrase(bfly_term(Term,[right_margin(60),left_margin(0),indent(1),nl(true),full_stop(true)]),Tokens)),!,
  must_or_rtrace(print_html_term_tree_st(Tokens)),!.
@@ -1121,13 +1121,13 @@ print_tree_unit(S):- maybe_pp_hook(print_tree_unit,S),!.
 print_tree_unit(Term):-
  current_output_line_position(Pos),
  ensure_pp((
-  tabbed_print(Pos, print_tree_with_final(Term, '', 
+  tabbed_print(Pos, print_tree_with_final(Term, '',
   [ partial(true), numbervars(true), character_escapes(true),fullstop(false)])))).
 
 print_tree_unit(Term, Options):-
  current_output_line_position(Pos),
  ensure_pp((
-  tabbed_print(Pos, print_tree_with_final(Term, '', 
+  tabbed_print(Pos, print_tree_with_final(Term, '',
   [ partial(true), numbervars(true), character_escapes(true),fullstop(false)|Options])))).
 
 print_tree_nl(Term):- print_tree_with_final(Term,'.\n').
@@ -1135,15 +1135,15 @@ print_tree_nl(Term):- print_tree_with_final(Term,'.\n').
 /*
 print_tree_nl(Term):-
  current_output_line_position(Pos),
- ensure_pp(( 
-  tabbed_print(Pos, print_tree_with_final(Term, ' ', 
+ ensure_pp((
+  tabbed_print(Pos, print_tree_with_final(Term, ' ',
   [ partial(true), numbervars(true), character_escapes(true),nl(true),fullstop(true)])))).
 */
 
 print_tree_no_nl(Term):-
  current_output_line_position(Pos),
- ensure_pp(( 
-  tabbed_print(Pos, print_tree_with_final(Term, '', 
+ ensure_pp((
+  tabbed_print(Pos, print_tree_with_final(Term, '',
   [ partial(true), numbervars(true), character_escapes(true),nl(false),fullstop(false)])))).
 
 
@@ -1163,7 +1163,7 @@ print_tree_with_final(Term, Final):-
 
 
 :-export(print_tree_with_final/3).
-print_tree_with_final(Term, Final, Options):- 
+print_tree_with_final(Term, Final, Options):-
   select(variable_names(Vs),Options,NewOptions),!,
   nb_current('$variable_names',Was),
   setup_call_cleanup(
@@ -1177,9 +1177,9 @@ print_tree_with_final(Term, Final, Options):- select(max_depth(N),Options,Option
 print_tree_with_final(Term, Final, Options):- select(html_depth(N),Options,OptionsNew),!,
  with_folding_depth(N, print_tree_with_final(Term, Final, OptionsNew)).
 
-print_tree_with_final(Term, Final, Options):- 
+print_tree_with_final(Term, Final, Options):-
   \+ \+ (member(numbervars(true),Options),
-  pretty_numbervars(Term,Term2), 
+  pretty_numbervars(Term,Term2),
   print_tree_with_final_real(Term2, Final, Options)),!.
 
 print_tree_with_final(Term, Final, Options):-
@@ -1187,15 +1187,15 @@ print_tree_with_final(Term, Final, Options):-
 
 
 
-print_tree_with_final_real(Term, Final, Options):-  
+print_tree_with_final_real(Term, Final, Options):-
   current_output_line_position(Tab),
   print_tree_with_final_real(Tab, Term, Final, Options).
 
 print_tree_with_final_real(Tab, Term, Final, Options):- fail,
-  member(left_margin(N),Options), N > Tab, !, 
+  member(left_margin(N),Options), N > Tab, !,
   print_tree_with_final_real(N, Term, Final, Options).
 
-print_tree_with_final_real(Tab, Term, Final, Options):- 
+print_tree_with_final_real(Tab, Term, Final, Options):-
    with_merged_write_options([fullstop(false)|Options],
      ensure_pp((print_tab_term(Tab, Term),pformat(Final)))).
 
@@ -1235,8 +1235,8 @@ with_pp(Mode,Goal):- quietly(with_pp0(Mode,Goal)).
 :- meta_predicate(with_pp0(+,0)).
 with_pp0(bfly,Goal):- in_pp(swish),!,with_pp0(swish,Goal).
 with_pp0(ansi,Goal):- \+ t_l:print_mode(plain), !, locally_tl(print_mode(plain),with_pp0(ansi,Goal)).
-with_pp0(Mode,Goal):- \+ t_l:print_mode(html), 
-  should_print_mode_be_html(Mode),!, 
+with_pp0(Mode,Goal):- \+ t_l:print_mode(html),
+  should_print_mode_be_html(Mode),!,
   locally_tl(print_mode(html),with_pp0(Mode,Goal)).
 
 with_pp0(Where,Goal):- \+ is_pp_set(Where), !,
@@ -1258,12 +1258,12 @@ write_bfly_html_0(S):- bfly_html_goal(write(S)).
 % actually_bfly(Goal):- flush_output, bfly_html_goal(Goal).
 actually_bfly(Goal):- bfly_html_goal((wots(S,set_pp(swish,Goal)),write_bfly_html_0(S))).
 :- export(actually_bfly/1).
-set_pp(Where,Goal):- 
-   \+ in_pp(Where) 
+set_pp(Where,Goal):-
+   \+ in_pp(Where)
    -> setup_call_cleanup(
       asserta(bfly_tl:bfly_setting(pp_output,Where),Ref),
       Goal,
-      erase(Ref)) 
+      erase(Ref))
    ; call(Goal).
 
 with_real_pp(ansi,ansi,Goal):- in_bfly(f,Goal).
@@ -1307,8 +1307,8 @@ our_pengine_output(SO):- bfly_write_hs(SO).
 %write_html(HTML):- phrase(html(HTML), Tokens), html_write:print_html(Out, Tokens))).
 % output_html(html([div([id('cp-menu'), class(menu)], cp_skin: cp_logo_and_menu)]))
 output_html(Var):- var(Var),!,term_to_atom(Var,Atom),output_html(pre([Atom])).
-%output_html(html(HTML)):- !,output_html(HTML). 
-output_html(HTML):- atomic(HTML),!,write_html( \ [HTML]). 
+%output_html(html(HTML)):- !,output_html(HTML).
+output_html(HTML):- atomic(HTML),!,write_html( \ [HTML]).
 %output_html(HTML):- is_list(HTML),send_tokens(HTML).
 output_html(HTML):- html_write:phrase(html(HTML), Tokens,[]),!,send_tokens(Tokens).
 
@@ -1316,7 +1316,7 @@ output_html(HTML):- html_write:phrase(html(HTML), Tokens,[]),!,send_tokens(Token
 %  our_pengine_output('<pre>hi</pre>').
 %  our_html_output_old('<pre>hi</pre>').
 %our_pengine_output(SO):- ttyflush,format('our_pengine_output\n{~w}',[SO]),nl.
-%our_pengine_output(SO):- 
+%our_pengine_output(SO):-
 
 %:- nb_setval(isHtmlMode,nil).
 
@@ -1347,7 +1347,7 @@ toplevel_pp(ansi):- getenv('TERM','xterm'),!.
 toplevel_pp(bfly):- current_predicate(bfly_get/2), bfly_get(butterfly,t),!.
 toplevel_pp(ansi).
 
-%toplevel_pp(html_pre):- 
+%toplevel_pp(html_pre):-
 %in_pp(html_pre):- on_x_log_fail(httpd_wrapper:http_current_request(_)).
 
 %display_length(X,L):- wots(S,display(X)),atom_length(S,L),!.
@@ -1376,7 +1376,7 @@ pformat_html(PREC):- PREC == pre(:), !, write(':').
 %pformat_html(pre(Fmt)):- pformat_string(Fmt,S), !, into_attribute(S,Attr),write(Attr). % print_html(['<pre>',S,'</pre>']).
 pformat_html(pre(Fmt)):- pformat_string(Fmt,S), !, into_attribute(S,Attr),write(Attr). % print_html(['<pre>',S,'</pre>']).
 %pformat_html(pre(Fmt)):- pformat_string(Fmt,S), !, atom_length(S,Len), ignore((Len>0, print_html(['<pre class="pre_html">',S,'</pre>']))),!.
-% WANT this? 
+% WANT this?
 %pformat_html(pre(Fmt)):- pformat_string(Fmt,S), phrase(pretty_clauses:html(S), Tokens), print_html(Tokens).
 pformat_html(Fmt):- pformat_std(pformat_html,Fmt), !.
 pformat_html(Fmt):- atomic(Fmt),!,bfly_html_goal(pformat_write(Fmt)).
@@ -1422,7 +1422,7 @@ wants_html0:- toplevel_pp(swish),!.
 wants_html0:- in_pp(swish),!,fail.
 %wants_html0:- is_http,!.
 
-never_webui:- 
+never_webui:-
   \+ current_prolog_flag(use_arc_www,true),
   \+ current_prolog_flag(use_arc_swish,true),
   \+ current_prolog_flag(use_arc_bfly,true),
@@ -1502,23 +1502,23 @@ using_folding_depth:- \+ ansi_ansi, nb_current('$use_folding',t).
 
 fold_this_round:- using_folding_depth, flag('$fold_this_round',N,N), N=1.
 
-%do_fold_this_round(Goal):- flag('$fold_this_round',N,N),N<0,!,call(Goal). 
+%do_fold_this_round(Goal):- flag('$fold_this_round',N,N),N<0,!,call(Goal).
 do_fold_this_round(Goal):- !, call(Goal).
 do_fold_this_round(Goal):-
   setup_call_cleanup(flag('$fold_this_round',N,2),
   with_folding(t,Goal),
   flag('$fold_this_round',_,N)).
 
-with_nb_var(Var,TF,Goal):- 
+with_nb_var(Var,TF,Goal):-
     (nb_current(Var,WAS);WAS=f),
     setup_call_cleanup(b_setval(Var,TF),
       Goal,
       nb_setval(Var,WAS)).
 
 
-increase_print_depth(Goal):- 
-  \+ using_folding_depth 
-  -> incr_term_depth(Goal) 
+increase_print_depth(Goal):-
+  \+ using_folding_depth
+  -> incr_term_depth(Goal)
   ; setup_call_cleanup(flag('$fold_this_round',N,N-1),
       Goal,
       flag('$fold_this_round',_,N)).
@@ -1531,21 +1531,21 @@ with_no_hrefs(TF,Goal):-
   with_nb_var('$no_hrefs',TF,Goal).
 
 with_folding_depth(0,Goal):-!,with_folding(f,Goal).
-with_folding_depth(Depth,Goal):- 
+with_folding_depth(Depth,Goal):-
  setup_call_cleanup(flag('$fold_this_round',N, Depth + 1),
       with_folding(t,Goal),
       flag('$fold_this_round',_,N)).
 
 no_more_folding:- flag('$term_depth',N, N), N>0.
 
-incr_term_depth(Goal):- 
+incr_term_depth(Goal):-
  setup_call_cleanup(flag('$term_depth',N, N + 1),
       Goal,
       flag('$term_depth',_,N)).
 
-pformat_e_args(E, Goal):- using_folding_depth, !, 
-  increase_print_depth(( 
-          pformat_ellipsis(E),  
+pformat_e_args(E, Goal):- using_folding_depth, !,
+  increase_print_depth((
+          pformat_ellipsis(E),
           (fold_this_round -> with_folding(f,pl_span_goal('args fold',Goal)) ; pl_span_goal('args',Goal)))),!.
 
 pformat_e_args(E, Goal):- pformat_ellipsis(E), !, pl_span_goal('args',Goal),!.
@@ -1601,11 +1601,11 @@ write_using_pprint(Term):- compound(Term), compound_name_arity(Term,_,1),!, arg(
 contains_list(Term):- \+ \+ ((compound(Term),arg(_,Term, Arg), sub_term(T,Arg), is_list(T),T\==[])).
 list_contains_sub_list(Term):- compound(Term),arg(_,Term, Arg),
   sub_term(T,Arg),T\==Arg,is_list(T),T\==[],contains_list(T).
- 
+
 
 inperent([F|_],TTs,Term,Ts):- fail, \+ is_list_functor(F),
-      TTs=..[F,Term,Ts], 
-      functor(TTsS,F,2),     
+      TTs=..[F,Term,Ts],
+      functor(TTsS,F,2),
      ((nonvar(Term), Term=TTsS);(nonvar(Ts), Ts=TTsS)).
 
 
@@ -1624,7 +1624,7 @@ print_functor(F):- with_folding(f,print_tree_unit(F)).
 
 pt_list_juncts(Tab,_OP,[T]):- print_tab_term(Tab,T).
 pt_list_juncts(_Tab,_OP,[]):- !.
-pt_list_juncts(Tab,OP,[T|List]):- 
+pt_list_juncts(Tab,OP,[T|List]):-
     print_tab_term(Tab,T), pformat(' '),pformat(OP),pformat(' '),
     pt_list_juncts(Tab,OP,List).
 
@@ -1681,13 +1681,13 @@ print_simple_2x2(List):- print_simple_2x2(print,List).
 print_simple_2x2(PS2,List):- current_output_line_position(Tab),print_simple_2x2(PS2,Tab,List).
 print_simple_2x2(PS2,Tab,List):- compound(Tab), TabN is Tab, !,print_simple_2x2(PS2,TabN,List).
 print_simple_2x2(PS2,Tab,[E|List]):- Tab>1, length(E,Len), Len>23,write('\n\r'),!,print_simple_2x2(PS2,1,[E|List]).
-print_simple_2x2(PS2,Tab,[E|List]):- 
+print_simple_2x2(PS2,Tab,[E|List]):-
   print_to_string11(PS2,0,[E|List],[ES|Str],Pad1),Pad is Pad1,
-  prefix_spaces(Tab),pformat_functor('[ '), 
+  prefix_spaces(Tab),pformat_functor('[ '),
       pt11(Pad, ES), maplist(pt111(Tab+2,Pad),Str),
    write(']').
 
-pt111(Tab, Pad, List):- 
+pt111(Tab, Pad, List):-
   format(',~N'), prefix_spaces(Tab), pt11(Pad, List).
 
 pt11(Pad, [E|List]):-
@@ -1731,7 +1731,7 @@ pt1(FS, _Tab,S) :- maybe_pp_hook(pt1(FS),S),!.
 
 % pt1(_FS,_Tab,Term) :- is_dict(Term), ansi_ansi,!,sys:plpp(Term),!.
 pt1(_FS,Tab,Term) :- is_dict(Term), !,  prefix_spaces(Tab), system_portray(Tab,Term).
-pt1(FS,Tab,Term) :- 
+pt1(FS,Tab,Term) :-
    is_dict(Term),
    dict_pairs(Term, Tag, Pairs), maplist(pair_to_colon,Pairs,Colons),!,
    prefix_spaces(Tab), pl_span_goal('functor',( print_tree_no_nl(Tag), pformat('{ '))),
@@ -1749,13 +1749,9 @@ pt1(_FS,_Tab,S) :- term_is_ansi(S), !, write_keeping_ansi(S).
 
 pt1(_, _Tab,Term) :- atom(Term),maybe_write_atom_link(Term),!.
 
-pt1(_FS,Tab,[H|T]) :- is_codelist([H|T]), !,  
+pt1(_FS,Tab,[H|T]) :- is_codelist([H|T]), !,
    sformat(S, '`~s`', [[H|T]]),
    pformat([ps(Tab),S]).
-
-pt1(_, Tab,Term) :-
-   use_system_portray(Term), !, 
-   system_portray(Tab,Term).
 
 pt1(_,_Tab,Term) :- Term=ref(_), !, write_q(Term),!.
 pt1(_,_Tab,Term) :- Term=element(_,_,List),List==[], !, write_q(Term),!.
@@ -1773,9 +1769,14 @@ pt1(_FS,Tab,T) :- % fail,
    prefix_spaces(Tab), write_q(T).
    %system_portray(Tab,T),!.
 
+pt1(_, Tab,Term) :-
+   use_system_portray(Term), !,
+   system_portray(Tab,Term).
+
+
 
 pt1(_FS,_Tab,N-V) :- print(N-V),!.
-pt1(_FS,_Tab,N-V) :- !, print(N),write(' - '),print(V).  
+pt1(_FS,_Tab,N-V) :- !, print(N),write(' - '),print(V).
 
 
 
@@ -1788,30 +1789,30 @@ pt1(FS,Tab,List) :- List=[_|_], !,
 
 
 % H:-B
-pt1(_FS,Tab, H:- T) :- 
+pt1(_FS,Tab, H:- T) :-
   OP = (','),
   compound(T),
-  compound_name_arity(T,OP, 2),      
+  compound_name_arity(T,OP, 2),
   pred_juncts_to_list(OP,T,List),!,
-  prefix_spaces(Tab), print_tree_no_nl(H),  
+  prefix_spaces(Tab), print_tree_no_nl(H),
   pl_span_goal('functor', (pformat(' :- '))),
   pformat_e_args(List, pt_list_juncts(Tab+2,OP,List)).
-      
+
 %pt1(_FS,_Tab,(NPV)) :- NPV=..[OP,_,_], OP=':', is_colon_mark(OP), ansi_ansi, !, print(NPV).
 
 
 
 % xfy/yfx/xfx
-pt1(_FS,Tab,T) :- 
-  compound_name_arity(T,OP, 2),  
+pt1(_FS,Tab,T) :-
+  compound_name_arity(T,OP, 2),
   (current_op(Pri,YFX,OP),is_infix_op(OP)),
   Pri >= 400,
   pred_juncts_to_list(OP,T,List), List=[H,R,E|ST], REST = [R,E|ST],!,
   prefix_spaces(Tab),pl_span_goal('functor', (
     pformat('( '), be_extra((pformat('/*e'),pformat(YFX),pformat('*/'))),print_tree_no_nl(H),pformat('  '), pformat(OP))),
     pformat_e_args(REST, (
-       pt_list_juncts(Tab+2,OP,REST))), 
-   pformat(')'),!.   
+       pt_list_juncts(Tab+2,OP,REST))),
+   pformat(')'),!.
 
 
 pt1(FS,Tab,(NPV)) :- NPV=..[OP,N,V], is_colon_mark(OP), current_op(_,yfx,OP), !, YFX=yfx,
@@ -1820,17 +1821,17 @@ pt1(FS,Tab,(NPV)) :- NPV=..[OP,N,V], is_colon_mark(OP), current_op(_,yfx,OP), !,
     print_tab_term(Tab+2,V).
 
 %t_l:printing_dict
-pt1(_FS,_Tab,(NPV)) :- NPV=..[OP,N,V], is_colon_mark(OP), atomic(N),current_op(_,YFX,OP), !, 
+pt1(_FS,_Tab,(NPV)) :- NPV=..[OP,N,V], is_colon_mark(OP), atomic(N),current_op(_,YFX,OP), !,
   write_q(N), be_extra((pformat('/*d*'),pformat(YFX),pformat('*/'))), pformat(OP),pformat(' '), print_tree_unit(V),!.
 
-    
+
 pt1(FS,Tab,(NPV)) :- NPV=..[OP,N,V], is_colon_mark(OP),
   print_tab_term(Tab,[op(OP,2)|FS], N),
   pl_span_goal('functor', (
     pformat(' '), pformat(OP), pformat('  '))),
     (ansi_ansi->true; (pformat_ellipsis(V),prefix_spaces(Tab+5))),
     pl_span_goal('args', (prefix_spaces(Tab+2), print_tree_unit( V ))),!.
-    
+
 
 pt1(_FS,Tab,T) :- % fail,
    print_tree_width(W120),
@@ -1838,7 +1839,7 @@ pt1(_FS,Tab,T) :- % fail,
    prefix_spaces(Tab), write_q(T).
    %system_portray(Tab,T),!.
 
-pt1(FS,Tab,{Prolog}) :- 
+pt1(FS,Tab,{Prolog}) :-
   pred_juncts_to_list(',',Prolog,LProlog),!,
   prefix_spaces(Tab),pformat_functor('{ '),
    pt_args_arglist(['{}'|FS],Tab+2,'',' | ',' }',LProlog),!.
@@ -1850,7 +1851,7 @@ pt1(FS,Tab,q(E,V,G)):- atom(E), !, T=..[E,V,G],!, pt1(FS,Tab,T).
 % xf/yf
 pt1(_FS,Tab,T1) :-
   %max_output(Tab,300,T),
-  compound_name_arguments(T1,OP, [T]),  
+  compound_name_arguments(T1,OP, [T]),
   (current_op(Pri,yf,OP);current_op(Pri,xf,OP)),
   Pri >= 400,
   prefix_spaces(Tab),pformat_functor('( ( '),
@@ -1861,7 +1862,7 @@ pt1(_FS,Tab,T1) :-
 % fx/fy
 pt1(_FS,Tab,T1) :-
   %max_output(Tab,300,T),
-  compound_name_arguments(T1,OP, [T]),  
+  compound_name_arguments(T1,OP, [T]),
   (current_op(Pri,fy,OP);current_op(Pri,fx,OP)),
   Pri >= 400,
   prefix_spaces(Tab), pformat('( '), print_atomf(OP), pformat_functor(' ( '),
@@ -1869,52 +1870,67 @@ pt1(_FS,Tab,T1) :-
    system_portray(Tab+3,T,[right_margin(100)])),
   pformat(') )'), !.
 
-pt1(_FS,Tab,T) :- 
+pt1(_FS,Tab,T) :-
    print_tree_width(W120), \+ using_folding_depth,
    max_output(Tab,W120,T),!,
    system_portray(Tab,T),!.
 
 pt1(FS,Tab,(NPV)) :- use_new, NPV=..[OP,N],
-    prefix_spaces(Tab), pformat(OP), pformat('( '), 
+    prefix_spaces(Tab), pformat(OP), pformat('( '),
     print_tree_no_nl(N), pformat(')'),!,
     ignore(((FS=[Fst|_],Fst=op(_,N),N>1,nl))).
 
 % yfx
-pt1(_FS,Tab,T) :-
-  compound_name_arity(T,OP, 2),  
+pt1(_FS,Tab,T) :- fail,
+  compound_name_arity(T,OP, 2),
   (current_op(Pri,yfx,OP)),
   Pri >= 400,
   pred_juncts_to_list(OP,T,[Y,X]),!,
-  prefix_spaces(Tab), pformat_functor('(/*1*/ '),  
-    pformat_e_args(T, 
-       pt_list_juncts(Tab+2,OP,[Y,X])), 
-   pformat(')'),!.
-% xfy/xfx
-pt1(_FS,Tab,T) :-
-  compound_name_arity(T,OP, 2),  
-  (current_op(Pri,xfy,OP);current_op(Pri,xfx,OP)),
-  Pri >= 400,
-  pred_juncts_to_list(OP,T,List),!,
-  prefix_spaces(Tab), pformat_functor('(/*2*/ '),  
-    pformat_e_args(T, 
-       pt_list_juncts(Tab+2,OP,List)), 
+  prefix_spaces(Tab), pformat_functor('(/*1*/ '),
+    pformat_e_args(T,
+       pt_list_juncts(Tab+2,OP,[Y,X])),
    pformat(')'),!.
 
-pt1(FS,Tab,Term) :- 
+% xfy/xfx/yfx
+pt1(FS,Tab,T) :- T=..[OP,A1,A2],
+  %compound_name_arity(T,OP, 2),
+  (current_op(Pri,xfy,OP);current_op(Pri,xfx,OP);current_op(Pri,yfx,OP)),
+  Pri >= 400,!,
+  prefix_spaces(Tab+2), pformat_functor('((\n '),
+    prefix_spaces(Tab+3), pformat('('),pt1(FS,Tab+4,A1),pformat(')'),
+    pformat(OP),
+    prefix_spaces(Tab+3), pformat('('),pt1(FS,Tab+4,A2),pformat(')'),
+   pformat('  ))'),!.
+
+/*
+% xfx
+pt1(FS,Tab,T) :-
+  compound_name_arity(T,OP, 2),
+  current_op(Pri,xfx,OP),
+  Pri >= 400,
+  pred_juncts_to_list(OP,T,[A1|List]),!,
+  prefix_spaces(Tab+2), pformat_functor('((\n '),
+    pt1(FS,Tab,A1), pformat(OP),
+    pformat_e_args(T,
+       pt_list_juncts(Tab+2,OP,List)),
+   pformat('  ))'),!.
+*/
+
+pt1(FS,Tab,Term) :-
    compound_name_arguments(Term,F,[Arg]), nonvar(Arg), Arg = [A|Args],
    is_arity_lt1(A), !,
    prefix_spaces(Tab), print_atomf(F), pformat_functor('([ '),
    pt_args_arglist([op(F,1)|FS],Tab+3,'','|','',[A|Args]), !,
    pformat('])').
 
-pt1(FS,Tab,Term) :- 
+pt1(FS,Tab,Term) :-
    compound_name_arguments(Term,F,[Arg]), nonvar(Arg), Arg = [A|Args],
    is_arity_lt1(A),
    prefix_spaces(Tab), print_atomf(F), pformat_functor(format('([ ~p, ',[A])),
    pt_args_arglist([op(F,1)|FS],Tab+3,'','|','',Args), !,
    pformat('])').
 
-pt1(FS,Tab,Term) :- 
+pt1(FS,Tab,Term) :-
    compound_name_arguments(Term,F,[Args]), nonvar(Args), Args = [_|_],
    prefix_spaces(Tab), print_atomf(F), pformat_functor('([ '),
    pt_args_arglist([op(F,1)|FS],Tab+3,'','|','',Args), !,
@@ -1922,41 +1938,41 @@ pt1(FS,Tab,Term) :-
 
 pt1(_FS,Tab,(NPV)) :- NPV=..[OP,N|Args], Args=[Arg], as_is(N), compound(Arg), compound_name_arity(Arg,_,3),!,
   prefix_spaces(Tab), print_atomf(OP),
-   pformat('( '), print_tree_no_nl(N), pformat(', '),  
+   pformat('( '), print_tree_no_nl(N), pformat(', '),
     prefix_spaces(Tab+2),print_tree_no_nl(Arg),pformat(')').
 
  % include arg1
-pt1(_FS,Tab,(NPV)) :- NPV=..[OP,N|Args], as_is(N), % \+ compound_gt(N,0),  
+pt1(_FS,Tab,(NPV)) :- NPV=..[OP,N|Args], as_is(N), % \+ compound_gt(N,0),
   Args=[Arg], is_list(Arg), is_simple_2x2(Arg),!,
-  prefix_spaces(Tab), print_atomf(OP), 
-  pformat('( '), print_tree_no_nl(N), pformat_functor(', '),  
+  prefix_spaces(Tab), print_atomf(OP),
+  pformat('( '), print_tree_no_nl(N), pformat_functor(', '),
  %do_fold_this_round
   current_output_line_position(L), print_simple_2x2(print,L+1,Arg), write(')').
 
  % include arg1
-pt1(FS,Tab,(NPV)) :- NPV=..[OP,N|Args], as_is(N), % \+ compound_gt(N,0),  
+pt1(FS,Tab,(NPV)) :- NPV=..[OP,N|Args], as_is(N), % \+ compound_gt(N,0),
   Args=[Arg], is_list(Arg),
-  prefix_spaces(Tab), print_atomf(OP), 
-  pformat('( '), print_tree_no_nl(N), pformat_functor(', ['),  
+  prefix_spaces(Tab), print_atomf(OP),
+  pformat('( '), print_tree_no_nl(N), pformat_functor(', ['),
  %do_fold_this_round
   pt_args_arglist([op(OP,2)|FS],Tab+2,'','@','])',Arg),!.
 
  % include arg1
-pt1(FS,Tab,(NPV)) :- NPV=..[OP,N|Args], as_is(N), % \+ compound_gt(N,0),  
+pt1(FS,Tab,(NPV)) :- NPV=..[OP,N|Args], as_is(N), % \+ compound_gt(N,0),
   Args=[_Arg],
   prefix_spaces(Tab), print_atomf(OP),
-  pl_span_goal('functor', ( pformat('( '), print_tree_no_nl(N), pformat(', '))),  
+  pl_span_goal('functor', ( pformat('( '), print_tree_no_nl(N), pformat(', '))),
  %do_fold_this_round
   pt_args_arglist([op(OP,2)|FS],Tab+2,'','@',')',Args),!.
 
 % include arg1
-pt1(FS,Tab,(NPV)) :- NPV=..[OP,N|Args], as_is(N), % \+ compound_gt(N,0),  
+pt1(FS,Tab,(NPV)) :- NPV=..[OP,N|Args], as_is(N), % \+ compound_gt(N,0),
   prefix_spaces(Tab), print_atomf(OP),
-  pl_span_goal('functor', ( pformat('( '), print_tree_no_nl(N), pformat(', '))),  
+  pl_span_goal('functor', ( pformat('( '), print_tree_no_nl(N), pformat(', '))),
  %do_fold_this_round
   pt_args_arglist([op(OP,2)|FS],Tab+2,'','@',')',Args),!.
 
-pt1(FS,Tab,Term) :- 
+pt1(FS,Tab,Term) :-
    compound_name_arguments(Term,F,Args), length(Args,Arity),
    prefix_spaces(Tab), print_atomf(F), pformat_functor('( '),
    pt_args_arglist([op(F,Arity)|FS],Tab+3,'','@',')',Args), !.
@@ -1975,8 +1991,8 @@ is_colon_mark('::::').
 
 major_conj(F):-  (F == ',';F == ';' /*;F=='&'*/),!.
 
-splice_off([A0,A|As],[A0|Left],[R|Rest]):- 
-   is_arity_lt1(A0), append(Left,[R|Rest],[A|As]), 
+splice_off([A0,A|As],[A0|Left],[R|Rest]):-
+   is_arity_lt1(A0), append(Left,[R|Rest],[A|As]),
     Rest\==[] , %  is_list(Rest),
    ( (\+ is_arity_lt1(R)) ; (length(Left,Len),Len>=6)),!.
 
@@ -1986,8 +2002,8 @@ pt_args_arglist( _, _, S,_,E,[]):- pt_s_e(S, (pl_span_goal('ellipsis clickprev f
 
 pt_args_arglist(FS,Tab,S,M,E,[H|TT]):- is_list(T), append(T,[Last],TT), never_as_is(Last),
  Sep = (', '),
- pt_s_e(S,  
-  pformat_e_args([H|T],      
+ pt_s_e(S,
+  pformat_e_args([H|T],
     ( prefix_spaces(Tab),
      print_tree_no_nl(H), pt_cont_args(Sep, Tab,Sep, M, FS,T),
      write(Sep),  write(' '),
@@ -1995,14 +2011,14 @@ pt_args_arglist(FS,Tab,S,M,E,[H|TT]):- is_list(T), append(T,[Last],TT), never_as
        % prefix_spaces(Tab-1),print(Last)
       )),E).
 
-pt_args_arglist(FS,Tab,S,M,E,[H|T]):- 
- pt_s_e(S,  
-  pformat_e_args([H|T],      
+pt_args_arglist(FS,Tab,S,M,E,[H|T]):-
+ pt_s_e(S,
+  pformat_e_args([H|T],
     ( prefix_spaces(Tab),
      print_tree_no_nl(H), pt_cont_args(', ', Tab,', ', M, FS,T))),E).
 
 
-write_ar_simple(Sep1, _Tab,Sep,[A|R]):- 
+write_ar_simple(Sep1, _Tab,Sep,[A|R]):-
  pformat(Sep1),
  ( (wots(S,write_q([A|R])),atom_concat_safety('[',MR,S),atom_concat_safety(M,']',MR), write(M))->true
  ; (write_simple(A), write_simple_each(Sep,R))).
@@ -2040,7 +2056,7 @@ pt_cont_args(Sep1, Tab,_Sep,_Mid, FS,[A|R]) :- R==[], pformat(Sep1), !, print_ta
 
 pt_cont_args(Sep1, Tab,Sep, Mid, FS, RL):-  is_list(RL), last(RL,Last), \+ never_as_is(Last), fail_when_arc_pp,
   wots(S,pt_cont_args_s(Sep1, Tab,Sep, Mid, FS, RL)), write(S),!.
-pt_cont_args(Sep1, Tab,Sep, Mid, FS,[A|As]) :- !,  
+pt_cont_args(Sep1, Tab,Sep, Mid, FS,[A|As]) :- !,
    pformat(Sep1), print_tab_term(Tab,[lf|FS],A),
    pt_cont_args(Sep, Tab,Sep, Mid,[lf|FS],As).
 
@@ -2057,11 +2073,11 @@ never_as_is(edit(_)).
 never_as_is(copy(_)).
 never_as_is(edit_copy(_,_,_,_,_)).
 
-pt_cont_args_s(Sep1, Tab, Sep, Mid,FS,RL) :- 
+pt_cont_args_s(Sep1, Tab, Sep, Mid,FS,RL) :-
     rev_append(List,Right,RL), fail_when_arc_pp,
-   length(List,L), L>1, maplist(not_is_list_local,List), max_output(Tab,80,List), 
+   length(List,L), L>1, maplist(not_is_list_local,List), max_output(Tab,80,List),
    first_right_not_short(List,Right), !,
-   write_ar_simple(Sep1,Tab,Sep,List),    
+   write_ar_simple(Sep1,Tab,Sep,List),
    ignore(( Right\==[], write(Sep), nl, prefix_spaces(Tab), pt_cont_args('', Tab,Sep, Mid, FS, Right))).
 
 pt_cont_args_s(Sep1, Tab,Sep, Mid, FS, RL) :- RL=[A|_], is_arity_lt1(A), slice_eq(==(A),RL,List,Right), List\= [_], fail_when_arc_pp,
@@ -2074,9 +2090,9 @@ pt_cont_args_s(Sep1, Tab, Sep, Mid, FS, RL) :- first_n(6, RL, List,Right),List\=
    write_ar_simple(Sep1, Tab,Sep,List),
    ignore(( Right\==[], write(Sep), nl, prefix_spaces(Tab), pt_cont_args('', Tab,Sep, Mid, FS, Right))).
 
-pt_cont_args_s(Sep1, Tab, Sep,_Mid,_FS, List) :- % ground(List),   
+pt_cont_args_s(Sep1, Tab, Sep,_Mid,_FS, List) :- % ground(List),
    fail_when_arc_pp,
-   is_list(List), length(List,Len),Len>1, Len<6, maplist(is_arity_lt1,List), 
+   is_list(List), length(List,Len),Len>1, Len<6, maplist(is_arity_lt1,List),
    first_right_not_short([A],R), !,
    pformat(Sep1), notrace(prefix_spaces(Tab)),pformat(' '), List=[A|R], write_simple(A), write_simple_each(Sep,R),!.
 
@@ -2103,7 +2119,7 @@ as_is_cmpd(Term) :- Term=ref(_),!.
 as_is_cmpd(Term) :- Term=element(_,_,List),List==[],!.
 
 use_system_portray(Term):- (( \+ compound(Term)); is_arity_lt1(Term); functor(Term,'$VAR',_); \+ compound_gt(Term, 0)),!.
-use_system_portray(A=B):- use_system_portray(A),use_system_portray(B),!. 
+use_system_portray(A=B):- use_system_portray(A),use_system_portray(B),!.
 
 
 as_is(V):- as_is0(V),!.
@@ -2199,7 +2215,7 @@ wots_test(S,G):-freeze(S,(dumpST,break)),wots((SS),G),!,
 :- export(merge_defaults/3).
 merge_defaults([], Old, Merged) :- !, canonicalise_defaults(Old, Merged).
 merge_defaults(New, [], Merged) :- !, canonicalise_defaults(New, Merged).
-merge_defaults(New, Old, Merged) :- 
+merge_defaults(New, Old, Merged) :-
     canonicalise_defaults(New, NCanonical),
     canonicalise_defaults(Old, OCanonical),
     merge_canonical_defaults(NCanonical,OCanonical,Merged).
@@ -2209,7 +2225,7 @@ merge_canonical_defaults([N=V|T],Old,O):- select(N=_,T,NewT),!,
   merge_canonical_defaults([N=V|NewT],Old,O).
 merge_canonical_defaults([N=V|T],Old,O):- select(N=_,Old,NewOld),!,
   merge_canonical_defaults([N=V|T],NewOld,O).
-merge_canonical_defaults([N=V|T],Old,[N=V|O]):- 
+merge_canonical_defaults([N=V|T],Old,[N=V|O]):-
   merge_canonical_defaults(T,Old,O).
 merge_canonical_defaults(O,[],O):-!.
 
@@ -2479,7 +2495,7 @@ pp(Dict, Ctx, Options) :-
     ).
 :- endif.
 
-pp(Portray, _Ctx, Options) :- 
+pp(Portray, _Ctx, Options) :-
     option(write_options(WriteOptions), Options),
     option(portray(true), WriteOptions),
     option(output(Out), Options),
@@ -2801,14 +2817,14 @@ bfly_term(Term, Options) -->
 html_any(_, Options) -->
     { Options.depth >= Options.max_depth },
     !,
-    html(span(class('pl-ellipsis'), '...')).    
+    html(span(class('pl-ellipsis'), '...')).
 html_any(Term, Options) -->
     (   {   nonvar(Term)
         ;   attvar(Term)
         }
     ->  portray(Term, Options)
     ),
-    !.    
+    !.
 html_any(Term, Options) -->
     { primitive(Term, Class0),
       !,
@@ -2947,7 +2963,7 @@ args_each(I, Arity, Compound, ArgOptions) -->
 html_list(List, _Options) --> {List== []},!, html('[]').
 html_list(List, Options) -->
        html(span(class(['pl-list']),
-              [ 
+              [
               span(class('pl-functor'), ' [ '),
                span(class(['pl-args']), [ \list_content(List, Options)]),
               ']'
@@ -3377,6 +3393,6 @@ finalize_term(Term, Dict) -->
 :- multifile(user:portray/1).
 :- dynamic(user:portray/1).
 user:portray(S):- term_is_ansi(S), !, write_keeping_ansi(S).
-user:portray(Term):- 
-  %fail, 
+user:portray(Term):-
+  %fail,
   notrace(pc_portray(Term)),!.
