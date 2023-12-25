@@ -13,7 +13,7 @@
 */
 % File:  $PACKDIR/subclause_expansion/prolog/echo_files.pl
 :- module(echo_files,
-          []).
+          [get_file_from_stream/2]).
 
 :- define_into_module(
  [
@@ -23,7 +23,7 @@
           echo_source_file/1]).
 
 /** <module> Utility LOGICMOO_PREDICATE_STREAMS
-This module allows running prolog files as echos. 
+This module allows running prolog files as echos.
 @author Douglas R. Miles
 @license LGPL
 
@@ -46,24 +46,24 @@ This module allows running prolog files as echos.
 
 %! echo_source_file(+File) is det.
 %
-echo_source_file(F):- 
+echo_source_file(F):-
  (\+ t_l:echoing_file(F) -> asserta(t_l:echoing_file(F)) ; true),
  check_current_echo(F).
 
 echo_source_file:- prolog_load_context(file,File), echo_source_file(File).
 
 echo_source_file_no_catchup(F):-
- ignore((  
+ ignore((
    \+ t_l:echoing_file(F),
    asserta(t_l:echoing_file(F)),!,
    get_file_from_stream(S,F), character_count(S,Pos),
    assume_caughtup_to(F,S,Pos))),!.
 
-check_current_echo:- 
+check_current_echo:-
    source_location(F,_), prolog_load_context(source,S), S\==F,!,
    check_current_echo(S),check_current_echo(F).
-check_current_echo:- 
-   ignore((prolog_load_context(source,S),check_current_echo(S))),   
+check_current_echo:-
+   ignore((prolog_load_context(source,S),check_current_echo(S))),
    ignore((source_location(F,_),S\==F,check_current_echo(F))),
    ignore((prolog_load_context(file,SL),SL\==S,SL\==F,check_current_echo(SL))),!.
 
@@ -98,7 +98,7 @@ feedback_close(F):- retract(t_l:feedback_started(F,current_output)),!,format('~N
 feedback_close(F):- retract(t_l:feedback_started(F,mf_s(MF,S,I,O,E))),!,set_prolog_IO(I,O,E),
   close(S),memory_file_to_string(MF,String),free_memory_file(MF),
   atom_length(String,L), (L>0 -> into_echo_cmt(write(String));true).
-feedback_close(_):- told.  
+feedback_close(_):- told.
 
 mco_info(F,S,_I,Start,End):-
    get_file_range(F,Start,End,STerm),
@@ -115,7 +115,7 @@ never_echo_term(begin_tests(_)).
 :- module_transparent(echo_catchup/4).
 
 echo_catchup(I,P,O,PO):- \+ echo_catchup_f(I,P,O,PO), fail.
-echo_catchup_f(I,P,O,PO):- 
+echo_catchup_f(I,P,O,PO):-
  notrace((compound(P),
    source_location(F,_L),t_l:echoing_file(F),
    b_getval('$term', Term),I==Term)),
@@ -157,7 +157,7 @@ consume_white(S):- peek_string(S,2,"#!"),!,read_line_to_string(S,Str),write(Str)
 
 
 mco_p(F,_S,_I,Start,End):- %garbage_collect_atoms,
-   get_file_range(F,Start,End,STerm), 
+   get_file_range(F,Start,End,STerm),
    read_mco(STerm,Term,Cmnts,QQ,_Vs,_Sv),
   % (Cmnts\==[];QQ\==[]),!,
   % mco_info(F,S,I,Start,End),
@@ -165,7 +165,7 @@ mco_p(F,_S,_I,Start,End):- %garbage_collect_atoms,
    assume_caughtup_to(F,S,End).
 
 mco_p(F,S,I,Start,End):- print_tree(I),!,assume_caughtup_to(F,S,End).
- 
+
 % mco_i(F,S,I,O):- format('~N/*~~'),
 mco_i2(F,S,I,O):- fail.
 mco_i(F,S,I,O):- fail.
@@ -185,7 +185,7 @@ catch_up_to_stream(S,Pos):- t_l:file_stream_loc(F,S,PosBefore), Pos>PosBefore, p
 catch_up_to_stream(S):- character_count(S,Pos),catch_up_to_stream(S,Pos).
 
 get_file_range(F,Start,End,SubStr):-
-  Len is End-Start, 
+  Len is End-Start,
   read_file_to_string(F,Str,[]),
   sub_string(Str,Start,Len,_,SubStr).
 get_file_from(F,Start,SubStr):-
@@ -193,7 +193,7 @@ get_file_from(F,Start,SubStr):-
   sub_string(Str,Start,_,0,SubStr).
 
 
-print_file_range(F,S,Start,End):- 
+print_file_range(F,S,Start,End):-
   get_file_range(F,Start,End,SubStr),
   assume_caughtup_to(F,S,End),
   write_ommit_feedback(on,SubStr),!.
@@ -223,10 +223,10 @@ assume_caughtup_to(F,S,Pos):- retractall(t_l:file_stream_loc(F,S,_)),assert(t_l:
 se:echo_expander(system:term_expansion(I,P,O,PO), echo_catchup(I,P,O,PO)).
 
 %user:term_expansion(I,P,O,PO):-  echo_catchup(I,P,O,PO).
-system:term_expansion(_,_,_,_):- 
+system:term_expansion(_,_,_,_):-
   notrace((
     se:echo_expander(H,B),
-    nth_clause(H,1,Ref), 
+    nth_clause(H,1,Ref),
     \+ (clause(H,_:B,Ref)))),
     ignore(retract(H:- B)),
            asserta(H:-B),
