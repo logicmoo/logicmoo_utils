@@ -101,7 +101,7 @@ block_format(G):- wots((S),locally(t_l:in_block_format,G)),bformat(S),!.
 %:- use_module(library(http/http_dispatch))
 
 :- if( exists_source(swi(library/http/html_head))).
-:- /*system:*/(swi(library/http/html_head)).
+:- /*system:*/use_module(swi(library/http/html_head)).
 :- else.
   :- if( exists_source(library(http/html_head))).
     :- /*system:*/use_module(library(http/html_head)).
