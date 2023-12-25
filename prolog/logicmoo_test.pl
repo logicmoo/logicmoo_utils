@@ -1012,7 +1012,7 @@ user:message_hook(T,Type,Term):-
   ((
    Type \== silent, Type \== debug, Type \== informational,
    current_prolog_flag(logicmoo_message_hook,Was),Was\==none,Was\==false)),
-   setup_call_cleanup(create_prolog_flag(logicmoo_message_hook,none,[type(term),keep(false)])),
+   setup_call_cleanup(create_prolog_flag(logicmoo_message_hook,none,[type(term),keep(false)]),
      once(catch(message_hook_handle(T,Type,Term),_,fail)),
       create_prolog_flag(logicmoo_message_hook,Was,[type(term),keep(false)])),!.
 
