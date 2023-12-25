@@ -1,10 +1,11 @@
 :- if((prolog_load_context(source,File),prolog_load_context(file,File));current_prolog_flag(xref,true)).
+
 :- else.
 
 test_completed% This file is mostly all inside if/endifs so it doesnt interfere with `module/2`
 :- if((set_stream(current_output,tty(true)))).  :- endif.
 
-:- dumpST.
+%:- dumpST.
 
 :- if((
  %set_prolog_flag(debug, true),
