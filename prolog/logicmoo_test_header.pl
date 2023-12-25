@@ -79,7 +79,7 @@ test_completed% This file is mostly all inside if/endifs so it doesnt interfere 
 :- endif. % current_prolog_flag(loaded_test_header,_)
 
 %:- if((current_prolog_flag(test_module,Module), '$set_source_module'(Module))). :- endif.
-
+:- endif.
 
 :- if((prolog_load_context(source,File),!,
    ignore((((sub_atom(File,_,_,_,'.pfc')
@@ -117,4 +117,4 @@ test_completed% This file is mostly all inside if/endifs so it doesnt interfere 
 :- if((prolog_load_context(source,F),echo_source_file_no_catchup(F))).  :- endif.
 :- endif.
 
-:- endif.
+
