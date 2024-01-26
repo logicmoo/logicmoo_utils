@@ -899,7 +899,7 @@ number_phase(5,runtime). % when running
 init_why(Phase, Why):-
   %wemsg("%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%%"),
   %wemsg("%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%%"),
-  wemsg(init_why(Phase, Why)),
+  %wemsg(init_why(Phase, Why)),
   set_prolog_flag(current_phase, Phase),
   %wemsg("%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%%"),
   %wemsg("%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%~%%%%"),!,
@@ -1981,12 +1981,13 @@ wemsg(W,D):- format(user_error,"~N; ~q.~n",[W=D]).
 %=======================================
 
 % These are mainly so we can later understand the restore phasing
+/*
 :- initialization(nop(wemsg(init_phase(program))),program).
 :- initialization((wemsg(init_phase(after_load))),after_load).
 :- initialization(nop(wemsg(init_phase(restore))),restore).
 :- initialization((wemsg(init_phase(restore_state))),restore_state).
 :- initialization(nop(wemsg(init_phase(prepare_state))),prepare_state).
-
+*/
 
 %= Register a hook after restore
 :- initialization(nop(init_why(during_boot,restore)),restore).
